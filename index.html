@@ -23,6 +23,13 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!--
+    Photo credits (Unsplash licence, free to use):
+    assets/hero.jpg           Photos by Lanty   https://unsplash.com/photos/qHjwSGv2p8c
+    assets/hero-portrait.jpg  Céline Druguet    https://unsplash.com/photos/Rnton6rhDe4
+    assets/eucalyptus.jpg     Iain Robertson    https://unsplash.com/photos/whLbVUIw7JE
+    assets/olive.jpg          Sixteen Miles Out https://unsplash.com/photos/IVCI2rmcJE8
+  -->
 
   <!-- Background Audio Element -->
   <audio id="wedding-audio" loop preload="auto">
@@ -58,7 +65,7 @@
             <span></span>
           </div>
           <p class="letter-guest">Querida familia y amigos</p>
-          <p class="letter-text">Hay momentos en la vida que son inolvidables, y compartirlos con vosotros los hace inolvidables.</p>
+          <p class="letter-text">Hay momentos en la vida que son inolvidables, y compartirlos con vosotros los hace aún más especiales.</p>
         </div>
 
         <!-- Envelope Front Flaps -->
@@ -100,10 +107,6 @@
         <span></span><span></span><span></span>
       </span>
     </button>
-    <a href="#rsvp" class="float-btn rsvp-quick-btn" title="Confirmar asistencia">
-      <i class="fa-solid fa-envelope-circle-check"></i>
-      <span class="rsvp-btn-label">RSVP</span>
-    </a>
   </aside>
 
   <!-- ======================================================== -->
@@ -113,9 +116,12 @@
 
     <!-- HERO SECTION -->
     <header class="hero-section" id="hero">
-      <div class="hero-floral-bg" aria-hidden="true"></div>
-      <div class="hero-overlay"></div>
-      
+      <picture class="hero-photo" aria-hidden="true">
+        <source media="(max-width: 768px)" srcset="assets/hero-portrait.jpg">
+        <img src="assets/hero.jpg" alt="" loading="eager" decoding="async">
+      </picture>
+      <div class="hero-overlay" aria-hidden="true"></div>
+
       <div class="hero-content">
         <div class="monogram-badge" aria-hidden="true">
           <span class="monogram-letter">S</span>
@@ -170,19 +176,16 @@
           <p class="section-desc">Nos llena de orgullo y emoción compartir este paso trascendental con el amor y apoyo incondicional de nuestras familias.</p>
         </div>
 
-        <div class="parents-grid">
-          <div class="parents-card">
-            <div class="card-icon" aria-hidden="true"><i class="fa-solid fa-dove"></i></div>
+        <div class="parents-row">
+          <div class="parents-col">
             <h3 class="parents-role">Padres de la Novia</h3>
-            <p class="parent-name">Sra. Carmen Morales Vega</p>
-            <p class="parent-name">Sr. Francisco Romero Delgado</p>
+            <p class="parent-name">Carmen Morales Vega</p>
+            <p class="parent-name">Francisco Romero Delgado</p>
           </div>
-
-          <div class="parents-card">
-            <div class="card-icon" aria-hidden="true"><i class="fa-solid fa-dove"></i></div>
+          <div class="parents-col">
             <h3 class="parents-role">Padres del Novio</h3>
-            <p class="parent-name">Sra. Isabel Castillo Herrera</p>
-            <p class="parent-name">Sr. Fernando Ramos Ortiz</p>
+            <p class="parent-name">Isabel Castillo Herrera</p>
+            <p class="parent-name">Fernando Ramos Ortiz</p>
           </div>
         </div>
       </div>
@@ -231,7 +234,6 @@
         <div class="section-heading text-center">
           <span class="section-tag">DÓNDE Y CUÁNDO</span>
           <h2 class="section-title">Los Lugares de Nuestra Celebración</h2>
-          <p class="section-desc">Queremos que disfrutes cada instante. Consulta la ubicación exacta de cada momento.</p>
         </div>
 
         <div class="locations-grid">
@@ -256,6 +258,7 @@
 
           <!-- Reception & Banquet Card -->
           <article class="location-card featured">
+            <span class="featured-tag">Banquete principal</span>
             <div class="location-card-header">
               <div class="location-icon"><i class="fa-solid fa-champagne-glasses"></i></div>
               <span class="location-badge">RECEPCIÓN &amp; BANQUETE</span>
@@ -301,7 +304,6 @@
         <div class="section-heading text-center">
           <span class="section-tag">PROGRAMA</span>
           <h2 class="section-title">Itinerario del Día</h2>
-          <p class="section-desc">Te compartimos la cronología planificada para disfrutar juntos sin perderte nada.</p>
         </div>
 
         <div class="timeline-wrapper">
@@ -309,7 +311,7 @@
 
           <!-- Timeline Item 1 -->
           <div class="timeline-item">
-            <div class="timeline-dot"><i class="fa-solid fa-rings-wedding"></i></div>
+            <div class="timeline-dot"><i class="fa-solid fa-ring"></i></div>
             <div class="timeline-time">17:30 HRS</div>
             <div class="timeline-card">
               <h3 class="timeline-title">Ceremonia Religiosa</h3>
@@ -452,17 +454,14 @@
           <div class="section-heading">
             <span class="section-tag">CÓDIGO DE VESTIMENTA</span>
             <h2 class="section-title">Formal &amp; Elegante</h2>
-            <p class="section-desc">Queremos que luzcan espectaculares en este día de fiesta y celebración.</p>
           </div>
 
           <div class="dresscode-guidelines">
             <div class="guideline-item">
-              <i class="fa-solid fa-vest"></i>
               <h4>Caballeros</h4>
               <p>Traje formal oscuro o esmoquin, corbata o pajarita.</p>
             </div>
             <div class="guideline-item">
-              <i class="fa-solid fa-person-dress"></i>
               <h4>Damas</h4>
               <p>Vestido largo o midi formal de fiesta.</p>
             </div>

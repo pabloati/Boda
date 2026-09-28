@@ -155,12 +155,12 @@
       // 3. After letter slides out and flap opens, fade out overlay
       setTimeout(() => {
         envelopeOverlay.classList.add('opened');
-      }, 1200);
+      }, 1700);
 
       // 4. Remove overlay from DOM flow after transition
       setTimeout(() => {
         envelopeOverlay.style.display = 'none';
-      }, 2500);
+      }, 2600);
     }
   }
 

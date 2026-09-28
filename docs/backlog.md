@@ -1,16 +1,16 @@
 # Backlog
 
 ## 1. Design fixes
-- [ ] Mobile horizontal overflow (countdown grid, hashtag box).
-- [ ] "Banquete principal" ribbon clipped on featured venue card.
-- [ ] Missing timeline icon (`fa-rings-wedding` is Font Awesome Pro only).
-- [ ] IBAN wraps onto several lines on mobile.
-- [ ] Envelope opening: layers overlap during the transition; keep overlay opaque until the animation ends.
-- [ ] Hero: full-bleed photo or illustration instead of a floating card on a gradient.
-- [ ] Reduce section padding on mobile (page is ~13,000px tall).
-- [ ] Simplify: parents as a single block, drop dress-code icons, one floating button instead of two.
-- [ ] Single RSVP submit button (drop the WhatsApp/green one once a backend exists).
-- [ ] Countdown box contrast on burgundy background.
+- [x] Mobile horizontal overflow (countdown grid, hashtag box).
+- [x] "Banquete principal" ribbon clipped on featured venue card.
+- [x] Missing timeline icon (`fa-rings-wedding` is Font Awesome Pro only).
+- [x] IBAN wraps onto several lines on mobile.
+- [x] Envelope opening: layers overlap during the transition; keep overlay opaque until the animation ends.
+- [x] Hero: full-bleed photo or illustration instead of a floating card on a gradient.
+- [x] Reduce section padding on mobile (page is ~13,000px tall).
+- [x] Simplify: parents as a single block, drop dress-code icons, one floating button instead of two.
+- [ ] Single RSVP submit button once a backend exists (WhatsApp button is now a secondary outline style).
+- [x] Countdown box contrast on burgundy background.
 
 ## 2. Real content
 - [ ] Couple names, date, monogram, hashtag.
