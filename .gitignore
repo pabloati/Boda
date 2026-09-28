@@ -1,0 +1,16 @@
+# Dependencies / tooling
+node_modules/
+package-lock.json
+package.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Logs and temp
+*.log
+.env
+.env.*

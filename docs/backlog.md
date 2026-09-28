@@ -1,19 +1,37 @@
-# Project Backlog & Implementation Tasks
+# Backlog
 
-## Sprint 1: Foundation & Core Invitation Structure
-- [x] Context & SRS/PRD/ADD/TDD documentation setup.
-- [x] Create `index.html` structure with all sections:
-  - [x] Envelope intro overlay with wax seal and "ABRIR" button.
-  - [x] Hero section with couple names and wedding date.
-  - [x] Quote and parents' blessing.
-  - [x] Real-time countdown timer.
-  - [x] Schedule cards (Ceremony, Reception, Party) with Google Maps and calendar buttons.
-  - [x] Day timeline with milestones and icons.
-  - [x] Interactive RSVP form with WhatsApp export.
-  - [x] Dress code with color swatches & adults-only notice.
-  - [x] Gift registry with 1-click IBAN copy.
-  - [x] Accommodations and playlist suggestions.
-  - [x] Floating music player and quick RSVP button.
-- [x] Create `css/styles.css` with sage green & burgundy palette, typography, 3D envelope animation, responsive layout.
-- [x] Create `js/script.js` with audio engine, countdown ticker, WhatsApp builder, copy-to-clipboard, and animations.
-- [x] Verify locally in browser environment.
+## 1. Design fixes
+- [ ] Mobile horizontal overflow (countdown grid, hashtag box).
+- [ ] "Banquete principal" ribbon clipped on featured venue card.
+- [ ] Missing timeline icon (`fa-rings-wedding` is Font Awesome Pro only).
+- [ ] IBAN wraps onto several lines on mobile.
+- [ ] Envelope opening: layers overlap during the transition; keep overlay opaque until the animation ends.
+- [ ] Hero: full-bleed photo or illustration instead of a floating card on a gradient.
+- [ ] Reduce section padding on mobile (page is ~13,000px tall).
+- [ ] Simplify: parents as a single block, drop dress-code icons, one floating button instead of two.
+- [ ] Single RSVP submit button (drop the WhatsApp/green one once a backend exists).
+- [ ] Countdown box contrast on burgundy background.
+
+## 2. Real content
+- [ ] Couple names, date, monogram, hashtag.
+- [ ] Parents.
+- [ ] Venues, times, addresses, map links.
+- [ ] Timeline.
+- [ ] Dress code text.
+- [ ] Bank details (IBAN, holder, concept).
+- [ ] Hotels.
+- [ ] Calendar event (`.ics` dates in `js/script.js`).
+- [ ] Local audio file in `assets/`.
+- [ ] Open Graph image for WhatsApp link previews.
+
+## 3. Data collection
+- [ ] Choose backend (see `docs/decisions.md`).
+- [ ] Wire RSVP form (name, attendance, companions' names, bus, allergies, message).
+- [ ] Wire song suggestions.
+- [ ] Remove the fake "Guardar confirmación" success message.
+- [ ] Private view of responses for the couple.
+
+## 4. Deploy
+- [ ] Create GitHub repo, push `main`.
+- [ ] GitHub Pages or Netlify.
+- [ ] Test on a real phone from a WhatsApp link.
