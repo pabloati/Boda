@@ -14,3 +14,7 @@ Thumbs.db
 *.log
 .env
 .env.*
+
+# Throwaway design previews
+preview-*.html
+!docs/portada-variantes.html

@@ -2,6 +2,8 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-09-29 — Front page: envelope redesign (variant A) chosen. Variant B (sealed card, no envelope) kept in `docs/portada-variantes.html` in case of a change of mind.
+- 2026-09-29 — Real wedding data is collected in a Claude Doc the couple fills in: https://claude.ai/code/artifact/42c14bb1-1d61-485b-8bb8-954cc798b53f
 - 2026-09-28 — Stock photos from Unsplash (free licence, no attribution required; credits kept in a comment at the top of `index.html`). Hero photos are placeholders until the couple provides their own.
 - 2026-09-28 — One floating button (music) instead of two. The RSVP shortcut covered content on phones.
 - 2026-09-28 — Envelope container no longer uses `transform-style: preserve-3d`; flat stacking lets z-index put the card above the opened flap.
