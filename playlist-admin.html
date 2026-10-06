@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Playlist · exportar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 32px 16px; background: #fdfbf7; color: #282423; font-family: 'Montserrat', -apple-system, sans-serif; font-size: 14px; }
+    main { max-width: 900px; margin: 0 auto; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; color: #6a1a24; font-size: 2.2rem; margin: 0 0 4px; }
+    p { color: #665f5c; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+    button { font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid #6a1a24; cursor: pointer; background: #fff; color: #6a1a24; }
+    button.primary { background: #6a1a24; color: #fff; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #eee5d8; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0e8dc; white-space: nowrap; }
+    th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #5e7153; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .status { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Playlist de la boda</h1>
+    <p>Ranking actual de canciones propuestas por los invitados. Para ocultar una canción, marca <code>hidden = true</code> en la tabla <code>songs</code> de Supabase.</p>
+
+    <div class="actions">
+      <button type="button" class="primary" id="btn-xlsx" disabled>Descargar Excel (.xlsx)</button>
+      <button type="button" id="btn-tsv" disabled>Descargar TSV</button>
+      <button type="button" id="btn-reload">Recargar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Canción</th><th>Artista</th><th>Votos</th><th>Origen</th><th>Añadida</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="status" id="status">Cargando…</p>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="js/playlist-config.js"></script>
+  <script src="js/playlist.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const api = window.WeddingPlaylist;
+      const rowsEl = document.getElementById('rows');
+      const statusEl = document.getElementById('status');
+      const btnXlsx = document.getElementById('btn-xlsx');
+      const btnTsv = document.getElementById('btn-tsv');
+      const btnReload = document.getElementById('btn-reload');
+      if (!api) { statusEl.textContent = 'No se ha podido cargar js/playlist.js'; return; }
+
+      const store = api.createStore();
+      let records = [];
+
+      function toRecords(songs) {
+        return api.sortRanking(songs).map(function (s, i) {
+          return {
+            'Posición': i + 1,
+            'Canción': s.title,
+            'Artista': s.artist,
+            'Votos': s.votes,
+            'Origen': s.source === 'itunes' ? 'Catálogo' : 'Manual',
+            'Enlace': s.externalUrl || '',
+            'Añadida': s.createdAt ? new Date(s.createdAt).toLocaleString('es-ES') : ''
+          };
+        });
+      }
+
+      function render() {
+        rowsEl.replaceChildren();
+        records.forEach(function (r) {
+          const tr = document.createElement('tr');
+          [r['Posición'], r['Canción'], r['Artista'], r['Votos'], r['Origen'], r['Añadida']].forEach(function (v, i) {
+            const td = document.createElement('td');
+            td.textContent = v;
+            if (i === 0 || i === 3) td.className = 'num';
+            tr.appendChild(td);
+          });
+          rowsEl.appendChild(tr);
+        });
+        const total = records.reduce(function (n, r) { return n + r['Votos']; }, 0);
+        statusEl.textContent = records.length + ' canciones · ' + total + ' votos' + (store.mode === 'demo' ? ' · MODO DEMO (datos de este navegador)' : '');
+        btnXlsx.disabled = !records.length || !window.XLSX;
+        btnTsv.disabled = !records.length;
+      }
+
+      function load() {
+        statusEl.textContent = 'Cargando…';
+        store.list().then(function (songs) {
+          records = toRecords(songs);
+          render();
+        }).catch(function () {
+          statusEl.textContent = 'No se ha podido cargar la playlist.';
+        });
+      }
+
+      function fileName(ext) {
+        return 'playlist-boda-' + new Date().toISOString().slice(0, 10) + '.' + ext;
+      }
+
+      btnXlsx.addEventListener('click', function () {
+        const sheet = XLSX.utils.json_to_sheet(records);
+        sheet['!cols'] = [{ wch: 9 }, { wch: 40 }, { wch: 30 }, { wch: 7 }, { wch: 10 }, { wch: 45 }, { wch: 20 }];
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, sheet, 'Playlist');
+        XLSX.writeFile(book, fileName('xlsx'));
+      });
+
+      btnTsv.addEventListener('click', function () {
+        const cols = Object.keys(records[0]);
+        const clean = function (v) { return String(v).replace(/[\t\r\n]+/g, ' '); };
+        const lines = [cols.join('\t')].concat(records.map(function (r) {
+          return cols.map(function (c) { return clean(r[c]); }).join('\t');
+        }));
+        // BOM so Excel shows accents correctly when double-clicking the file
+        const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/tab-separated-values;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName('tsv');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      });
+
+      btnReload.addEventListener('click', load);
+      load();
+    })();
+  </script>
+</body>
+</html>

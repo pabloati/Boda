@@ -411,10 +411,9 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="guest-song" class="form-label">La Canción que no Puede Faltar</label>
-                <input type="text" id="guest-song" name="guestSong" class="form-control" placeholder="Ej: Vivir Mi Vida - Marc Anthony">
-              </div>
+              <p class="form-hint rsvp-playlist-hint">
+                <i class="fa-solid fa-music"></i> ¿Una canción que no puede faltar? Proponla o vota en la <a href="#playlist">playlist de la boda</a>.
+              </p>
             </div>
 
             <div class="form-actions">
@@ -512,32 +511,56 @@
               </a>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
 
-          <!-- Song Suggestions Form -->
-          <div class="logistics-card">
-            <div class="section-heading">
-              <span class="section-tag">PLAYLIST DE LA BODA</span>
-              <h2 class="section-title">¿Nos ayudas con la música?</h2>
-              <p class="section-desc">¿Qué temazo no puede faltar en la pista de baile para verte dándolo todo?</p>
+    <!-- SECTION: PLAYLIST (search + vote, see js/playlist.js) -->
+    <section class="playlist-section" id="playlist">
+      <div class="container">
+        <div class="section-heading text-center">
+          <span class="section-tag">PLAYLIST DE LA BODA</span>
+          <h2 class="section-title">¿Nos ayudas con la música?</h2>
+          <p class="section-desc">Busca el temazo que no puede faltar en la pista. Si alguien ya lo ha propuesto, dale tu corazón para que suba en el ranking.</p>
+        </div>
+
+        <div class="playlist-card">
+          <div class="playlist-search">
+            <label for="playlist-search-input" class="form-label">Busca una canción o artista</label>
+            <div class="playlist-search-box">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" id="playlist-search-input" class="form-control" placeholder="Ej: Vivir mi vida, Queen, Rosalía…" autocomplete="off" aria-controls="playlist-results">
             </div>
+            <div id="playlist-results" class="playlist-results" hidden></div>
 
-            <form id="song-form" class="song-form">
-              <div class="form-group">
-                <label for="song-input" class="form-label">Título de la canción y Artista</label>
-                <div class="song-input-group">
-                  <input type="text" id="song-input" class="form-control" placeholder="Ej: Bohemian Rhapsody - Queen" required>
-                  <button type="submit" class="btn-primary-burgundy">
-                    <i class="fa-solid fa-plus"></i> Añadir
-                  </button>
+            <form id="playlist-manual" class="playlist-manual" hidden>
+              <p class="playlist-manual-title">Añádela a mano</p>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="manual-title" class="form-label">Canción</label>
+                  <input type="text" id="manual-title" class="form-control" maxlength="120" required>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="manual-artist" class="form-label">Artista</label>
+                  <input type="text" id="manual-artist" class="form-control" maxlength="120" required>
                 </div>
               </div>
-              <div id="song-list" class="song-pills">
-                <span class="song-pill"><i class="fa-solid fa-music"></i> Thinking Out Loud &ndash; Ed Sheeran</span>
-                <span class="song-pill"><i class="fa-solid fa-music"></i> Can't Stop the Feeling &ndash; Justin Timberlake</span>
-                <span class="song-pill"><i class="fa-solid fa-music"></i> Vivir Mi Vida &ndash; Marc Anthony</span>
+              <div class="playlist-manual-actions">
+                <button type="button" id="manual-cancel" class="btn-mini">Cancelar</button>
+                <button type="submit" class="btn-primary-burgundy"><i class="fa-solid fa-plus"></i> Añadir</button>
               </div>
             </form>
           </div>
+
+          <div class="playlist-meta">
+            <span id="playlist-hearts" class="playlist-hearts" aria-live="polite"></span>
+            <span id="playlist-count" class="playlist-count"></span>
+          </div>
+
+          <div id="playlist-notice" class="playlist-notice" role="status" hidden></div>
+
+          <ol id="playlist-ranking" class="playlist-ranking" aria-label="Ranking de canciones"></ol>
+          <button type="button" id="playlist-more" class="playlist-more" hidden></button>
         </div>
       </div>
     </section>
@@ -573,5 +596,7 @@
 
   <!-- Main JavaScript Application -->
   <script src="js/script.js"></script>
+  <script src="js/playlist-config.js"></script>
+  <script src="js/playlist.js"></script>
 </body>
 </html>

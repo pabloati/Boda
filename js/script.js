@@ -28,9 +28,6 @@
   const copyText = document.getElementById('copy-text');
   const btnCopyHashtag = document.getElementById('btn-copy-hashtag');
   const weddingHashtag = document.getElementById('wedding-hashtag');
-  const songForm = document.getElementById('song-form');
-  const songInput = document.getElementById('song-input');
-  const songList = document.getElementById('song-list');
 
   // --- 2. AUDIO ENGINE (HTML5 + Web Audio API Ambient Synthesizer Fallback) ---
   let isMusicPlaying = false;
@@ -142,6 +139,21 @@
   if (btnMusicToggle) {
     btnMusicToggle.addEventListener('click', toggleMusic);
   }
+
+  // Song previews in the playlist (js/playlist.js) pause the background track and resume it afterwards
+  let resumeAfterPreview = false;
+  document.addEventListener('playlist:preview', function (e) {
+    if (!btnMusicToggle) return;
+    if (e.detail && e.detail.playing) {
+      if (isMusicPlaying) {
+        resumeAfterPreview = true;
+        pauseMusic();
+      }
+    } else if (resumeAfterPreview) {
+      resumeAfterPreview = false;
+      playMusic();
+    }
+  });
 
   // --- 3. ENVELOPE OPENING ANIMATION ---
   function openEnvelope() {
@@ -288,7 +300,6 @@
 
     const diet = readValue('guest-diet', 'Ninguna');
     const menu = readValue('guest-menu', 'Ninguno');
-    const song = readValue('guest-song', '');
 
     return {
       guestName,
@@ -298,8 +309,7 @@
       bus,
       busFrom,
       diet,
-      menu,
-      song
+      menu
     };
   }
 
@@ -323,8 +333,7 @@
           `👥 *Acompañantes:* ${data.companions.length ? data.companions.join(', ') : 'Ninguno'}\n` +
           `🚌 *Autobús:* ${data.bus}${data.busFrom ? ` (desde ${data.busFrom})` : ''}\n` +
           `🍽️ *Alergias:* ${data.diet}\n` +
-          `🥗 *Menú especial:* ${data.menu}\n` +
-          (data.song ? `🎵 *Canción:* ${data.song}\n` : '');
+          `🥗 *Menú especial:* ${data.menu}\n`;
       } else {
         whatsappText = `¡Hola Mª Ángeles y Pablo! 💍✨\n\n` +
           `👤 *Nombre:* ${data.guestName}\n` +
@@ -419,20 +428,6 @@
     });
   }
 
-  // --- 9. PLAYLIST SONG SUGGESTION ---
-  if (songForm && songInput && songList) {
-    songForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const songTitle = songInput.value.trim();
-      if (!songTitle) return;
-
-      const newPill = document.createElement('span');
-      newPill.className = 'song-pill';
-      newPill.innerHTML = `<i class="fa-solid fa-music"></i> ${escapeHtml(songTitle)}`;
-      songList.prepend(newPill);
-
-      songInput.value = '';
-    });
-  }
+  // --- 9. PLAYLIST: see js/playlist.js ---
 
 })();
