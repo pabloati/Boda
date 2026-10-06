@@ -21,4 +21,7 @@ Then open <http://localhost:8000>. Opening `index.html` directly also works, but
 
 ## Customising
 
+The real wedding data (names, dates, venues, parents, dress code, IBAN, hotels, music) is kept in a Claude Doc the couple edits:
+<https://claude.ai/code/artifact/42c14bb1-1d61-485b-8bb8-954cc798b53f>. When something changes there, ask Claude to read the doc and update the site.
+
 Names, dates, venues and bank details are text in `index.html`. The countdown target is the `data-target-date` attribute on the countdown element. The calendar event dates are in the `.ics` block in `js/script.js`.

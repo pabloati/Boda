@@ -13,25 +13,29 @@
 - [x] Countdown box contrast on burgundy background.
 
 ## 2. Real content
-- [ ] Couple names, date, monogram, hashtag.
-- [ ] Parents.
-- [ ] Venues, times, addresses, map links.
-- [ ] Timeline.
-- [ ] Dress code text.
-- [ ] Bank details (IBAN, holder, concept).
-- [ ] Hotels.
-- [ ] Calendar event (`.ics` dates in `js/script.js`).
+Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-10-06.
+- [x] Couple names, date, monogram, hashtag.
+- [x] Parents.
+- [x] Venues, times, addresses, map links (ceremony + banquet; no separate party venue).
+- [x] Timeline.
+- [x] Dress code section removed at the couple's request.
+- [ ] Bank details: holder and concept done; **IBAN still a placeholder** (`ES00 …`).
+- [ ] Hotels (table in the doc is empty; the two hotels on the site are invented).
+- [x] Calendar event (`.ics` dates in `js/script.js`).
 - [ ] Local audio file in `assets/`.
+- [ ] Couple's own photos (hero landscape, hero portrait).
 - [ ] Open Graph image for WhatsApp link previews.
+- [ ] Bus: departure points and times (shown nowhere yet; the form only asks guests where they would board).
 
 ## 3. Data collection
 - [ ] Choose backend (see `docs/decisions.md`).
-- [ ] Wire RSVP form (name, attendance, companions' names, bus, allergies, message).
+- [ ] Wire RSVP form (name, phone, attendance, companions' names, bus + boarding point, allergies, vegetarian/vegan menu, song).
+- [ ] WhatsApp number for the RSVP button (empty in the doc).
 - [ ] Wire song suggestions.
 - [ ] Remove the fake "Guardar confirmación" success message.
 - [ ] Private view of responses for the couple.
 
 ## 4. Deploy
 - [ ] Create GitHub repo, push `main`.
-- [ ] GitHub Pages or Netlify.
+- [ ] GitHub Pages (the couple's choice; no custom domain).
 - [ ] Test on a real phone from a WhatsApp link.

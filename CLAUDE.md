@@ -36,7 +36,11 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 
 ## Content and language
 
-All guest-facing copy is Spanish (Spain, `vosotros` forms). Placeholder couple "Sofía & Mateo" and all names, venues, hotels, IBAN and hashtag are invented and must be replaced before the site is shared.
+All guest-facing copy is Spanish (Spain, `vosotros` forms).
+
+**Source of truth for real content** is a Claude Doc the couple edits, "Datos para la invitación de boda":
+https://claude.ai/code/artifact/42c14bb1-1d61-485b-8bb8-954cc798b53f
+Each section of the site has a table there with a "Valor" column. When the user says the doc changed, read it with the Claude Docs tools (never web-fetch it) and update `index.html` / `js/script.js` to match. Anything still marked as placeholder in the doc stays as invented text and must be replaced before the site is shared.
 
 ## Git
 

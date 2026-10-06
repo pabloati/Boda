@@ -1,6 +1,6 @@
 /**
  * WEDDING INVITATION INTERACTIVITY ENGINE
- * Sofía & Mateo - 20 de Junio de 2026
+ * Mª Ángeles & Pablo - 13 de marzo de 2027
  */
 
 (function () {
@@ -175,7 +175,7 @@
   function initCountdown() {
     if (!countdownClock) return;
 
-    const targetDateStr = countdownClock.getAttribute('data-target-date') || '2026-06-20T17:30:00';
+    const targetDateStr = countdownClock.getAttribute('data-target-date') || '2027-03-13T12:30:00';
     const targetDate = new Date(targetDateStr).getTime();
 
     function updateTimer() {
@@ -213,17 +213,17 @@
       const icsData = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Boda Sofia y Mateo//Invitacion Digital//ES',
+        'PRODID:-//Boda Maria Angeles y Pablo//Invitacion Digital//ES',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         'BEGIN:VEVENT',
-        'UID:boda-sofia-mateo-20260620@wedding.es',
-        'DTSTAMP:20260601T120000Z',
-        'DTSTART:20260620T153000Z', // 17:30 Madrid CEST (UTC+2)
-        'DTEND:20260621T030000Z',   // 05:00 Madrid
-        'SUMMARY:💍 Boda de Sofía & Mateo',
-        'DESCRIPTION:Ceremonia religiosa en la Real Basílica de San Jerónimo el Real y banquete en Finca Soto de Cerrolén.',
-        'LOCATION:Real Basílica de San Jerónimo el Real, Calle de Moreto, 4, Retiro, 28014 Madrid',
+        'UID:boda-mariangeles-pablo-20270313@wedding.es',
+        'DTSTAMP:20261006T120000Z',
+        'DTSTART:20270313T113000Z', // 12:30 Madrid CET (UTC+1, winter time)
+        'DTEND:20270313T220000Z',   // 23:00 Madrid
+        'SUMMARY:💍 Boda de Mª Ángeles & Pablo',
+        'DESCRIPTION:Ceremonia en la Parroquia de San José (C. Alcalá 43) a las 12:30 y convite en el Complejo La Cigüeña (Arganda del Rey) a las 14:30.',
+        'LOCATION:Parroquia de San José, C. Alcalá, 43, 28014 Madrid',
         'STATUS:CONFIRMED',
         'END:VEVENT',
         'END:VCALENDAR'
@@ -233,7 +233,7 @@
       const url = window.URL.createObjectURL(blob);
       const tempLink = document.createElement('a');
       tempLink.href = url;
-      tempLink.setAttribute('download', 'Boda-Sofia-y-Mateo.ics');
+      tempLink.setAttribute('download', 'Boda-MariAngeles-y-Pablo.ics');
       document.body.appendChild(tempLink);
       tempLink.click();
       document.body.removeChild(tempLink);
@@ -255,33 +255,51 @@
     });
   });
 
+  const busSelect = document.getElementById('guest-bus');
+  const busFromGroup = document.getElementById('bus-from-group');
+  if (busSelect && busFromGroup) {
+    busSelect.addEventListener('change', function () {
+      busFromGroup.style.display = this.value.startsWith('Si') ? 'block' : 'none';
+    });
+  }
+
   // --- 7. RSVP FORM SUBMISSION & WHATSAPP GENERATOR ---
+  function readValue(id, fallback) {
+    const el = document.getElementById(id);
+    const v = el ? el.value.trim() : '';
+    return v || fallback;
+  }
+
   function getRsvpFormData() {
-    const nameInput = document.getElementById('guest-name');
-    const guestName = nameInput ? nameInput.value.trim() : '';
+    const guestName = readValue('guest-name', '');
+    const phone = readValue('guest-phone', '');
 
     const statusEl = document.querySelector('input[name="attendanceStatus"]:checked');
     const status = statusEl ? statusEl.value : 'asistire';
 
-    const guestCountEl = document.getElementById('guest-count');
-    const guestCount = guestCountEl ? guestCountEl.value : '1';
+    const companionsRaw = readValue('guest-companions', '');
+    const companions = companionsRaw
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
 
-    const busEl = document.getElementById('guest-bus');
-    const bus = busEl ? busEl.value : 'No necesito autobus';
+    const bus = readValue('guest-bus', 'No, voy por mi cuenta');
+    const busFrom = bus.startsWith('Si') ? readValue('guest-bus-from', 'sin indicar') : '';
 
-    const dietEl = document.getElementById('guest-diet');
-    const diet = (dietEl && dietEl.value.trim()) ? dietEl.value.trim() : 'Sin restricciones';
-
-    const messageEl = document.getElementById('guest-message');
-    const message = (messageEl && messageEl.value.trim()) ? messageEl.value.trim() : '';
+    const diet = readValue('guest-diet', 'Ninguna');
+    const menu = readValue('guest-menu', 'Ninguno');
+    const song = readValue('guest-song', '');
 
     return {
       guestName,
+      phone,
       status,
-      guestCount,
+      companions,
       bus,
+      busFrom,
       diet,
-      message
+      menu,
+      song
     };
   }
 
@@ -298,20 +316,20 @@
 
       let whatsappText = '';
       if (data.status === 'asistire') {
-        whatsappText = `¡Hola Sofía y Mateo! 💍✨\n\nConfirmo mi asistencia a vuestra boda:\n\n` +
+        whatsappText = `¡Hola Mª Ángeles y Pablo! 💍✨\n\nConfirmo mi asistencia a vuestra boda:\n\n` +
           `👤 *Nombre:* ${data.guestName}\n` +
+          (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
           `✅ *Asistencia:* ¡Sí, estaré allí con mucha ilusión!\n` +
-          `👥 *Asistentes:* ${data.guestCount}\n` +
-          `🚌 *Autobús:* ${data.bus}\n` +
-          `🍽️ *Alergias/Menú:* ${data.diet}\n`;
+          `👥 *Acompañantes:* ${data.companions.length ? data.companions.join(', ') : 'Ninguno'}\n` +
+          `🚌 *Autobús:* ${data.bus}${data.busFrom ? ` (desde ${data.busFrom})` : ''}\n` +
+          `🍽️ *Alergias:* ${data.diet}\n` +
+          `🥗 *Menú especial:* ${data.menu}\n` +
+          (data.song ? `🎵 *Canción:* ${data.song}\n` : '');
       } else {
-        whatsappText = `¡Hola Sofía y Mateo! 💍✨\n\n` +
+        whatsappText = `¡Hola Mª Ángeles y Pablo! 💍✨\n\n` +
           `👤 *Nombre:* ${data.guestName}\n` +
+          (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
           `❌ *Asistencia:* Lamentablemente no podré acompañaros en esta ocasión, ¡pero os deseo todo lo mejor en este gran día!\n`;
-      }
-
-      if (data.message) {
-        whatsappText += `💬 *Dedicatoria:* "${data.message}"\n`;
       }
 
       whatsappText += `\n¡Un abrazo grande!`;
@@ -337,9 +355,6 @@
         rsvpStatusMessage.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Muchas gracias, <strong>${escapeHtml(data.guestName)}</strong>! Tu confirmación ha sido guardada. Nos alegra mucho celebrar contigo.`;
       }
 
-      // Reset fields
-      const messageEl = document.getElementById('guest-message');
-      if (messageEl) messageEl.value = '';
     });
   }
 
