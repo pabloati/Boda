@@ -29,103 +29,29 @@
   const btnCopyHashtag = document.getElementById('btn-copy-hashtag');
   const weddingHashtag = document.getElementById('wedding-hashtag');
 
-  // --- 2. AUDIO ENGINE (HTML5 + Web Audio API Ambient Synthesizer Fallback) ---
+  // --- 2. AUDIO ENGINE ---
   let isMusicPlaying = false;
-  let audioContext = null;
-  let synthInterval = null;
-  let usingSynthFallback = false;
 
-  // Gentle romantic chord arpeggio progression (C - G - Am - F) in frequency (Hz)
-  const romanticMelody = [
-    261.63, 329.63, 392.00, 523.25, // C chord
-    196.00, 246.94, 293.66, 392.00, // G chord
-    220.00, 261.63, 329.63, 440.00, // Am chord
-    174.61, 220.00, 261.63, 349.23  // F chord
-  ];
-  let noteIndex = 0;
-
-  function initWebAudioSynth() {
-    if (audioContext) return;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      audioContext = new AudioCtx();
-    } catch (e) {
-      console.warn('Web Audio API not supported', e);
-    }
-  }
-
-  function playSynthNote(freq) {
-    if (!audioContext || audioContext.state === 'suspended') {
-      audioContext && audioContext.resume();
-    }
-    if (!audioContext) return;
-
-    try {
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-
-      gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.08, audioContext.currentTime + 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 1.2);
-
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-
-      osc.start();
-      osc.stop(audioContext.currentTime + 1.3);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function startSynthMelody() {
-    initWebAudioSynth();
-    usingSynthFallback = true;
-    if (synthInterval) clearInterval(synthInterval);
-    synthInterval = setInterval(() => {
-      if (isMusicPlaying) {
-        playSynthNote(romanticMelody[noteIndex]);
-        noteIndex = (noteIndex + 1) % romanticMelody.length;
-      }
-    }, 450);
-  }
-
-  function stopSynthMelody() {
-    if (synthInterval) {
-      clearInterval(synthInterval);
-      synthInterval = null;
-    }
+  function setMusicState(playing) {
+    isMusicPlaying = playing;
+    if (btnMusicToggle) btnMusicToggle.classList.toggle('active', playing);
+    if (musicIcon) musicIcon.className = playing ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
   }
 
   function playMusic() {
-    isMusicPlaying = true;
-    btnMusicToggle.classList.add('active');
-    musicIcon.className = 'fa-solid fa-volume-high';
-
-    if (weddingAudio) {
-      weddingAudio.play().then(() => {
-        usingSynthFallback = false;
-      }).catch((err) => {
-        console.info('Audio source blocked or unavailable, engaging gentle romantic synth fallback:', err);
-        startSynthMelody();
-      });
-    } else {
-      startSynthMelody();
-    }
+    if (!weddingAudio) return;
+    weddingAudio.play().then(() => {
+      setMusicState(true);
+    }).catch((err) => {
+      // Autoplay refused or the file is unavailable: stay silent, show the muted state.
+      console.info('Audio unavailable:', err && err.message);
+      setMusicState(false);
+    });
   }
 
   function pauseMusic() {
-    isMusicPlaying = false;
-    btnMusicToggle.classList.remove('active');
-    musicIcon.className = 'fa-solid fa-volume-xmark';
-
-    if (weddingAudio && !usingSynthFallback) {
-      weddingAudio.pause();
-    }
-    stopSynthMelody();
+    if (weddingAudio) weddingAudio.pause();
+    setMusicState(false);
   }
 
   function toggleMusic() {
