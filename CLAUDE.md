@@ -29,6 +29,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 ## Things that are easy to get wrong
 
 - **Wedding date is duplicated** in three places: the `data-target-date` attribute on `#countdown-clock`, the `DTSTART`/`DTEND` lines in the `.ics` block of `js/script.js` (UTC, so Madrid summer time = local minus 2h), and the visible text throughout `index.html`.
+- **CSS/JS links carry a `?v=YYYYMMDD` cache-buster** in `index.html` and `playlist-admin.html`. Bump it in every link whenever `css/` or `js/` changes, or visitors get new HTML with stale styles for up to 10 minutes (GitHub Pages caching).
 - **Icons come from the Font Awesome 6 free CDN.** Pro-only icon names render as an empty box. Check the free set before adding one.
 - **The RSVP form does not persist anything yet.** The "Guardar confirmación" handler only shows a success message. The WhatsApp button opens a prefilled message with no recipient number. A backend is planned; see `docs/backlog.md` section 3.
 - **JS is defensive by design.** Every DOM lookup is null-guarded so sections can be removed from the HTML without breaking the script. Keep that pattern when adding features.
