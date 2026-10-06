@@ -12,6 +12,13 @@
 - [ ] Single RSVP submit button once a backend exists (WhatsApp button is now a secondary outline style).
 - [x] Countdown box contrast on burgundy background.
 
+## 1b. Redesign (branch `redesign`, preview link in `NOTES.local.md`)
+- [x] New palette, fonts, paper texture; icons and card chrome removed.
+- [ ] Couple's short texts from the doc ("Textos cortos").
+- [ ] Couple's own photos (hero), ideally also one or two snapshots for the intro band.
+- [ ] Line illustrations of the church and the venue (optional, as in the second reference).
+- [ ] Review on a real phone, then merge into `main`.
+
 ## 2. Real content
 Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-10-06.
 - [x] Couple names, date, monogram, hashtag.
