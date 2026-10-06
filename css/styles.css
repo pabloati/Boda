@@ -207,8 +207,8 @@ a:hover {
 /* 3D Envelope Geometry */
 .envelope-container {
   position: relative;
-  width: 340px;
-  height: 230px;
+  width: 270px;
+  height: 380px;
   background: #ecdcc9;
   border-radius: 4px;
   box-shadow: 0 25px 50px -12px rgba(70, 15, 23, 0.25);
@@ -248,75 +248,28 @@ a:hover {
 /* Invitation Card Inside */
 .envelope-letter {
   position: absolute;
-  top: 10px;
+  top: 15px;
   left: 20px;
-  right: 20px;
-  height: 200px;
+  width: 230px;
+  height: 345px;
   background: #ffffff;
   border: 1px solid #ebd9c5;
   border-radius: 4px;
-  padding: 16px;
-  text-align: center;
+  overflow: hidden;
   box-shadow: 0 4px 15px rgba(0,0,0,0.06);
   z-index: 2;
   transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+}
+
+.envelope-letter img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .envelope-overlay.opened-flap .envelope-letter {
-  transform: translateY(-120px) scale(1.06);
-}
-
-.letter-monogram {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
-  color: var(--gold-accent);
-  letter-spacing: 2px;
-}
-
-.letter-label {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--burgundy-primary);
-  font-weight: 600;
-  margin: 2px 0 6px;
-}
-
-.letter-divider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.letter-divider span {
-  width: 24px;
-  height: 1px;
-  background: var(--gold-accent);
-}
-
-.letter-divider i {
-  font-size: 0.75rem;
-  color: var(--sage-primary);
-}
-
-.letter-guest {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  font-style: italic;
-  color: var(--burgundy-primary);
-  margin-bottom: 4px;
-}
-
-.letter-text {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-  max-width: 240px;
+  transform: translateY(-250px) scale(1.03);
 }
 
 /* Front Flaps */
@@ -326,9 +279,9 @@ a:hover {
   left: 0;
   width: 0;
   height: 0;
-  border-left: 170px solid #e1ceb8;
-  border-top: 115px solid transparent;
-  border-bottom: 115px solid #e1ceb8;
+  border-left: 135px solid #e1ceb8;
+  border-top: 155px solid transparent;
+  border-bottom: 225px solid #e1ceb8;
   z-index: 3;
 }
 
@@ -338,9 +291,9 @@ a:hover {
   right: 0;
   width: 0;
   height: 0;
-  border-right: 170px solid #d9c4ad;
-  border-top: 115px solid transparent;
-  border-bottom: 115px solid #d9c4ad;
+  border-right: 135px solid #d9c4ad;
+  border-top: 155px solid transparent;
+  border-bottom: 225px solid #d9c4ad;
   z-index: 3;
 }
 
@@ -351,9 +304,9 @@ a:hover {
   right: 0;
   width: 0;
   height: 0;
-  border-bottom: 125px solid #eddcca;
-  border-left: 170px solid transparent;
-  border-right: 170px solid transparent;
+  border-bottom: 200px solid #eddcca;
+  border-left: 135px solid transparent;
+  border-right: 135px solid transparent;
   z-index: 4;
 }
 
@@ -363,7 +316,7 @@ a:hover {
   top: 0;
   left: 0;
   right: 0;
-  height: 125px;
+  height: 160px;
   z-index: 5;
   transform-origin: top center;
   backface-visibility: visible;
@@ -373,9 +326,9 @@ a:hover {
 .envelope-flap-top .flap-triangle {
   width: 0;
   height: 0;
-  border-top: 125px solid #dfcca9;
-  border-left: 170px solid transparent;
-  border-right: 170px solid transparent;
+  border-top: 160px solid #dfcca9;
+  border-left: 135px solid transparent;
+  border-right: 135px solid transparent;
 }
 
 .envelope-overlay.opened-flap .envelope-flap-top {
@@ -386,7 +339,7 @@ a:hover {
 /* Embossed Burgundy Wax Seal */
 .wax-seal {
   position: absolute;
-  top: 95px;
+  top: 131px;
   left: 50%;
   transform: translateX(-50%);
   width: 58px;
@@ -1918,40 +1871,40 @@ a:hover {
   }
 
   .envelope-container {
-    width: 290px;
-    height: 200px;
+    width: 240px;
+    height: 340px;
   }
 
   .envelope-front-left {
-    border-left: 145px solid #e1ceb8;
-    border-top: 100px solid transparent;
-    border-bottom: 100px solid #e1ceb8;
+    border-left: 120px solid #e1ceb8;
+    border-top: 140px solid transparent;
+    border-bottom: 200px solid #e1ceb8;
   }
 
   .envelope-front-right {
-    border-right: 145px solid #d9c4ad;
-    border-top: 100px solid transparent;
-    border-bottom: 100px solid #d9c4ad;
+    border-right: 120px solid #d9c4ad;
+    border-top: 140px solid transparent;
+    border-bottom: 200px solid #d9c4ad;
   }
 
   .envelope-front-bottom {
-    border-bottom: 110px solid #eddcca;
-    border-left: 145px solid transparent;
-    border-right: 145px solid transparent;
+    border-bottom: 180px solid #eddcca;
+    border-left: 120px solid transparent;
+    border-right: 120px solid transparent;
   }
 
   .envelope-flap-top {
-    height: 110px;
+    height: 145px;
   }
 
   .envelope-flap-top .flap-triangle {
-    border-top: 110px solid #dfcca9;
-    border-left: 145px solid transparent;
-    border-right: 145px solid transparent;
+    border-top: 145px solid #dfcca9;
+    border-left: 120px solid transparent;
+    border-right: 120px solid transparent;
   }
 
   .wax-seal {
-    top: 80px;
+    top: 120px;
     width: 50px;
     height: 50px;
   }
@@ -1962,10 +1915,14 @@ a:hover {
   }
 
   .envelope-letter {
-    height: 175px;
+    top: 8px;
     left: 12px;
-    right: 12px;
-    padding: 10px;
+    width: 216px;
+    height: 324px;
+  }
+
+  .envelope-overlay.opened-flap .envelope-letter {
+    transform: translateY(-235px) scale(1.03);
   }
 }
 

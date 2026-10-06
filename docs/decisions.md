@@ -2,6 +2,7 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-10-06 — Envelope is portrait (270×380, 240×340 on phones) to fit the couple's own card, a 2:3 postcard scan. Served as `assets/tarjeta.jpg` (800×1200, ~180 KB); the 3 MB PNG source stays local and git-ignored.
 - 2026-10-06 — Real content applied from the couple's doc. Dress code section removed (couple's request). Only two venue cards: ceremony (Parroquia de San José, 12:30) and banquet (Complejo La Cigüeña, 14:30).
 - 2026-10-06 — Quote reference: the doc said «1ª Juan 4:10»; the verse is 1 Juan 4:18, so the site shows 4:18. Change back in the doc if the couple prefers otherwise.
 - 2026-10-06 — Parents assigned by surname (Atienza → groom, Quijano → bride); the doc had them under the opposite labels.

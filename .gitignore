@@ -18,3 +18,7 @@ Thumbs.db
 # Throwaway design previews
 preview-*.html
 !docs/portada-variantes.html
+
+# Original high-resolution source of assets/tarjeta.jpg (3 MB, not served)
+assets/Postal_GC_edit.png
+assets/*.TMP
