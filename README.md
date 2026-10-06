@@ -2,6 +2,10 @@
 
 Single-page wedding invitation with an envelope-opening animation, countdown, venue details, timeline, RSVP form, gift details and hotel suggestions. Plain HTML, CSS and vanilla JavaScript. No build step.
 
+## Live site
+
+<https://pabloati.github.io/Boda/> — GitHub Pages, deployed from `main`.
+
 ## Preview
 
 ```bash

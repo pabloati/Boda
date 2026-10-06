@@ -36,6 +36,6 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [ ] Private view of responses for the couple.
 
 ## 4. Deploy
-- [ ] Create GitHub repo, push `main`.
-- [ ] GitHub Pages (the couple's choice; no custom domain).
+- [x] Create GitHub repo, push `main` (https://github.com/pabloati/Boda).
+- [ ] GitHub Pages (the couple's choice; no custom domain). Expected URL: https://pabloati.github.io/Boda/
 - [ ] Test on a real phone from a WhatsApp link.
