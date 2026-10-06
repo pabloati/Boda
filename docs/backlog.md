@@ -20,7 +20,6 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [x] Timeline.
 - [x] Dress code section removed at the couple's request.
 - [ ] Bank details: holder and concept done; **IBAN still a placeholder** (`ES00 …`).
-- [ ] Hotels (table in the doc is empty; the two hotels on the site are invented).
 - [x] Calendar event (`.ics` dates in `js/script.js`).
 - [ ] Local audio file in `assets/`.
 - [ ] Couple's own photos (hero landscape, hero portrait).
@@ -28,10 +27,11 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [ ] Bus: departure points and times (shown nowhere yet; the form only asks guests where they would board).
 
 ## 3. Data collection
-- [ ] Choose backend (see `docs/decisions.md`).
-- [ ] Wire RSVP form (name, phone, attendance, companions' names, bus + boarding point, allergies, vegetarian/vegan menu, song).
+- [x] Choose backend: Supabase free tier (see `docs/decisions.md`).
+- [ ] Wire RSVP form (name, phone, attendance, companions' names, bus + boarding point, allergies, vegetarian/vegan menu).
 - [ ] WhatsApp number for the RSVP button (empty in the doc).
-- [ ] Wire song suggestions.
+- [x] Song suggestions widget (search + vote + Excel/TSV export, demo mode).
+- [ ] Create the Supabase project, run `docs/playlist-schema.sql`, fill `js/playlist-config.js`.
 - [ ] Remove the fake "Guardar confirmación" success message.
 - [ ] Private view of responses for the couple.
 

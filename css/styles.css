@@ -1519,56 +1519,7 @@ a:hover {
   color: var(--burgundy-primary);
 }
 
-/* ========================================================
-   LOGISTICS: HOTELS & PLAYLIST
-======================================================== */
-.logistics-section {
-  padding: 72px 20px;
-  background: #ffffff;
-}
-
-.logistics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 40px;
-}
-
-.logistics-card {
-  background: var(--cream-bg);
-  border: 1px solid #eee5d8;
-  border-radius: var(--radius-md);
-  padding: 35px 25px;
-}
-
-.hotel-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 16px 0;
-  border-bottom: 1px solid #ebd9c5;
-}
-
-.hotel-item:last-child {
-  border-bottom: none;
-}
-
-.hotel-info h4 {
-  font-size: 1.15rem;
-  color: var(--burgundy-primary);
-  margin-bottom: 4px;
-}
-
-.hotel-info p {
-  font-size: 0.85rem;
-  margin-bottom: 2px;
-}
-
-.promo-code {
-  color: var(--sage-primary) !important;
-  font-size: 0.8rem !important;
-}
-
+/* Small pill button (playlist actions) */
 .btn-mini {
   padding: 6px 14px;
   background: #ffffff;
@@ -2196,7 +2147,6 @@ a:hover {
   .rsvp-section,
   .dresscode-section,
   .gifts-section,
-  .logistics-section,
   .playlist-section,
   .social-section {
     padding-top: 56px;

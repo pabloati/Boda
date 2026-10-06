@@ -20,7 +20,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 
 ## Layout
 
-- `index.html` — all markup, in section order: envelope overlay, floating controls, hero, quote, parents, countdown, venues, timeline, RSVP form, dress code, gifts/IBAN, hotels + playlist, hashtag, footer.
+- `index.html` — all markup, in section order: envelope overlay, floating controls, hero, quote, parents, countdown, venues, timeline, RSVP form, dress code, gifts/IBAN, playlist (search + vote, \js/playlist.js\), hashtag, footer.
 - `css/styles.css` — one file. Design tokens live in `:root` at the top (burgundy/sage/gold/cream palette, `--font-serif` Cormorant Garamond, `--font-sans` Montserrat, `--font-script` Great Vibes). The only breakpoint is `@media (max-width: 768px)` near the end.
 - `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit / WhatsApp text builder, clipboard copy, song suggestions.
 - `assets/` — images and audio (currently empty; the background track is still hotlinked from a third-party URL in `index.html`).

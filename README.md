@@ -1,6 +1,6 @@
 # Invitación digital de boda
 
-Single-page wedding invitation with an envelope-opening animation, countdown, venue details, timeline, RSVP form, gift details and hotel suggestions. Plain HTML, CSS and vanilla JavaScript. No build step.
+Single-page wedding invitation with an envelope-opening animation, countdown, venue details, timeline, RSVP form, gift details and a song playlist where guests suggest and vote. Plain HTML, CSS and vanilla JavaScript. No build step.
 
 ## Live site
 
