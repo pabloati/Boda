@@ -3,102 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mª Ángeles & Pablo | ¡Nos Casamos!</title>
-  <meta name="description" content="Invitación digital para la boda de Mª Ángeles y Pablo - 13 de marzo de 2027. Acompáñanos a celebrar nuestro gran día.">
+  <title>Mª Ángeles & Pablo | ¡Nos casamos!</title>
+  <meta name="description" content="Invitación a la boda de Mª Ángeles y Pablo, 13 de marzo de 2027, Madrid.">
 
   <!-- Open Graph / Meta -->
-  <meta property="og:title" content="Mª Ángeles & Pablo | Nuestra Boda">
-  <meta property="og:description" content="¡Nos casamos! Nos encantaría que nos acompañes en este día tan especial.">
+  <meta property="og:title" content="Mª Ángeles & Pablo | Nos casamos">
+  <meta property="og:description" content="13 de marzo de 2027, Madrid. Abre la invitación y confirma tu asistencia.">
   <meta property="og:type" content="website">
 
-  <!-- Google Fonts: Cormorant Garamond (Serif), Great Vibes (Cursive), Montserrat (Sans) -->
+  <!-- Google Fonts: Cormorant Garamond (text), Allison (script headings), Homemade Apple (handwritten notes) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
 
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <!-- Main Stylesheet -->
-  <!-- ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261006">
+  <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
+  <link rel="stylesheet" href="css/styles.css?v=20261007b">
 
   <!-- The card inside the envelope is visible immediately, so fetch it early -->
   <link rel="preload" as="image" href="assets/tarjeta.jpg">
 </head>
 <body>
   <!--
-    Photo credits (Unsplash licence, free to use):
+    Photo credits (Unsplash licence, free to use), placeholders until the couple's own photos arrive:
     assets/hero.jpg           Photos by Lanty   https://unsplash.com/photos/qHjwSGv2p8c
     assets/hero-portrait.jpg  Céline Druguet    https://unsplash.com/photos/Rnton6rhDe4
     assets/eucalyptus.jpg     Iain Robertson    https://unsplash.com/photos/whLbVUIw7JE
     assets/olive.jpg          Sixteen Miles Out https://unsplash.com/photos/IVCI2rmcJE8
   -->
 
-  <!-- Background Audio Element -->
+  <!-- Background audio. Replace the src with a local file in assets/ (see docs/backlog.md) -->
   <audio id="wedding-audio" loop preload="auto">
-    <!-- Royalty-free romantic violin/piano melody -->
     <source src="https://eventobonito.com/wp-content/uploads/2024/02/Thinking-Out-Loud-Violin-Cover-Robert-Mendoza.mp3" type="audio/mpeg">
   </audio>
 
   <!-- ======================================================== -->
-  <!-- 1. FULLSCREEN INTERACTIVE ENVELOPE OPENING OVERLAY       -->
+  <!-- 1. ENVELOPE OPENING OVERLAY                               -->
   <!-- ======================================================== -->
-  <div id="envelope-overlay" class="envelope-overlay" role="dialog" aria-modal="true" aria-label="Apertura de invitación de boda">
+  <div id="envelope-overlay" class="envelope-overlay" role="dialog" aria-modal="true" aria-label="Apertura de la invitación">
     <div class="envelope-scene">
       <div class="envelope-card-preview" id="card-preview">
-        <div class="monogram-small">M &amp; P</div>
-        <p class="envelope-subtitle">NUESTRA BODA</p>
+        <p class="envelope-subtitle">Nos casamos</p>
         <h2 class="envelope-names">Mª Ángeles &amp; Pablo</h2>
-        <p class="envelope-date">13 DE MARZO DE 2027</p>
+        <p class="envelope-date">13 · 03 · 2027 &nbsp;·&nbsp; Madrid</p>
       </div>
 
       <div class="envelope-container" id="envelope-container">
-        <!-- Envelope Back / Inner Pocket -->
         <div class="envelope-back">
           <div class="envelope-liner"></div>
         </div>
 
-        <!-- The Invitation Card Inside the Envelope -->
         <div class="envelope-letter" id="envelope-letter">
           <img src="assets/tarjeta.jpg" alt="Tarjeta de invitación de Mª Ángeles y Pablo" width="800" height="1200" decoding="async">
         </div>
 
-        <!-- Envelope Front Flaps -->
         <div class="envelope-front-left"></div>
         <div class="envelope-front-right"></div>
         <div class="envelope-front-bottom"></div>
 
-        <!-- The Top Folding Flap with 3D Rotate -->
         <div class="envelope-flap-top" id="envelope-flap">
           <div class="flap-triangle"></div>
         </div>
 
-        <!-- Embossed Burgundy Wax Seal with Monogram -->
-        <div class="wax-seal" id="wax-seal" title="Haz clic en ABRIR">
+        <div class="wax-seal" id="wax-seal" title="Abrir">
           <div class="wax-seal-inner">
             <span class="wax-monogram">M&amp;P</span>
           </div>
         </div>
       </div>
 
-      <!-- Action Button to Trigger the Unveiling -->
       <div class="open-action-wrapper" id="open-action-wrapper">
-        <button id="btn-open-envelope" class="btn-open-invitation" aria-label="Abrir invitación de boda">
-          <span class="btn-open-icon"><i class="fa-regular fa-envelope-open"></i></span>
-          <span class="btn-open-text">ABRIR INVITACIÓN</span>
-        </button>
-        <p class="open-hint"><i class="fa-solid fa-volume-high"></i> Con música romántica</p>
+        <button id="btn-open-envelope" class="btn-open-invitation" aria-label="Abrir la invitación">Abrir</button>
       </div>
     </div>
   </div>
 
-  <!-- ======================================================== -->
-  <!-- FLOATING ACTION CONTROLS (MUSIC & QUICK RSVP)            -->
-  <!-- ======================================================== -->
+  <!-- Floating music toggle -->
   <aside class="floating-controls" aria-label="Controles de la página">
-    <button id="btn-music-toggle" class="float-btn music-btn" aria-label="Reproducir o pausar música de fondo" title="Música de fondo">
-      <i id="music-icon" class="fa-solid fa-music"></i>
+    <button id="btn-top" class="float-btn btn-top" aria-label="Volver arriba">
+      <span class="chevron up" aria-hidden="true"></span>
+    </button>
+    <button id="btn-music-toggle" class="float-btn music-btn" aria-label="Reproducir o pausar la música" title="Música">
+      <i id="music-icon" class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
       <span class="music-wave" aria-hidden="true">
         <span></span><span></span><span></span>
       </span>
@@ -106,11 +91,11 @@
   </aside>
 
   <!-- ======================================================== -->
-  <!-- MAIN INVITATION SITE WRAPPER                             -->
+  <!-- 2. MAIN SITE                                              -->
   <!-- ======================================================== -->
   <main id="main-content" class="main-content">
 
-    <!-- HERO SECTION -->
+    <!-- HERO -->
     <header class="hero-section" id="hero">
       <picture class="hero-photo" aria-hidden="true">
         <source media="(max-width: 768px)" srcset="assets/hero-portrait.jpg">
@@ -119,67 +104,39 @@
       <div class="hero-overlay" aria-hidden="true"></div>
 
       <div class="hero-content">
-        <div class="monogram-badge" aria-hidden="true">
-          <span class="monogram-letter">M</span>
-          <span class="monogram-amp">&amp;</span>
-          <span class="monogram-letter">P</span>
-        </div>
+        <p class="hero-pretitle">Nos casamos</p>
+        <h1 class="hero-title">Mª Ángeles <span class="nowrap">&amp; Pablo</span></h1>
+        <p class="hero-date">Sábado, 13 de marzo de 2027</p>
+        <p class="hero-location">Madrid</p>
 
-        <p class="hero-pretitle">¡NOS CASAMOS!</p>
-        <h1 class="hero-title">Mª Ángeles &amp; Pablo</h1>
-        
-        <div class="hero-date-box">
-          <span class="date-line"></span>
-          <p class="hero-date">13 DE MARZO DE 2027</p>
-          <span class="date-line"></span>
-        </div>
-
-        <p class="hero-location"><i class="fa-solid fa-location-dot"></i> MADRID, ESPAÑA</p>
-
-        <a href="#quote-section" class="scroll-indicator" aria-label="Desliza para continuar leyendo">
+        <a href="#intro" class="scroll-indicator" aria-label="Desliza para seguir leyendo">
           <span>Desliza</span>
-          <i class="fa-solid fa-chevron-down bounce"></i>
+          <span class="chevron" aria-hidden="true"></span>
         </a>
       </div>
     </header>
 
-    <!-- SECTION: LOVE QUOTE -->
-    <section class="quote-section" id="quote-section">
-      <div class="container text-center">
-        <div class="ornament-divider" aria-hidden="true">
-          <span class="line"></span>
-          <i class="fa-solid fa-leaf"></i>
-          <span class="line"></span>
-        </div>
-        <blockquote class="love-quote">
-          &ldquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&rdquo;
-        </blockquote>
-        <p class="quote-author">&mdash; 1 Juan 4:18</p>
-        <div class="ornament-divider" aria-hidden="true">
-          <span class="line"></span>
-          <i class="fa-solid fa-leaf flip"></i>
-          <span class="line"></span>
-        </div>
+    <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
+    <section class="intro-band" id="intro">
+      <div class="container narrow text-center">
+        <p class="intro-text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
+        <p class="intro-ref">1 Juan 4:18</p>
       </div>
     </section>
 
-    <!-- SECTION: PARENTS BLESSING -->
-    <section class="parents-section" id="parents">
-      <div class="container">
-        <div class="section-heading text-center">
-          <span class="section-tag">NUESTRAS FAMILIAS</span>
-          <h2 class="section-title">Nuestros señores padres</h2>
-          <p class="section-desc">Nos llena de orgullo y emoción compartir este paso trascendental con el amor y apoyo incondicional de nuestras familias.</p>
-        </div>
+    <!-- PARENTS -->
+    <section class="section parents-section" id="parents">
+      <div class="container narrow text-center">
+        <h2 class="h-script">Nuestros señores padres</h2>
 
         <div class="parents-row">
           <div class="parents-col">
-            <h3 class="parents-role">Padres de la Novia</h3>
+            <p class="hand-label">Padres de la novia</p>
             <p class="parent-name">Mª Ángeles Sánchez Sánchez</p>
             <p class="parent-name">Carlos Quijano Junquera</p>
           </div>
           <div class="parents-col">
-            <h3 class="parents-role">Padres del Novio</h3>
+            <p class="hand-label">Padres del novio</p>
             <p class="parent-name">Verónica López García</p>
             <p class="parent-name">Pablo Atienza de Frutos</p>
           </div>
@@ -187,325 +144,226 @@
       </div>
     </section>
 
-    <!-- SECTION: COUNTDOWN TIMER -->
-    <section class="countdown-section" id="countdown">
-      <div class="container text-center">
-        <span class="countdown-tag">LA CUENTA REGRESIVA</span>
-        <h2 class="countdown-title">Faltan muy pocos días</h2>
-        <p class="countdown-sub">Para comenzar nuestro camino juntos hacia el &laquo;Sí, quiero&raquo;</p>
+    <!-- COUNTDOWN -->
+    <section class="section countdown-section" id="countdown">
+      <div class="container narrow text-center">
+        <h2 class="h-script">Faltan muy pocos días</h2>
 
         <div class="countdown-grid" id="countdown-clock" data-target-date="2027-03-13T12:30:00">
           <div class="countdown-item">
             <span class="countdown-number" id="days">00</span>
-            <span class="countdown-label">Días</span>
+            <span class="countdown-label">días</span>
           </div>
-          <div class="countdown-colon">:</div>
           <div class="countdown-item">
             <span class="countdown-number" id="hours">00</span>
-            <span class="countdown-label">Horas</span>
+            <span class="countdown-label">horas</span>
           </div>
-          <div class="countdown-colon">:</div>
           <div class="countdown-item">
             <span class="countdown-number" id="minutes">00</span>
-            <span class="countdown-label">Minutos</span>
+            <span class="countdown-label">min</span>
           </div>
-          <div class="countdown-colon">:</div>
           <div class="countdown-item">
             <span class="countdown-number" id="seconds">00</span>
-            <span class="countdown-label">Segundos</span>
+            <span class="countdown-label">seg</span>
           </div>
         </div>
 
-        <div class="calendar-action">
-          <button id="btn-add-calendar" class="btn-outline-burgundy">
-            <i class="fa-regular fa-calendar-plus"></i> Añadir a mi Calendario
-          </button>
-        </div>
+        <button id="btn-add-calendar" class="link-button">Añadir al calendario</button>
       </div>
     </section>
 
-    <!-- SECTION: WHERE & WHEN (LOCATIONS) -->
-    <section class="locations-section" id="locations">
-      <div class="container">
-        <div class="section-heading text-center">
-          <span class="section-tag">DÓNDE Y CUÁNDO</span>
-          <h2 class="section-title">Los Lugares de Nuestra Celebración</h2>
-        </div>
+    <!-- WHERE & WHEN -->
+    <section class="section band-paper locations-section" id="locations">
+      <div class="container narrow text-center">
+        <h2 class="h-script">Dónde y cuándo</h2>
 
         <div class="locations-grid">
-          <!-- Ceremony Card -->
-          <article class="location-card">
-            <div class="location-card-header">
-              <div class="location-icon"><i class="fa-solid fa-church"></i></div>
-              <span class="location-badge">CEREMONIA</span>
-            </div>
-            <div class="location-card-body">
-              <h3 class="location-name">Parroquia de San José</h3>
-              <p class="location-time"><i class="fa-regular fa-clock"></i> 12:30 Horas</p>
-              <p class="location-address"><i class="fa-solid fa-location-dot"></i> C. Alcalá, 43, Centro, 28014 Madrid</p>
-            </div>
-            <div class="location-card-footer">
-              <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="btn-location">
-                <i class="fa-solid fa-map-location-dot"></i> Ver en Google Maps
-              </a>
-            </div>
+          <article class="location">
+            <!-- Drawing of the church: drop the file in assets/ with this name and it appears -->
+            <img class="location-art" src="assets/dibujo-iglesia.png" alt="" onerror="this.remove()">
+            <p class="hand-label">Ceremonia · 12:30</p>
+            <h3 class="location-name">Parroquia de San José</h3>
+            <p class="location-address">C. Alcalá, 43<br>Madrid</p>
+            <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
           </article>
 
-          <!-- Reception & Banquet Card -->
-          <article class="location-card featured">
-            <span class="featured-tag">Banquete principal</span>
-            <div class="location-card-header">
-              <div class="location-icon"><i class="fa-solid fa-champagne-glasses"></i></div>
-              <span class="location-badge">CONVITE &amp; BANQUETE</span>
-            </div>
-            <div class="location-card-body">
-              <h3 class="location-name">Complejo La Cigüeña</h3>
-              <p class="location-time"><i class="fa-regular fa-clock"></i> 14:30 Horas</p>
-              <p class="location-address"><i class="fa-solid fa-location-dot"></i> Ctra. Puente de Arganda a Chinchón, Km 2, Cam. de Pajares y del Porcal, 460, 5, 28500 Arganda del Rey, Madrid</p>
-            </div>
-            <div class="location-card-footer">
-              <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="btn-location">
-                <i class="fa-solid fa-map-location-dot"></i> Ver en Google Maps
-              </a>
-            </div>
+          <article class="location">
+            <img class="location-art" src="assets/dibujo-convite.png" alt="" onerror="this.remove()">
+            <p class="hand-label">Convite · 14:30</p>
+            <h3 class="location-name">Complejo La Cigüeña</h3>
+            <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
+            <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- SECTION: DAY TIMELINE / ITINERARY -->
-    <section class="timeline-section" id="timeline">
-      <div class="container">
-        <div class="section-heading text-center">
-          <span class="section-tag">PROGRAMA</span>
-          <h2 class="section-title">Itinerario del Día</h2>
-        </div>
+    <!-- TIMELINE -->
+    <section class="section timeline-section" id="timeline">
+      <div class="container narrow">
+        <h2 class="h-script text-center">Hoja de ruta</h2>
 
-        <div class="timeline-wrapper">
-          <div class="timeline-track" aria-hidden="true"></div>
-
-          <!-- Timeline Item 1 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"><i class="fa-solid fa-ring"></i></div>
-            <div class="timeline-time">12:30 HRS</div>
-            <div class="timeline-card">
+        <ol class="timeline">
+          <li class="timeline-item">
+            <span class="timeline-time">12:30</span>
+            <div class="timeline-body">
               <h3 class="timeline-title">Ceremonia</h3>
               <p class="timeline-desc">El inicio de nuestro matrimonio.</p>
             </div>
-          </div>
-
-          <!-- Timeline Item 2 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"><i class="fa-solid fa-martini-glass-citrus"></i></div>
-            <div class="timeline-time">14:30 HRS</div>
-            <div class="timeline-card">
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-time">14:30</span>
+            <div class="timeline-body">
               <h3 class="timeline-title">Convite</h3>
               <p class="timeline-desc">Un buen cóctel os espera.</p>
             </div>
-          </div>
-
-          <!-- Timeline Item 3 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"><i class="fa-solid fa-compact-disc"></i></div>
-            <div class="timeline-time">19:00 HRS</div>
-            <div class="timeline-card">
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-time">19:00</span>
+            <div class="timeline-body">
               <h3 class="timeline-title">Fiesta</h3>
               <p class="timeline-desc">Empieza lo bueno.</p>
             </div>
-          </div>
-
-          <!-- Timeline Item 4 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"><i class="fa-solid fa-bus"></i></div>
-            <div class="timeline-time">23:00 HRS</div>
-            <div class="timeline-card">
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-time">23:00</span>
+            <div class="timeline-body">
               <h3 class="timeline-title">Buses</h3>
               <p class="timeline-desc">¡Que no pare la fiesta!</p>
             </div>
-          </div>
-        </div>
+          </li>
+        </ol>
       </div>
     </section>
 
-    <!-- SECTION: RSVP / ATTENDANCE CONFIRMATION -->
-    <section class="rsvp-section" id="rsvp">
-      <div class="container">
-        <div class="rsvp-wrapper">
-          <div class="section-heading text-center">
-            <span class="section-tag">CONFIRMACIÓN</span>
-            <h2 class="section-title">¿Nos acompañas en nuestro día?</h2>
-            <p class="section-desc">Por favor confirma tu asistencia antes del <strong>1 de febrero de 2027</strong> para que podamos organizarlo todo.</p>
+    <!-- RSVP -->
+    <section class="section band-olive rsvp-section" id="rsvp">
+      <div class="container narrow">
+        <h2 class="h-script light text-center">¿Nos acompañas?</h2>
+        <p class="section-lead text-center">Confirma antes del 1 de febrero de 2027.</p>
+
+        <form id="rsvp-form" class="rsvp-form paper-panel" novalidate>
+          <div class="form-group">
+            <label for="guest-name" class="form-label">Nombre y apellidos</label>
+            <input type="text" id="guest-name" name="guestName" class="form-control" autocomplete="name" required>
           </div>
 
-          <form id="rsvp-form" class="rsvp-form" novalidate>
+          <div class="form-group">
+            <label for="guest-phone" class="form-label">Teléfono <span class="optional">(por si tenemos que llamarte)</span></label>
+            <input type="tel" id="guest-phone" name="guestPhone" class="form-control" autocomplete="tel">
+          </div>
+
+          <fieldset class="form-group">
+            <legend class="form-label">¿Vienes?</legend>
+            <div class="choice-group">
+              <label class="choice">
+                <input type="radio" name="attendanceStatus" value="asistire" checked>
+                <span>Sí, allí estaré</span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="attendanceStatus" value="no_asistire">
+                <span>No podré ir</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div id="rsvp-attendance-details" class="conditional-fields">
             <div class="form-group">
-              <label for="guest-name" class="form-label">Tu Nombre y Apellidos <span class="required">*</span></label>
-              <input type="text" id="guest-name" name="guestName" class="form-control" placeholder="Ej: Carlos Gómez Pérez" required>
+              <label for="guest-companions" class="form-label">Acompañantes <span class="optional">(nombre y apellidos, uno por línea)</span></label>
+              <textarea id="guest-companions" name="guestCompanions" rows="2" class="form-control"></textarea>
             </div>
 
-            <div class="form-group">
-              <label for="guest-phone" class="form-label">Tu Teléfono</label>
-              <input type="tel" id="guest-phone" name="guestPhone" class="form-control" placeholder="Ej: 600 000 000" autocomplete="tel">
-              <small class="form-hint">Solo por si necesitamos contactarte.</small>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">¿Podrás asistir? <span class="required">*</span></label>
-              <div class="radio-cards-group">
-                <label class="radio-card">
-                  <input type="radio" name="attendanceStatus" value="asistire" checked>
-                  <span class="radio-card-content">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>¡Sí, allí estaré con ilusión!</span>
-                  </span>
-                </label>
-                <label class="radio-card">
-                  <input type="radio" name="attendanceStatus" value="no_asistire">
-                  <span class="radio-card-content decline">
-                    <i class="fa-solid fa-circle-xmark"></i>
-                    <span>Lamentablemente no podré</span>
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div id="rsvp-attendance-details" class="conditional-fields">
+            <div class="form-row">
               <div class="form-group">
-                <label for="guest-companions" class="form-label">Acompañantes</label>
-                <textarea id="guest-companions" name="guestCompanions" rows="2" class="form-control" placeholder="Nombre y apellidos de cada acompañante, uno por línea"></textarea>
-                <small class="form-hint">Déjalo vacío si vienes sin acompañantes.</small>
+                <label for="guest-bus" class="form-label">Autobús</label>
+                <select id="guest-bus" name="guestBus" class="form-control">
+                  <option value="No, voy por mi cuenta">No, voy por mi cuenta</option>
+                  <option value="Si, necesito plaza en el autobus">Sí, necesito plaza</option>
+                </select>
               </div>
 
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="guest-bus" class="form-label">¿Necesitas autobús?</label>
-                  <select id="guest-bus" name="guestBus" class="form-control">
-                    <option value="No, voy por mi cuenta">No, iré por mi cuenta</option>
-                    <option value="Si, necesito plaza en el autobus">Sí, necesito plaza en el autobús</option>
-                  </select>
-                </div>
-
-                <div class="form-group col-md-6" id="bus-from-group" style="display:none;">
-                  <label for="guest-bus-from" class="form-label">¿Desde dónde lo cogerías?</label>
-                  <input type="text" id="guest-bus-from" name="guestBusFrom" class="form-control" placeholder="Ej: Madrid centro">
-                </div>
+              <div class="form-group" id="bus-from-group" style="display:none;">
+                <label for="guest-bus-from" class="form-label">¿Desde dónde?</label>
+                <input type="text" id="guest-bus-from" name="guestBusFrom" class="form-control" placeholder="Madrid centro, Arganda…">
               </div>
-
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="guest-diet" class="form-label">Alergias o Intolerancias</label>
-                  <input type="text" id="guest-diet" name="guestDiet" class="form-control" placeholder="Ej: Ninguna / 1 celíaco / frutos secos">
-                </div>
-
-                <div class="form-group col-md-6">
-                  <label for="guest-menu" class="form-label">Menú Especial</label>
-                  <select id="guest-menu" name="guestMenu" class="form-control">
-                    <option value="Ninguno">Ninguno</option>
-                    <option value="Vegetariano">Vegetariano</option>
-                    <option value="Vegano">Vegano</option>
-                  </select>
-                </div>
-              </div>
-
-              <p class="form-hint rsvp-playlist-hint">
-                <i class="fa-solid fa-music"></i> ¿Una canción que no puede faltar? Proponla o vota en la <a href="#playlist">playlist de la boda</a>.
-              </p>
             </div>
 
-            <div class="form-actions">
-              <button type="button" id="btn-submit-whatsapp" class="btn-whatsapp">
-                <i class="fa-brands fa-whatsapp"></i> Confirmar vía WhatsApp
-              </button>
-              <button type="submit" id="btn-submit-direct" class="btn-primary-burgundy">
-                <i class="fa-regular fa-paper-plane"></i> Guardar Confirmación
-              </button>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="guest-diet" class="form-label">Alergias o intolerancias</label>
+                <input type="text" id="guest-diet" name="guestDiet" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="guest-menu" class="form-label">Menú</label>
+                <select id="guest-menu" name="guestMenu" class="form-control">
+                  <option value="Ninguno">Normal</option>
+                  <option value="Vegetariano">Vegetariano</option>
+                  <option value="Vegano">Vegano</option>
+                </select>
+              </div>
             </div>
 
-            <div id="rsvp-status-message" class="rsvp-status-message" role="alert" style="display:none;"></div>
-          </form>
-        </div>
+            <p class="form-note rsvp-playlist-hint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-submit-direct" class="btn-primary">Confirmar</button>
+            <button type="button" id="btn-submit-whatsapp" class="link-button">o enviarlo por WhatsApp</button>
+          </div>
+
+          <div id="rsvp-status-message" class="rsvp-status-message" role="alert" style="display:none;"></div>
+        </form>
       </div>
     </section>
 
-    <!-- SECTION: GIFT REGISTRY & IBAN -->
-    <section class="gifts-section" id="gifts">
-      <div class="container">
-        <div class="section-heading text-center">
-          <span class="section-tag">MESA DE REGALOS</span>
-          <h2 class="section-title">Vuestra Presencia es Nuestro Mejor Regalo</h2>
-          <p class="section-desc">Vuestra compañía y cariño es lo que más valoramos. Si deseáis hacernos un detalle para comenzar nuestra nueva etapa o colaborar con nuestra luna de miel:</p>
-        </div>
+    <!-- GIFTS -->
+    <section class="section gifts-section" id="gifts">
+      <div class="container narrow text-center">
+        <h2 class="h-script">Regalo</h2>
+        <p class="section-lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
 
-        <div class="gifts-grid">
-          <!-- Bank Account Card -->
-          <div class="gift-card">
-            <div class="gift-icon"><i class="fa-solid fa-building-columns"></i></div>
-            <h3 class="gift-card-title">Transferencia Bancaria</h3>
-            <p class="gift-card-text">Para facilitar cualquier aportación a nuestro fondo de luna de miel:</p>
-            
-            <div class="iban-box">
-              <span class="iban-label">NÚMERO DE CUENTA (IBAN):</span>
-              <div class="iban-copy-row">
-                <span class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</span>
-                <button type="button" id="btn-copy-iban" class="btn-copy" aria-label="Copiar número de IBAN">
-                  <i class="fa-regular fa-copy"></i>
-                  <span id="copy-text">Copiar</span>
-                </button>
-              </div>
-              <div class="iban-meta">
-                <p><strong>Titular:</strong> Pablo Atienza &amp; María de los Ángeles Quijano</p>
-                <p><strong>Concepto:</strong> Boda Mª Ángeles y Pablo + [Tu Nombre]</p>
-              </div>
-            </div>
+        <details class="iban-details">
+          <summary class="text-link">Ver número de cuenta</summary>
+          <div class="iban-box">
+            <p class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</p>
+            <button type="button" id="btn-copy-iban" class="link-button small" aria-label="Copiar el IBAN"><span id="copy-text">Copiar</span></button>
+            <p class="iban-meta">Pablo Atienza &amp; María de los Ángeles Quijano<br>Concepto: Boda Mª Ángeles y Pablo + vuestro nombre</p>
           </div>
+        </details>
 
-          <!-- Envelope Rain / Box Card -->
-          <div class="gift-card">
-            <div class="gift-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
-            <h3 class="gift-card-title">Lluvia de Sobres</h3>
-            <p class="gift-card-text">Si prefieres tener un detalle en mano el día de la celebración, dispondremos de un buzón de sobres conmemorativo en el salón de recepción.</p>
-            <div class="gift-card-badge">
-              <i class="fa-solid fa-heart"></i>
-              <span>¡Muchas gracias por su cariño y generosidad!</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
-    <!-- SECTION: PLAYLIST (search + vote, see js/playlist.js) -->
-    <section class="playlist-section" id="playlist">
-      <div class="container">
-        <div class="section-heading text-center">
-          <span class="section-tag">PLAYLIST DE LA BODA</span>
-          <h2 class="section-title">¿Nos ayudas con la música?</h2>
-          <p class="section-desc">Busca el temazo que no puede faltar en la pista. Si alguien ya lo ha propuesto, dale tu corazón para que suba en el ranking.</p>
-        </div>
+    <!-- PLAYLIST (search + vote, see js/playlist.js) -->
+    <section class="section band-paper playlist-section" id="playlist">
+      <div class="container narrow">
+        <h2 class="h-script text-center">La playlist</h2>
+        <p class="section-lead text-center">Busca la canción que no puede faltar, o vota las que ya están.</p>
 
-        <div class="playlist-card">
+        <div class="playlist-card paper-panel">
           <div class="playlist-search">
-            <label for="playlist-search-input" class="form-label">Busca una canción o artista</label>
+            <label for="playlist-search-input" class="form-label">Canción o artista</label>
             <div class="playlist-search-box">
-              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-              <input type="search" id="playlist-search-input" class="form-control" placeholder="Ej: Vivir mi vida, Queen, Rosalía…" autocomplete="off" aria-controls="playlist-results">
+              <input type="search" id="playlist-search-input" class="form-control" placeholder="Vivir mi vida, Queen, Rosalía…" autocomplete="off" aria-controls="playlist-results">
             </div>
             <div id="playlist-results" class="playlist-results" hidden></div>
 
             <form id="playlist-manual" class="playlist-manual" hidden>
               <p class="playlist-manual-title">Añádela a mano</p>
               <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group">
                   <label for="manual-title" class="form-label">Canción</label>
                   <input type="text" id="manual-title" class="form-control" maxlength="120" required>
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group">
                   <label for="manual-artist" class="form-label">Artista</label>
                   <input type="text" id="manual-artist" class="form-control" maxlength="120" required>
                 </div>
               </div>
               <div class="playlist-manual-actions">
                 <button type="button" id="manual-cancel" class="btn-mini">Cancelar</button>
-                <button type="submit" class="btn-primary-burgundy"><i class="fa-solid fa-plus"></i> Añadir</button>
+                <button type="submit" class="btn-primary small">Añadir</button>
               </div>
             </form>
           </div>
@@ -523,38 +381,28 @@
       </div>
     </section>
 
-    <!-- SECTION: HASHTAG & INSTAGRAM -->
-    <section class="social-section" id="social">
-      <div class="container text-center">
-        <div class="social-icon" aria-hidden="true"><i class="fa-brands fa-instagram"></i></div>
-        <h2 class="social-title">Comparte tus recuerdos</h2>
-        <p class="social-desc">El día de la boda toma todas las fotos y vídeos que desees y compártelos con nosotros usando nuestro hashtag:</p>
-        
-        <div class="hashtag-box">
-          <span class="hashtag-text" id="wedding-hashtag">#BodaMariAngelesYPablo</span>
-          <button id="btn-copy-hashtag" class="btn-hashtag" title="Copiar hashtag">
-            <i class="fa-regular fa-copy"></i> Copiar
-          </button>
-        </div>
+    <!-- PHOTOS / HASHTAG -->
+    <section class="section social-section" id="social">
+      <div class="container narrow text-center">
+        <h2 class="h-script">Fotos</h2>
+        <p class="section-lead">Sube tus fotos y vídeos del día con el hashtag</p>
+        <p class="hashtag-text" id="wedding-hashtag">#BodaMariAngelesYPablo</p>
+        <button id="btn-copy-hashtag" class="link-button small">Copiar</button>
       </div>
     </section>
 
-    <!-- FOOTER & CLOSING NOTE -->
-    <footer class="footer-section">
-      <div class="container text-center">
-        <div class="footer-monogram">M &amp; P</div>
-        <h3 class="footer-title">¡Gracias por ser parte de nuestras vidas!</h3>
-        <p class="footer-message">Estamos contando los días para celebrar contigo este gran capítulo de nuestro amor.</p>
-        <p class="footer-date">13 · MARZO · 2027</p>
-        <p class="footer-copy">&copy; 2027 Mª Ángeles &amp; Pablo. Diseñado con amor para nuestra boda.</p>
+    <!-- FOOTER -->
+    <footer class="footer-section band-olive">
+      <div class="container narrow text-center">
+        <p class="footer-title h-script light">Gracias por ser parte de nuestras vidas</p>
+        <p class="footer-date">13 · 03 · 2027</p>
       </div>
     </footer>
 
   </main>
 
-  <!-- Main JavaScript Application -->
-  <script src="js/script.js?v=20261006"></script>
-  <script src="js/playlist-config.js?v=20261006"></script>
-  <script src="js/playlist.js?v=20261006"></script>
+  <script src="js/script.js?v=20261007b"></script>
+  <script src="js/playlist-config.js?v=20261007"></script>
+  <script src="js/playlist.js?v=20261007"></script>
 </body>
 </html>

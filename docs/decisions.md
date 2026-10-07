@@ -2,6 +2,9 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-10-07 — Redesign merged into `main` before the texts and photos are final, so the couple can review on their phones; `redesign` branch kept for further style rounds.
+- 2026-10-06 — Redesign (branch `redesign`) to look less generic: layout and tone from mieventobonito.com/marianoytere (script headings, airy, one hero photo), palette from petalandpixel.wixsite.com/martaycarlos (olive, cream paper, terracotta, paper grain). Fonts: Cormorant Garamond for text, Allison for headings, Homemade Apple for handwritten labels. Font Awesome removed; the playlist widget's icon class names map to plain glyphs via a CSS shim. No eyebrow labels, section descriptions, cards, badges or copy buttons with icons; sentence case throughout.
+- 2026-10-06 — Short personal texts are written by the couple in the data doc ("Textos cortos" table). Until filled, the site keeps neutral placeholders.
 - 2026-10-06 — Hotels section removed (couple's request).
 - 2026-10-06 — Playlist: guests search the iTunes catalogue and vote anonymously (5 hearts, 3 new songs per device); duplicates caught by a normalised title|artist key + fuzzy "¿Te refieres a…?". Backend chosen: Supabase free tier; until configured the widget runs in a localStorage demo mode. The RSVP song field was replaced by a link to the playlist. Details in `docs/playlist.md`.
 - 2026-10-06 — Code lives in the public repo https://github.com/pabloati/Boda, served by GitHub Pages from `main` / root. Every push to `main` redeploys.
