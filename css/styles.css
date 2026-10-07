@@ -287,16 +287,56 @@ button {
   pointer-events: none;
 }
 
-/* Desktop: a tall envelope in the middle of the screen. Phones (media query below) fill the screen. */
+.envelope-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+}
+
+.envelope-card-preview {
+  text-align: center;
+  margin-bottom: 28px;
+  animation: fadeInDown 1s ease-out;
+  transition: opacity 0.4s ease;
+}
+
+.envelope-overlay.opened-flap .envelope-card-preview {
+  opacity: 0;
+}
+
+.envelope-subtitle {
+  font-size: 0.85rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+}
+
+.envelope-names {
+  font-family: var(--font-script);
+  font-size: 3.6rem;
+  line-height: 1;
+  color: var(--ink);
+  margin: 6px 0 8px;
+}
+
+.envelope-date {
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+}
+
+/* The envelope keeps the photo's proportions (1440 × 1776). Desktop: sized by height; phones: by width. */
 .envelope-container {
   position: relative;
   flex: none;
-  height: min(94vh, 960px);
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
-  border-radius: 4px;
-  box-shadow: 0 30px 60px -20px rgba(59, 56, 47, 0.45);
-  transform-style: preserve-3d;
+  height: min(66vh, 620px);
+  aspect-ratio: 1440 / 1776;
+  border-radius: 3px;
+  box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
+  /* no transform-style: preserve-3d here: flat stacking lets z-index put the card above the opened flap */
 }
 
 /* Every layer is the same photo stretched to the container, so the clip-path percentages line up */
@@ -321,7 +361,7 @@ button {
 /* z2 — the card, 2:3, sitting inside the pocket */
 .envelope-letter {
   position: absolute;
-  top: 10%;
+  top: 7%;
   left: 15%;
   width: 70%;
   aspect-ratio: 2 / 3;
@@ -341,13 +381,13 @@ button {
 }
 
 .envelope-overlay.opened-flap .envelope-letter {
-  transform: translateY(-52%);
+  transform: translateY(-46%);
 }
 
 /* z3 — the body of the envelope: the photo minus the flap triangle */
 .envelope-front {
   z-index: 3;
-  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 100% 40%, 50% 74%, 0 40%);
+  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 100% 13.9%, 50% 62.6%, 0 13.9%);
 }
 
 /* z3 — the side flaps continue under the top flap; plain paper from a lineless part of the photo */
@@ -357,17 +397,17 @@ button {
 }
 
 .envelope-side-left {
-  clip-path: polygon(20.3% 54%, 50% 40.3%, 50% 74%);
+  clip-path: polygon(20.3% 33.7%, 50% 14%, 50% 62.6%);
 }
 
 .envelope-side-right {
-  clip-path: polygon(79.7% 54%, 50% 40.3%, 50% 74%);
+  clip-path: polygon(79.7% 33.7%, 50% 14%, 50% 62.6%);
 }
 
 /* z5 — the flap: the photo above the diagonals, hinged on the top edge */
 .envelope-flap-top {
   z-index: 5;
-  clip-path: polygon(0 0, 100% 0, 100% 40%, 50% 74%, 0 40%);
+  clip-path: polygon(0 0, 100% 0, 100% 13.9%, 50% 62.6%, 0 13.9%);
   transform-origin: top center;
   backface-visibility: visible;
   transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s linear 0.5s;
@@ -381,9 +421,9 @@ button {
 /* z6 — the wax seal cut from the photo (assets/sello.png), lettering replaced by the monogram */
 .wax-seal {
   position: absolute;
-  top: 67.5%;
+  top: 53.2%;
   left: 50%;
-  width: 29%;
+  width: 36%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   padding: 0;
@@ -407,8 +447,10 @@ button {
 
 .wax-monogram {
   font-family: var(--font-script);
-  font-size: 2rem;
-  font-size: 26cqw;
+  position: relative;
+  left: -5cqw; /* the script M carries a swash on the left: optical centring */
+  font-size: 2.2rem;
+  font-size: 24cqw;
   line-height: 1;
   white-space: nowrap;
   color: #4a340e;
@@ -1525,13 +1567,15 @@ select.form-control {
     gap: 24px 16px;
   }
 
-  /* Envelope: fill the phone screen like a real envelope held in the hand */
+  /* Envelope: as wide as the phone allows while leaving room for the title above */
   .envelope-container {
     height: auto;
-    width: max(100vw, calc(100vh * 9 / 16));
-    width: max(100vw, calc(100svh * 9 / 16));
-    border-radius: 0;
-    box-shadow: none;
+    width: min(100vw - 56px, calc((100vh - 240px) * 1440 / 1776));
+    width: min(100vw - 56px, calc((100svh - 240px) * 1440 / 1776));
+  }
+
+  .envelope-names {
+    font-size: 3rem;
   }
 }
 

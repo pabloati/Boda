@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261007c">
+  <link rel="stylesheet" href="css/styles.css?v=20261007d">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -41,11 +41,19 @@
   <!-- 1. ENVELOPE OPENING OVERLAY                               -->
   <!-- The envelope is a photo (assets/sobre.jpg, 9:16) sliced   -->
   <!-- into layers with clip-path so the top flap can rotate.    -->
-  <!-- Geometry (percent of the image): flap base y 40%, flap    -->
-  <!-- tip (50%, 74%), side flaps meet at (50%, 40.3%), seal     -->
-  <!-- centre (50%, 67.5%).                                      -->
+  <!-- Geometry (percent of the 1440×1776 image): flap base y   -->
+  <!-- 13.9%, flap tip (50%, 62.6%), side flaps meet at          -->
+  <!-- (50%, 14%), side/flap edges cross at (20.3%, 33.7%),      -->
+  <!-- seal centre (50%, 53.2%), seal diameter 27.8% of width.   -->
   <!-- ======================================================== -->
   <div id="envelope-overlay" class="envelope-overlay" role="dialog" aria-modal="true" aria-label="Apertura de la invitación">
+    <div class="envelope-scene">
+    <div class="envelope-card-preview" id="card-preview">
+      <p class="envelope-subtitle">Nos casamos</p>
+      <h2 class="envelope-names">Mª Ángeles &amp; Pablo</h2>
+      <p class="envelope-date">13 · 03 · 2027 &nbsp;·&nbsp; Madrid</p>
+    </div>
+
     <div class="envelope-container" id="envelope-container">
       <div class="envelope-back" aria-hidden="true"></div>
 
@@ -61,6 +69,7 @@
       <button type="button" class="wax-seal" id="wax-seal" aria-label="Abrir la invitación">
         <span class="wax-monogram" aria-hidden="true">M &amp; P</span>
       </button>
+    </div>
     </div>
   </div>
 
@@ -388,7 +397,7 @@
 
   </main>
 
-  <script src="js/script.js?v=20261007c"></script>
+  <script src="js/script.js?v=20261007d"></script>
   <script src="js/playlist-config.js?v=20261007"></script>
   <script src="js/playlist.js?v=20261007"></script>
 </body>
