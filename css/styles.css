@@ -766,12 +766,14 @@ button {
   text-align: center;
 }
 
+/* Both drawings share one box height and rest on its bottom edge, so the labels line up */
 .location-art {
   display: block;
   width: 100%;
-  max-width: 220px;
-  height: auto;
-  margin: 0 auto 14px;
+  height: clamp(150px, 40vw, 230px);
+  object-fit: contain;
+  object-position: center bottom;
+  margin: 0 auto 18px;
 }
 
 .location-name {

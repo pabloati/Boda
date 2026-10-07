@@ -19,7 +19,7 @@
 - [ ] ES/EN language toggle (after the final texts).
 - [ ] Couple's short texts from the doc ("Textos cortos").
 - [ ] Couple's own photos (hero), ideally also one or two snapshots for the intro band.
-- [ ] Line illustrations of the church and the venue (optional, as in the second reference).
+- [x] Line illustrations of the church and the venue (couple's drawings, rendered to PNG in olive, 2026-10-07).
 - [ ] Review on a real phone.
 
 ## 2. Real content
