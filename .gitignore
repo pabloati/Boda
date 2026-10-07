@@ -28,3 +28,7 @@ NOTES.local.md
 
 # 4 MB source of assets/sobre.jpg and assets/sello.png
 assets/Sobre.png
+
+# Office files and lock files dropped in the repo root
+*.docx
+~$*
