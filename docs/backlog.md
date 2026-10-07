@@ -11,7 +11,6 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
-| 6 | **Chrome on your phone**: turn off "Sitio para ordenador" for the site | Menu ⋮ → untick. Only affects your own browser. | — |
 
 ## B. Claude does once A arrives
 
