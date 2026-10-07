@@ -20,7 +20,7 @@ Then open <http://localhost:8000>. Opening `index.html` directly also works, but
 - `css/styles.css` — styles; design tokens at the top in `:root`
 - `js/script.js` — envelope, audio, countdown, calendar file, RSVP, clipboard, song list
 - `assets/` — images and audio
-- `docs/backlog.md` — what's left to do
+- `docs/backlog.md` — roadmap of what is left, by owner
 - `docs/decisions.md` — why things are the way they are
 
 ## Customising

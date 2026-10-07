@@ -24,7 +24,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 - `css/styles.css` — one file. Design tokens live in `:root` at the top (olive / cream paper / terracotta palette, `--font-serif` Cormorant Garamond for all text, `--font-script` Allison for headings, `--font-hand` Homemade Apple for handwritten labels). Paper grain is an inline SVG on `body::before`. The only breakpoint is `@media (max-width: 768px)` near the end.
 - `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit (POST to Apps Script) + WhatsApp contact link, clipboard copy, back-to-top. `js/rsvp-config.js` holds the endpoint URL and WhatsApp number.
 - `assets/` — images: `sobre.jpg`, `sello.png`, `sobre-papel.jpg` (envelope layers), `tarjeta.jpg` (the couple's card inside the envelope), stock hero photos (placeholders), drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). Background track: `assets/Emborracharme.mp3`.
-- `docs/backlog.md` — the agreed work plan. `docs/decisions.md` — one-line log of choices.
+- `docs/backlog.md` — the roadmap: only open items, grouped by who acts (couple / Claude / other session / pre-launch). `docs/decisions.md` — one-line log of choices.
 
 ## Things that are easy to get wrong
 
