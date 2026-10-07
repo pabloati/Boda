@@ -41,6 +41,12 @@ Target look (decided 2026-10-06): layout and tone of mieventobonito.com/marianoy
 
 ## Content and language
 
+The site is bilingual (ES default, EN via the top-left toggle, `js/i18n.js`). **Every guest-facing text must be translatable:**
+- Static text in `index.html`: add `data-i18n="section.key"` (or `data-i18n-placeholder`, `data-i18n-aria`, `data-i18n-title`) and the English entry in the `EN` map of `js/i18n.js`. Spanish is read from the HTML, so it is not repeated in the dictionary.
+- Text built by a script: call `t('key', { var })` (alias of `I18N.t`) and add both the `ES` and `EN` entries. `{var}` placeholders are substituted.
+- When a new text is added, write its English in the same commit. A missing EN entry shows a `[i18n] missing` warning in the browser console and falls back to Spanish.
+- `js/i18n.js` loads before the other scripts. `js/playlist.js` re-renders its dynamic strings on the `langchange` event.
+
 All guest-facing copy is Spanish (Spain). The guest is addressed as `tú`; sentence case in headings (no Title Case). Tone target: short and personal, no filler. The couple writes the short texts in the "Textos cortos" table of the data doc; do not invent jokes for them.
 
 **Source of truth for real content** is a Claude Doc the couple edits, "Datos para la invitación de boda". Its link is in `NOTES.local.md` at the repo root (git-ignored; the repo is public). Each section of the site has a table there with a "Valor" column. When the user says the doc changed, read it with the Claude Docs tools (never web-fetch it) and update `index.html` / `js/script.js` to match. Anything still marked as placeholder in the doc stays as invented text and must be replaced before the site is shared.

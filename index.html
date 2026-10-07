@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261007g">
+  <link rel="stylesheet" href="css/styles.css?v=20261007h">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -49,7 +49,7 @@
   <div id="envelope-overlay" class="envelope-overlay" role="dialog" aria-modal="true" aria-label="Apertura de la invitación">
     <div class="envelope-scene">
     <div class="envelope-card-preview" id="card-preview">
-      <p class="envelope-subtitle">Nos casamos</p>
+      <p class="envelope-subtitle" data-i18n="env.subtitle">Nos casamos</p>
       <h2 class="envelope-names">Mª Ángeles &amp; Pablo</h2>
       <p class="envelope-date">13 · 03 · 2027 &nbsp;·&nbsp; Madrid</p>
     </div>
@@ -66,19 +66,22 @@
       <div class="envelope-side envelope-side-right" aria-hidden="true"></div>
       <div class="envelope-flap-top" id="envelope-flap" aria-hidden="true"></div>
 
-      <button type="button" class="wax-seal" id="wax-seal" aria-label="Abrir la invitación">
+      <button type="button" class="wax-seal" id="wax-seal" aria-label="Abrir la invitación" data-i18n-aria="env.sealAria">
         <span class="wax-monogram" aria-hidden="true">M &amp; P</span>
       </button>
     </div>
     </div>
   </div>
 
+  <!-- Language toggle: shows the language you can switch TO -->
+  <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Cambiar a inglés">EN</button>
+
   <!-- Floating music toggle -->
   <aside class="floating-controls" aria-label="Controles de la página">
-    <button id="btn-top" class="float-btn btn-top" aria-label="Volver arriba">
+    <button id="btn-top" class="float-btn btn-top" aria-label="Volver arriba" data-i18n-aria="top.aria">
       <span class="chevron up" aria-hidden="true"></span>
     </button>
-    <button id="btn-music-toggle" class="float-btn music-btn" aria-label="Reproducir o pausar la música" title="Música">
+    <button id="btn-music-toggle" class="float-btn music-btn" aria-label="Reproducir o pausar la música" data-i18n-aria="music.aria" title="Música">
       <i id="music-icon" class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
       <span class="music-wave" aria-hidden="true">
         <span></span><span></span><span></span>
@@ -100,13 +103,13 @@
       <div class="hero-overlay" aria-hidden="true"></div>
 
       <div class="hero-content">
-        <p class="hero-pretitle">Nos casamos</p>
+        <p class="hero-pretitle" data-i18n="hero.pretitle">Nos casamos</p>
         <h1 class="hero-title">Mª Ángeles <span class="nowrap">&amp; Pablo</span></h1>
-        <p class="hero-date">Sábado, 13 de marzo de 2027</p>
+        <p class="hero-date" data-i18n="hero.date">Sábado, 13 de marzo de 2027</p>
         <p class="hero-location">Madrid</p>
 
-        <a href="#intro" class="scroll-indicator" aria-label="Desliza para seguir leyendo">
-          <span>Desliza</span>
+        <a href="#intro" class="scroll-indicator" aria-label="Desliza para seguir leyendo" data-i18n-aria="hero.scrollAria">
+          <span data-i18n="hero.scroll">Desliza</span>
           <span class="chevron" aria-hidden="true"></span>
         </a>
       </div>
@@ -115,24 +118,24 @@
     <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
     <section class="intro-band" id="intro">
       <div class="container narrow text-center">
-        <p class="intro-text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
-        <p class="intro-ref">1 Juan 4:18</p>
+        <p class="intro-text" data-i18n="intro.text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
+        <p class="intro-ref" data-i18n="intro.ref">1 Juan 4:18</p>
       </div>
     </section>
 
     <!-- PARENTS -->
     <section class="section parents-section" id="parents">
       <div class="container narrow text-center">
-        <h2 class="h-script">Nuestros señores padres</h2>
+        <h2 class="h-script" data-i18n="parents.title">Nuestros señores padres</h2>
 
         <div class="parents-row">
           <div class="parents-col">
-            <p class="hand-label">Padres de la novia</p>
+            <p class="hand-label" data-i18n="parents.bride">Padres de la novia</p>
             <p class="parent-name">Mª Ángeles Sánchez Sánchez</p>
             <p class="parent-name">Carlos Quijano Junquera</p>
           </div>
           <div class="parents-col">
-            <p class="hand-label">Padres del novio</p>
+            <p class="hand-label" data-i18n="parents.groom">Padres del novio</p>
             <p class="parent-name">Verónica López García</p>
             <p class="parent-name">Pablo Atienza de Frutos</p>
           </div>
@@ -143,52 +146,52 @@
     <!-- COUNTDOWN -->
     <section class="section countdown-section" id="countdown">
       <div class="container narrow text-center">
-        <h2 class="h-script">Faltan muy pocos días</h2>
+        <h2 class="h-script" data-i18n="countdown.title">Faltan muy pocos días</h2>
 
         <div class="countdown-grid" id="countdown-clock" data-target-date="2027-03-13T12:30:00">
           <div class="countdown-item">
             <span class="countdown-number" id="days">00</span>
-            <span class="countdown-label">días</span>
+            <span class="countdown-label" data-i18n="countdown.days">días</span>
           </div>
           <div class="countdown-item">
             <span class="countdown-number" id="hours">00</span>
-            <span class="countdown-label">horas</span>
+            <span class="countdown-label" data-i18n="countdown.hours">horas</span>
           </div>
           <div class="countdown-item">
             <span class="countdown-number" id="minutes">00</span>
-            <span class="countdown-label">min</span>
+            <span class="countdown-label" data-i18n="countdown.min">min</span>
           </div>
           <div class="countdown-item">
             <span class="countdown-number" id="seconds">00</span>
-            <span class="countdown-label">seg</span>
+            <span class="countdown-label" data-i18n="countdown.sec">seg</span>
           </div>
         </div>
 
-        <button id="btn-add-calendar" class="link-button">Añadir al calendario</button>
+        <button id="btn-add-calendar" class="link-button" data-i18n="countdown.calendar">Añadir al calendario</button>
       </div>
     </section>
 
     <!-- WHERE & WHEN -->
     <section class="section band-paper locations-section" id="locations">
       <div class="container narrow text-center">
-        <h2 class="h-script">Dónde y cuándo</h2>
+        <h2 class="h-script" data-i18n="loc.title">Dónde y cuándo</h2>
 
         <div class="locations-grid">
           <article class="location">
             <!-- Drawing of the church: drop the file in assets/ with this name and it appears -->
             <img class="location-art" src="assets/dibujo-iglesia.png" alt="" onerror="this.remove()">
-            <p class="hand-label">Ceremonia · 12:30</p>
+            <p class="hand-label" data-i18n="loc.ceremony">Ceremonia · 12:30</p>
             <h3 class="location-name">Parroquia de San José</h3>
             <p class="location-address">C. Alcalá, 43<br>Madrid</p>
-            <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
+            <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver mapa</a>
           </article>
 
           <article class="location">
             <img class="location-art location-art-cover" src="assets/dibujo-convite.png" alt="" onerror="this.remove()">
-            <p class="hand-label">Convite · 14:30</p>
+            <p class="hand-label" data-i18n="loc.reception">Convite · 14:30</p>
             <h3 class="location-name">Complejo La Cigüeña</h3>
             <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
-            <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
+            <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver mapa</a>
           </article>
         </div>
       </div>
@@ -197,35 +200,35 @@
     <!-- TIMELINE -->
     <section class="section timeline-section" id="timeline">
       <div class="container narrow">
-        <h2 class="h-script text-center">Hoja de ruta</h2>
+        <h2 class="h-script text-center" data-i18n="tl.title">Hoja de ruta</h2>
 
         <ol class="timeline">
           <li class="timeline-item">
             <span class="timeline-time">12:30</span>
             <div class="timeline-body">
-              <h3 class="timeline-title">Ceremonia</h3>
-              <p class="timeline-desc">El inicio de nuestro matrimonio.</p>
+              <h3 class="timeline-title" data-i18n="tl.1.title">Ceremonia</h3>
+              <p class="timeline-desc" data-i18n="tl.1.desc">El inicio de nuestro matrimonio.</p>
             </div>
           </li>
           <li class="timeline-item">
             <span class="timeline-time">14:30</span>
             <div class="timeline-body">
-              <h3 class="timeline-title">Convite</h3>
-              <p class="timeline-desc">Un buen cóctel os espera.</p>
+              <h3 class="timeline-title" data-i18n="tl.2.title">Convite</h3>
+              <p class="timeline-desc" data-i18n="tl.2.desc">Un buen cóctel os espera.</p>
             </div>
           </li>
           <li class="timeline-item">
             <span class="timeline-time">19:00</span>
             <div class="timeline-body">
-              <h3 class="timeline-title">Fiesta</h3>
-              <p class="timeline-desc">Empieza lo bueno.</p>
+              <h3 class="timeline-title" data-i18n="tl.3.title">Fiesta</h3>
+              <p class="timeline-desc" data-i18n="tl.3.desc">Empieza lo bueno.</p>
             </div>
           </li>
           <li class="timeline-item">
             <span class="timeline-time">23:00</span>
             <div class="timeline-body">
-              <h3 class="timeline-title">Buses</h3>
-              <p class="timeline-desc">¡Que no pare la fiesta!</p>
+              <h3 class="timeline-title" data-i18n="tl.4.title">Buses</h3>
+              <p class="timeline-desc" data-i18n="tl.4.desc">¡Que no pare la fiesta!</p>
             </div>
           </li>
         </ol>
@@ -235,79 +238,79 @@
     <!-- RSVP -->
     <section class="section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
-        <h2 class="h-script light text-center">¿Nos acompañas?</h2>
-        <p class="section-lead text-center">Confirma antes del 1 de febrero de 2027.</p>
+        <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
+        <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027.</p>
 
         <form id="rsvp-form" class="rsvp-form paper-panel" novalidate>
           <div class="form-group">
-            <label for="guest-name" class="form-label">Nombre y apellidos</label>
+            <label for="guest-name" class="form-label" data-i18n="rsvp.name">Nombre y apellidos</label>
             <input type="text" id="guest-name" name="guestName" class="form-control" autocomplete="name" required>
           </div>
 
           <div class="form-group">
-            <label for="guest-phone" class="form-label">Teléfono <span class="optional">(por si tenemos que llamarte)</span></label>
+            <label for="guest-phone" class="form-label" data-i18n="rsvp.phone">Teléfono <span class="optional">(por si tenemos que llamarte)</span></label>
             <input type="tel" id="guest-phone" name="guestPhone" class="form-control" autocomplete="tel">
           </div>
 
           <fieldset class="form-group">
-            <legend class="form-label">¿Vienes?</legend>
+            <legend class="form-label" data-i18n="rsvp.coming">¿Vienes?</legend>
             <div class="choice-group">
               <label class="choice">
                 <input type="radio" name="attendanceStatus" value="asistire" checked>
-                <span>Sí, allí estaré</span>
+                <span data-i18n="rsvp.yes">Sí, allí estaré</span>
               </label>
               <label class="choice">
                 <input type="radio" name="attendanceStatus" value="no_asistire">
-                <span>No podré ir</span>
+                <span data-i18n="rsvp.no">No podré ir</span>
               </label>
             </div>
           </fieldset>
 
           <div id="rsvp-attendance-details" class="conditional-fields">
             <div class="form-group">
-              <label for="guest-companions" class="form-label">Acompañantes <span class="optional">(nombre y apellidos, uno por línea)</span></label>
+              <label for="guest-companions" class="form-label" data-i18n="rsvp.companions">Acompañantes <span class="optional">(nombre y apellidos, uno por línea)</span></label>
               <textarea id="guest-companions" name="guestCompanions" rows="2" class="form-control"></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="guest-bus" class="form-label">Autobús</label>
+                <label for="guest-bus" class="form-label" data-i18n="rsvp.bus">Autobús</label>
                 <select id="guest-bus" name="guestBus" class="form-control">
-                  <option value="No, voy por mi cuenta">No, voy por mi cuenta</option>
-                  <option value="Si, necesito plaza en el autobus">Sí, necesito plaza</option>
+                  <option value="No, voy por mi cuenta" data-i18n="rsvp.busNo">No, voy por mi cuenta</option>
+                  <option value="Si, necesito plaza en el autobus" data-i18n="rsvp.busYes">Sí, necesito plaza</option>
                 </select>
               </div>
 
               <div class="form-group" id="bus-type-group" style="display:none;">
-                <label for="guest-bus-type" class="form-label">¿Qué bus necesitas?</label>
+                <label for="guest-bus-type" class="form-label" data-i18n="rsvp.busType">¿Qué bus necesitas?</label>
                 <select id="guest-bus-type" name="guestBusType" class="form-control">
-                  <option value="Ida">Ida</option>
-                  <option value="Vuelta">Vuelta</option>
-                  <option value="Ida y vuelta">Ida y vuelta</option>
+                  <option value="Ida" data-i18n="rsvp.busThere">Ida</option>
+                  <option value="Vuelta" data-i18n="rsvp.busBack">Vuelta</option>
+                  <option value="Ida y vuelta" data-i18n="rsvp.busBoth">Ida y vuelta</option>
                 </select>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="guest-diet" class="form-label">Alergias o intolerancias</label>
+                <label for="guest-diet" class="form-label" data-i18n="rsvp.diet">Alergias o intolerancias</label>
                 <input type="text" id="guest-diet" name="guestDiet" class="form-control">
               </div>
 
               <div class="form-group">
-                <label for="guest-menu" class="form-label">Menú</label>
+                <label for="guest-menu" class="form-label" data-i18n="rsvp.menu">Menú</label>
                 <select id="guest-menu" name="guestMenu" class="form-control">
-                  <option value="Ninguno">Normal</option>
-                  <option value="Vegetariano">Vegetariano</option>
+                  <option value="Ninguno" data-i18n="rsvp.menuRegular">Normal</option>
+                  <option value="Vegetariano" data-i18n="rsvp.menuVeg">Vegetariano</option>
                 </select>
               </div>
             </div>
 
-            <p class="form-note rsvp-playlist-hint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
+            <p class="form-note rsvp-playlist-hint" data-i18n="rsvp.playlistHint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
           </div>
 
           <div class="form-group">
-            <label for="guest-message" class="form-label">Déjanos un mensajito <span class="optional">(el más original tiene premio) ;)</span></label>
+            <label for="guest-message" class="form-label" data-i18n="rsvp.message">Déjanos un mensajito <span class="optional">(el más original tiene premio) ;)</span></label>
             <textarea id="guest-message" name="guestMessage" rows="3" class="form-control"></textarea>
           </div>
 
@@ -317,8 +320,8 @@
           </div>
 
           <div class="form-actions">
-            <button type="submit" id="btn-submit-direct" class="btn-primary">Confirmar</button>
-            <a id="rsvp-whatsapp-link" class="link-button" href="https://wa.me/" target="_blank" rel="noopener" style="display:none;">¿Alguna duda? Escríbenos por WhatsApp</a>
+            <button type="submit" id="btn-submit-direct" class="btn-primary" data-i18n="rsvp.submit">Confirmar</button>
+            <a id="rsvp-whatsapp-link" class="link-button" href="https://wa.me/" target="_blank" rel="noopener" style="display:none;" data-i18n="rsvp.whatsapp">¿Alguna duda? Escríbenos por WhatsApp</a>
           </div>
 
           <div id="rsvp-status-message" class="rsvp-status-message" role="alert" style="display:none;"></div>
@@ -329,15 +332,15 @@
     <!-- GIFTS -->
     <section class="section gifts-section" id="gifts">
       <div class="container narrow text-center">
-        <h2 class="h-script">Regalo</h2>
-        <p class="section-lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
+        <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
+        <p class="section-lead" data-i18n="gifts.lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
 
         <details class="iban-details">
-          <summary class="text-link">Ver número de cuenta</summary>
+          <summary class="text-link" data-i18n="gifts.showIban">Ver número de cuenta</summary>
           <div class="iban-box">
             <p class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</p>
-            <button type="button" id="btn-copy-iban" class="link-button small" aria-label="Copiar el IBAN"><span id="copy-text">Copiar</span></button>
-            <p class="iban-meta">Pablo Atienza &amp; María de los Ángeles Quijano<br>Concepto: Boda Mª Ángeles y Pablo + vuestro nombre</p>
+            <button type="button" id="btn-copy-iban" class="link-button small" aria-label="Copiar el IBAN" data-i18n-aria="gifts.copyAria"><span id="copy-text" data-i18n="gifts.copy">Copiar</span></button>
+            <p class="iban-meta" data-i18n="gifts.meta">Pablo Atienza &amp; María de los Ángeles Quijano<br>Concepto: Boda Mª Ángeles y Pablo + vuestro nombre</p>
           </div>
         </details>
 
@@ -347,32 +350,32 @@
     <!-- PLAYLIST (search + vote, see js/playlist.js) -->
     <section class="section band-paper playlist-section" id="playlist">
       <div class="container narrow">
-        <h2 class="h-script text-center">La playlist</h2>
-        <p class="section-lead text-center">Busca la canción que no puede faltar, o vota las que ya están.</p>
+        <h2 class="h-script text-center" data-i18n="pl.title">La playlist</h2>
+        <p class="section-lead text-center" data-i18n="pl.lead">Busca la canción que no puede faltar, o vota las que ya están.</p>
 
         <div class="playlist-card paper-panel">
           <div class="playlist-search">
-            <label for="playlist-search-input" class="form-label">Canción o artista</label>
+            <label for="playlist-search-input" class="form-label" data-i18n="pl.searchLabel">Canción o artista</label>
             <div class="playlist-search-box">
-              <input type="search" id="playlist-search-input" class="form-control" placeholder="Vivir mi vida, Queen, Rosalía…" autocomplete="off" aria-controls="playlist-results">
+              <input type="search" id="playlist-search-input" class="form-control" placeholder="Vivir mi vida, Queen, Rosalía…" data-i18n-placeholder="pl.searchPlaceholder" autocomplete="off" aria-controls="playlist-results">
             </div>
             <div id="playlist-results" class="playlist-results" hidden></div>
 
             <form id="playlist-manual" class="playlist-manual" hidden>
-              <p class="playlist-manual-title">Añádela a mano</p>
+              <p class="playlist-manual-title" data-i18n="pl.manualTitle">Añádela a mano</p>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="manual-title" class="form-label">Canción</label>
+                  <label for="manual-title" class="form-label" data-i18n="pl.song">Canción</label>
                   <input type="text" id="manual-title" class="form-control" maxlength="120" required>
                 </div>
                 <div class="form-group">
-                  <label for="manual-artist" class="form-label">Artista</label>
+                  <label for="manual-artist" class="form-label" data-i18n="pl.artist">Artista</label>
                   <input type="text" id="manual-artist" class="form-control" maxlength="120" required>
                 </div>
               </div>
               <div class="playlist-manual-actions">
-                <button type="button" id="manual-cancel" class="btn-mini">Cancelar</button>
-                <button type="submit" class="btn-primary small">Añadir</button>
+                <button type="button" id="manual-cancel" class="btn-mini" data-i18n="pl.cancel">Cancelar</button>
+                <button type="submit" class="btn-primary small" data-i18n="pl.addBtn">Añadir</button>
               </div>
             </form>
           </div>
@@ -384,7 +387,7 @@
 
           <div id="playlist-notice" class="playlist-notice" role="status" hidden></div>
 
-          <ol id="playlist-ranking" class="playlist-ranking" aria-label="Ranking de canciones"></ol>
+          <ol id="playlist-ranking" class="playlist-ranking" aria-label="Ranking de canciones" data-i18n-aria="pl.rankingAria"></ol>
           <button type="button" id="playlist-more" class="playlist-more" hidden></button>
         </div>
       </div>
@@ -393,26 +396,27 @@
     <!-- PHOTOS / HASHTAG -->
     <section class="section social-section" id="social">
       <div class="container narrow text-center">
-        <h2 class="h-script">Fotos</h2>
-        <p class="section-lead">Sube tus fotos y vídeos del día con el hashtag</p>
+        <h2 class="h-script" data-i18n="social.title">Fotos</h2>
+        <p class="section-lead" data-i18n="social.lead">Sube tus fotos y vídeos del día con el hashtag</p>
         <p class="hashtag-text" id="wedding-hashtag">#BodaMariAngelesYPablo</p>
-        <button id="btn-copy-hashtag" class="link-button small">Copiar</button>
+        <button id="btn-copy-hashtag" class="link-button small" data-i18n="social.copy">Copiar</button>
       </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="footer-section band-olive">
       <div class="container narrow text-center">
-        <p class="footer-title h-script light">Gracias por ser parte de nuestras vidas</p>
+        <p class="footer-title h-script light" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
         <p class="footer-date">13 · 03 · 2027</p>
       </div>
     </footer>
 
   </main>
 
-  <script src="js/rsvp-config.js?v=20261007g"></script>
-  <script src="js/script.js?v=20261007g"></script>
-  <script src="js/playlist-config.js?v=20261007g"></script>
-  <script src="js/playlist.js?v=20261007g"></script>
+  <script src="js/i18n.js?v=20261007h"></script>
+  <script src="js/rsvp-config.js?v=20261007h"></script>
+  <script src="js/script.js?v=20261007h"></script>
+  <script src="js/playlist-config.js?v=20261007h"></script>
+  <script src="js/playlist.js?v=20261007h"></script>
 </body>
 </html>

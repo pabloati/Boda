@@ -16,7 +16,7 @@
 - [x] New palette, fonts, paper texture; icons and card chrome removed.
 - [x] Merged into `main` on 2026-10-07 so the couple can review on their phones.
 - [x] Wax seal: replaced by the real wax seal cut from the couple's reference photo (2026-10-07).
-- [ ] ES/EN language toggle (after the final texts).
+- [x] ES/EN language toggle (2026-10-07). Keep the EN dictionary in `js/i18n.js` in step with new texts.
 - [ ] Couple's short texts from the doc ("Textos cortos").
 - [ ] Couple's own photos (hero), ideally also one or two snapshots for the intro band.
 - [x] Line illustrations of the church and the venue (couple's drawings, rendered to PNG in olive, 2026-10-07).
