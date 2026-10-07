@@ -31,7 +31,7 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [x] Dress code section removed at the couple's request.
 - [ ] Bank details: holder and concept done; **IBAN still a placeholder** (`ES00 …`).
 - [x] Calendar event (`.ics` dates in `js/script.js`).
-- [ ] Local audio file in `assets/`.
+- [x] Local audio file in `assets/` (`Emborracharme.mp3`, 3.6 MB, 2026-10-07).
 - [ ] Couple's own photos (hero landscape, hero portrait).
 - [ ] Open Graph image for WhatsApp link previews.
 - [ ] Bus: departure points and times (shown nowhere yet; the form only asks guests where they would board).
