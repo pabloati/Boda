@@ -20,7 +20,8 @@ var HEADERS = [
   'Autobús',
   'Tipo de bus',
   'Alergias',
-  'Menú'
+  'Menú',
+  'Mensaje'
 ];
 
 function doPost(e) {
@@ -49,7 +50,8 @@ function doPost(e) {
       String(data.bus || ''),
       String(data.busType || ''),
       String(data.diet || ''),
-      String(data.menu || '')
+      String(data.menu || ''),
+      String(data.message || '')
     ]);
 
     return respond({ ok: true });

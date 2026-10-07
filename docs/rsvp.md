@@ -21,10 +21,11 @@ The "Confirmar" button POSTs the form as JSON to a Google Apps Script web app. T
 | bus | Autobús | `No, voy por mi cuenta` / `Si, necesito plaza en el autobus` |
 | busType | ¿Qué bus necesitas? | `Ida` / `Vuelta` / `Ida y vuelta`, only when bus is needed |
 | diet | Alergias o intolerancias | free text, `Ninguna` when empty |
-| menu | Menú | `Ninguno` / `Vegetariano` / `Vegano` |
+| menu | Menú | `Ninguno` / `Vegetariano` |
+| message | Déjanos un mensajito | free text, optional, asked to everyone |
 | website | hidden honeypot | always empty for real guests; bots fill it and are dropped |
 
-When the guest is not coming, companions, bus, diet and menu are sent empty.
+When the guest is not coming, companions, bus, diet and menu are sent empty. The message is kept either way.
 
 ## Setup (about 10 minutes, once)
 

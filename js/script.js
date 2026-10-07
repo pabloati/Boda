@@ -237,6 +237,7 @@
       busType,
       diet,
       menu,
+      message: readValue('guest-message', ''),
       website: readValue('guest-website', '')
     };
   }
@@ -267,6 +268,10 @@
           `👤 *Nombre:* ${data.guestName}\n` +
           (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
           `❌ *Asistencia:* Lamentablemente no podré acompañaros en esta ocasión, ¡pero os deseo todo lo mejor en este gran día!\n`;
+      }
+
+      if (data.message) {
+        whatsappText += `\n💌 *Mensajito:* ${data.message}\n`;
       }
 
       whatsappText += `\n¡Un abrazo grande!`;
