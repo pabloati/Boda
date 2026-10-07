@@ -278,9 +278,13 @@
                 </select>
               </div>
 
-              <div class="form-group" id="bus-from-group" style="display:none;">
-                <label for="guest-bus-from" class="form-label">¿Desde dónde?</label>
-                <input type="text" id="guest-bus-from" name="guestBusFrom" class="form-control" placeholder="Madrid centro, Arganda…">
+              <div class="form-group" id="bus-type-group" style="display:none;">
+                <label for="guest-bus-type" class="form-label">¿Qué bus necesitas?</label>
+                <select id="guest-bus-type" name="guestBusType" class="form-control">
+                  <option value="Ida">Ida</option>
+                  <option value="Vuelta">Vuelta</option>
+                  <option value="Ida y vuelta">Ida y vuelta</option>
+                </select>
               </div>
             </div>
 
@@ -301,6 +305,11 @@
             </div>
 
             <p class="form-note rsvp-playlist-hint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
+          </div>
+
+          <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+            <label for="guest-website">Web</label>
+            <input type="text" id="guest-website" name="website" tabindex="-1" autocomplete="off">
           </div>
 
           <div class="form-actions">
@@ -397,7 +406,8 @@
 
   </main>
 
-  <script src="js/script.js?v=20261007d"></script>
+  <script src="js/rsvp-config.js?v=20261007e"></script>
+  <script src="js/script.js?v=20261007e"></script>
   <script src="js/playlist-config.js?v=20261007"></script>
   <script src="js/playlist.js?v=20261007"></script>
 </body>

@@ -194,10 +194,10 @@
   });
 
   const busSelect = document.getElementById('guest-bus');
-  const busFromGroup = document.getElementById('bus-from-group');
-  if (busSelect && busFromGroup) {
+  const busTypeGroup = document.getElementById('bus-type-group');
+  if (busSelect && busTypeGroup) {
     busSelect.addEventListener('change', function () {
-      busFromGroup.style.display = this.value.startsWith('Si') ? 'block' : 'none';
+      busTypeGroup.style.display = this.value.startsWith('Si') ? 'block' : 'none';
     });
   }
 
@@ -221,21 +221,23 @@
       .map(line => line.trim())
       .filter(Boolean);
 
-    const bus = readValue('guest-bus', 'No, voy por mi cuenta');
-    const busFrom = bus.startsWith('Si') ? readValue('guest-bus-from', 'sin indicar') : '';
+    const attending = status === 'asistire';
+    const bus = attending ? readValue('guest-bus', 'No, voy por mi cuenta') : '';
+    const busType = attending && bus.startsWith('Si') ? readValue('guest-bus-type', 'Ida y vuelta') : '';
 
-    const diet = readValue('guest-diet', 'Ninguna');
-    const menu = readValue('guest-menu', 'Ninguno');
+    const diet = attending ? readValue('guest-diet', 'Ninguna') : '';
+    const menu = attending ? readValue('guest-menu', 'Ninguno') : '';
 
     return {
       guestName,
       phone,
       status,
-      companions,
+      companions: attending ? companions : [],
       bus,
-      busFrom,
+      busType,
       diet,
-      menu
+      menu,
+      website: readValue('guest-website', '')
     };
   }
 
@@ -257,7 +259,7 @@
           (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
           `✅ *Asistencia:* ¡Sí, estaré allí con mucha ilusión!\n` +
           `👥 *Acompañantes:* ${data.companions.length ? data.companions.join(', ') : 'Ninguno'}\n` +
-          `🚌 *Autobús:* ${data.bus}${data.busFrom ? ` (desde ${data.busFrom})` : ''}\n` +
+          `🚌 *Autobús:* ${data.bus}${data.busType ? ` (${data.busType.toLowerCase()})` : ''}\n` +
           `🍽️ *Alergias:* ${data.diet}\n` +
           `🥗 *Menú especial:* ${data.menu}\n`;
       } else {
@@ -269,27 +271,72 @@
 
       whatsappText += `\n¡Un abrazo grande!`;
 
-      const encodedUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+      const waNumber = (window.RSVP_CONFIG && window.RSVP_CONFIG.whatsappNumber) || '';
+      const encodedUrl = waNumber
+        ? `https://wa.me/${waNumber}?text=${encodeURIComponent(whatsappText)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
       window.open(encodedUrl, '_blank');
     });
   }
 
+  // Replies are POSTed as JSON to a Google Apps Script web app that appends a
+  // row to the couple's Google Sheet (docs/rsvp.md). The body is sent as plain
+  // text so the browser skips the CORS preflight, which Apps Script cannot answer.
+  function showRsvpStatus(kind, html) {
+    if (!rsvpStatusMessage) return;
+    rsvpStatusMessage.style.display = 'block';
+    rsvpStatusMessage.className = 'rsvp-status-message ' + kind;
+    rsvpStatusMessage.innerHTML = html;
+  }
+
+  function sendRsvp(data) {
+    const endpoint = (window.RSVP_CONFIG && window.RSVP_CONFIG.endpoint) || '';
+    if (!endpoint) {
+      return Promise.reject(new Error('rsvp endpoint not configured'));
+    }
+    return fetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(json => {
+      if (!json || json.ok !== true) throw new Error((json && json.error) || 'bad response');
+      return json;
+    });
+  }
+
   if (rsvpForm) {
+    const submitButton = document.getElementById('btn-submit-direct');
+    let sending = false;
+
     rsvpForm.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (sending) return;
       const data = getRsvpFormData();
 
       if (!data.guestName) {
         alert('Por favor indica tu nombre y apellidos antes de guardar.');
+        const nameInput = document.getElementById('guest-name');
+        nameInput && nameInput.focus();
         return;
       }
 
-      if (rsvpStatusMessage) {
-        rsvpStatusMessage.style.display = 'block';
-        rsvpStatusMessage.className = 'rsvp-status-message success';
-        rsvpStatusMessage.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Muchas gracias, <strong>${escapeHtml(data.guestName)}</strong>! Tu confirmación ha sido guardada. Nos alegra mucho celebrar contigo.`;
-      }
+      sending = true;
+      if (submitButton) submitButton.disabled = true;
+      showRsvpStatus('pending', '<i class="fa-solid fa-spinner fa-spin"></i> Enviando tu respuesta…');
 
+      sendRsvp(data).then(() => {
+        const thanks = data.status === 'asistire'
+          ? 'Nos alegra mucho celebrar contigo.'
+          : 'Gracias por avisarnos, te echaremos de menos.';
+        showRsvpStatus('success', `<i class="fa-solid fa-circle-check"></i> ¡Muchas gracias, <strong>${escapeHtml(data.guestName)}</strong>! Hemos recibido tu respuesta. ${thanks}`);
+      }).catch(err => {
+        console.warn('RSVP not saved:', err);
+        showRsvpStatus('error', 'No hemos podido guardar tu respuesta. Inténtalo de nuevo en un momento o envíanosla por WhatsApp con el enlace de arriba.');
+        sending = false;
+        if (submitButton) submitButton.disabled = false;
+      });
     });
   }
 

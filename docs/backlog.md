@@ -37,13 +37,14 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [ ] Bus: departure points and times (shown nowhere yet; the form only asks guests where they would board).
 
 ## 3. Data collection
-- [x] Choose backend: Supabase free tier (see `docs/decisions.md`).
-- [ ] Wire RSVP form (name, phone, attendance, companions' names, bus + boarding point, allergies, vegetarian/vegan menu).
-- [ ] WhatsApp number for the RSVP button (empty in the doc).
+- [x] Choose backend: Supabase free tier for the playlist; Google Sheet + Apps Script for the RSVP (see `docs/decisions.md`).
+- [x] Wire RSVP form (name, phone, attendance, companions' names, bus + outward/return, allergies, vegetarian/vegan menu). Sends JSON to the Apps Script endpoint; see `docs/rsvp.md`.
+- [ ] Deploy the Apps Script (`docs/rsvp-apps-script.gs`) on the couple's Google account and paste the URL into `js/rsvp-config.js`.
+- [ ] WhatsApp number for the RSVP button (empty in the doc; goes in `js/rsvp-config.js`).
 - [x] Song suggestions widget (search + vote + Excel/TSV export, demo mode).
 - [ ] Create the Supabase project, run `docs/playlist-schema.sql`, fill `js/playlist-config.js`.
-- [ ] Remove the fake "Guardar confirmación" success message.
-- [ ] Private view of responses for the couple.
+- [x] Remove the fake "Guardar confirmación" success message.
+- [x] Private view of responses for the couple: the Google Sheet itself.
 
 ## 4. Deploy
 - [x] Create GitHub repo, push `main` (https://github.com/pabloati/Boda).
