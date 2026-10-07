@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261007">
+  <link rel="stylesheet" href="css/styles.css?v=20261007b">
 
   <!-- The card inside the envelope is visible immediately, so fetch it early -->
   <link rel="preload" as="image" href="assets/tarjeta.jpg">
@@ -73,13 +73,15 @@
 
       <div class="open-action-wrapper" id="open-action-wrapper">
         <button id="btn-open-envelope" class="btn-open-invitation" aria-label="Abrir la invitación">Abrir</button>
-        <p class="open-hint">con música</p>
       </div>
     </div>
   </div>
 
   <!-- Floating music toggle -->
   <aside class="floating-controls" aria-label="Controles de la página">
+    <button id="btn-top" class="float-btn btn-top" aria-label="Volver arriba">
+      <span class="chevron up" aria-hidden="true"></span>
+    </button>
     <button id="btn-music-toggle" class="float-btn music-btn" aria-label="Reproducir o pausar la música" title="Música">
       <i id="music-icon" class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
       <span class="music-wave" aria-hidden="true">
@@ -175,18 +177,21 @@
       <div class="container narrow text-center">
         <h2 class="h-script">Dónde y cuándo</h2>
 
-        <div class="locations-list">
+        <div class="locations-grid">
           <article class="location">
+            <!-- Drawing of the church: drop the file in assets/ with this name and it appears -->
+            <img class="location-art" src="assets/dibujo-iglesia.png" alt="" onerror="this.remove()">
             <p class="hand-label">Ceremonia · 12:30</p>
             <h3 class="location-name">Parroquia de San José</h3>
-            <p class="location-address">C. Alcalá, 43 · Madrid</p>
+            <p class="location-address">C. Alcalá, 43<br>Madrid</p>
             <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
           </article>
 
           <article class="location">
+            <img class="location-art" src="assets/dibujo-convite.png" alt="" onerror="this.remove()">
             <p class="hand-label">Convite · 14:30</p>
             <h3 class="location-name">Complejo La Cigüeña</h3>
-            <p class="location-address">Ctra. Puente de Arganda a Chinchón, km 2 · Arganda del Rey</p>
+            <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
             <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link">Ver mapa</a>
           </article>
         </div>
@@ -316,7 +321,7 @@
     <section class="section gifts-section" id="gifts">
       <div class="container narrow text-center">
         <h2 class="h-script">Regalo</h2>
-        <p class="section-lead">Tu presencia es el mejor regalo. Si además quieres tener un detalle:</p>
+        <p class="section-lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
 
         <details class="iban-details">
           <summary class="text-link">Ver número de cuenta</summary>
@@ -327,7 +332,6 @@
           </div>
         </details>
 
-        <p class="section-note">También habrá un buzón para sobres el día de la boda.</p>
       </div>
     </section>
 
@@ -397,7 +401,7 @@
 
   </main>
 
-  <script src="js/script.js?v=20261007"></script>
+  <script src="js/script.js?v=20261007b"></script>
   <script src="js/playlist-config.js?v=20261007"></script>
   <script src="js/playlist.js?v=20261007"></script>
 </body>

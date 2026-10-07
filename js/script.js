@@ -356,4 +356,17 @@
 
   // --- 9. PLAYLIST: see js/playlist.js ---
 
+  // --- 10. BACK TO TOP (appears once the footer is in view) ---
+  const btnTop = document.getElementById('btn-top');
+  const footerEl = document.querySelector('footer');
+  if (btnTop && footerEl && 'IntersectionObserver' in window) {
+    const footerWatcher = new IntersectionObserver(function (entries) {
+      btnTop.classList.toggle('is-visible', entries.some(e => e.isIntersecting));
+    }, { threshold: 0.15 });
+    footerWatcher.observe(footerEl);
+    btnTop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
 })();
