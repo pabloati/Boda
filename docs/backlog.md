@@ -14,10 +14,13 @@
 
 ## 1b. Redesign (branch `redesign`, preview link in `NOTES.local.md`)
 - [x] New palette, fonts, paper texture; icons and card chrome removed.
+- [x] Merged into `main` on 2026-10-07 so the couple can review on their phones.
+- [ ] Wax seal: the couple still dislikes it; try a plainer disc or a real wax-seal photo/PNG.
+- [ ] ES/EN language toggle (after the final texts).
 - [ ] Couple's short texts from the doc ("Textos cortos").
 - [ ] Couple's own photos (hero), ideally also one or two snapshots for the intro band.
 - [ ] Line illustrations of the church and the venue (optional, as in the second reference).
-- [ ] Review on a real phone, then merge into `main`.
+- [ ] Review on a real phone.
 
 ## 2. Real content
 Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-10-06.

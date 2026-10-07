@@ -20,24 +20,28 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 
 ## Layout
 
-- `index.html` — all markup, in section order: envelope overlay, floating controls, hero, quote, parents, countdown, venues, timeline, RSVP form, dress code, gifts/IBAN, playlist (search + vote, \js/playlist.js\), hashtag, footer.
-- `css/styles.css` — one file. Design tokens live in `:root` at the top (burgundy/sage/gold/cream palette, `--font-serif` Cormorant Garamond, `--font-sans` Montserrat, `--font-script` Great Vibes). The only breakpoint is `@media (max-width: 768px)` near the end.
-- `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit / WhatsApp text builder, clipboard copy, song suggestions.
-- `assets/` — images and audio (currently empty; the background track is still hotlinked from a third-party URL in `index.html`).
+- `index.html` — all markup, in section order: envelope overlay, floating controls (back-to-top + music), hero, intro band (quote), parents, countdown, venues (two columns with drawing slots), timeline, RSVP form, gift/IBAN, playlist (search + vote, `js/playlist.js`), photos/hashtag, footer.
+- `css/styles.css` — one file. Design tokens live in `:root` at the top (olive / cream paper / terracotta palette, `--font-serif` Cormorant Garamond for all text, `--font-script` Allison for headings, `--font-hand` Homemade Apple for handwritten labels). Paper grain is an inline SVG on `body::before`. The only breakpoint is `@media (max-width: 768px)` near the end.
+- `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit / WhatsApp text builder, clipboard copy, back-to-top.
+- `assets/` — images: `tarjeta.jpg` (the couple's card inside the envelope), stock hero photos (placeholders), drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). The background track is still hotlinked from a third-party URL in `index.html`.
 - `docs/backlog.md` — the agreed work plan. `docs/decisions.md` — one-line log of choices.
 
 ## Things that are easy to get wrong
 
 - **Wedding date is duplicated** in three places: the `data-target-date` attribute on `#countdown-clock`, the `DTSTART`/`DTEND` lines in the `.ics` block of `js/script.js` (UTC, so Madrid summer time = local minus 2h), and the visible text throughout `index.html`.
 - **CSS/JS links carry a `?v=YYYYMMDD` cache-buster** in `index.html` and `playlist-admin.html`. Bump it in every link whenever `css/` or `js/` changes, or visitors get new HTML with stale styles for up to 10 minutes (GitHub Pages caching).
-- **Icons come from the Font Awesome 6 free CDN.** Pro-only icon names render as an empty box. Check the free set before adding one.
-- **The RSVP form does not persist anything yet.** The "Guardar confirmación" handler only shows a success message. The WhatsApp button opens a prefilled message with no recipient number. A backend is planned; see `docs/backlog.md` section 3.
+- **There is no icon font.** `js/playlist.js` and `js/script.js` still emit Font Awesome class names (`fa-heart`, `fa-play`…); the "icon shim" block at the end of `css/styles.css` maps them to plain glyphs. Add a glyph there if you use a new class name. Never add the Font Awesome CDN back: the artifact preview blocks it and the design avoids icons on purpose.
+- **The RSVP form does not persist anything yet.** The "Confirmar" handler only shows a success message. The WhatsApp button opens a prefilled message with no recipient number. A backend is planned; see `docs/backlog.md` section 3.
 - **JS is defensive by design.** Every DOM lookup is null-guarded so sections can be removed from the HTML without breaking the script. Keep that pattern when adding features.
 - **User-provided text goes through `escapeHtml()`** before being inserted with `innerHTML`. Keep doing that.
 
+## Design
+
+Target look (decided 2026-10-06): layout and tone of mieventobonito.com/marianoytere, colours of petalandpixel.wixsite.com/martaycarlos. No eyebrow labels, section descriptions, cards, badges or icon buttons; one script heading per section, text links instead of buttons except the terracotta primary. The wax seal is an SVG data URI in `.wax-seal` (the couple still finds it unconvincing; a plain disc is an acceptable fallback). Preview the branch as a private Claude artifact (link in `NOTES.local.md`) before merging to `main`.
+
 ## Content and language
 
-All guest-facing copy is Spanish (Spain, `vosotros` forms).
+All guest-facing copy is Spanish (Spain). The guest is addressed as `tú`; sentence case in headings (no Title Case). Tone target: short and personal, no filler. The couple writes the short texts in the "Textos cortos" table of the data doc; do not invent jokes for them.
 
 **Source of truth for real content** is a Claude Doc the couple edits, "Datos para la invitación de boda". Its link is in `NOTES.local.md` at the repo root (git-ignored; the repo is public). Each section of the site has a table there with a "Valor" column. When the user says the doc changed, read it with the Claude Docs tools (never web-fetch it) and update `index.html` / `js/script.js` to match. Anything still marked as placeholder in the doc stays as invented text and must be replaced before the site is shared.
 
