@@ -450,70 +450,28 @@ button {
   z-index: 1;
 }
 
-/* Wax seal: irregular blob with two small drips, script monogram pressed into it */
+/* Wax seal: a slightly irregular disc drawn as SVG, monogram pressed into it */
 .wax-seal {
   position: absolute;
-  top: 124px;
+  top: 122px;
   left: 50%;
-  transform: translateX(-50%) rotate(-7deg);
+  transform: translateX(-50%);
   width: 76px;
-  height: 72px;
-  background:
-    radial-gradient(circle at 36% 30%, rgba(255, 214, 180, 0.4) 0%, rgba(255, 214, 180, 0) 36%),
-    radial-gradient(circle at 64% 74%, rgba(120, 50, 24, 0.55) 0%, rgba(120, 50, 24, 0) 52%),
-    #bf5f38;
-  border-radius: 46% 54% 49% 51% / 56% 46% 54% 44%;
-  box-shadow:
-    0 6px 14px rgba(80, 35, 20, 0.45),
-    inset 0 -4px 6px rgba(90, 40, 20, 0.35),
-    inset 0 3px 5px rgba(255, 225, 195, 0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 76px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='40%25' cy='34%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23d4835c'/%3E%3Cstop offset='0.55' stop-color='%23bf6038'/%3E%3Cstop offset='1' stop-color='%238e4327'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M97.6,50.0C98.0,56.7 96.0,64.6 93.0,70.7C89.9,76.8 84.8,82.9 79.3,86.7C73.8,90.6 66.5,92.9 60.0,93.9C53.5,94.9 46.7,94.0 40.3,92.6C33.8,91.3 26.8,89.6 21.4,85.9C16.0,82.1 10.8,76.3 7.9,70.3C4.9,64.3 3.8,56.8 3.8,50.0C3.7,43.2 4.9,35.7 7.8,29.7C10.7,23.6 15.8,17.9 21.1,13.8C26.4,9.7 33.2,6.5 39.7,5.1C46.3,3.7 53.9,3.6 60.2,5.3C66.5,7.1 72.3,11.4 77.4,15.6C82.5,19.8 87.2,24.7 90.5,30.5C93.9,36.2 97.2,43.3 97.6,50.0Z' fill='url(%23g)'/%3E%3Cpath d='M97.6,50.0C98.0,56.7 96.0,64.6 93.0,70.7C89.9,76.8 84.8,82.9 79.3,86.7C73.8,90.6 66.5,92.9 60.0,93.9C53.5,94.9 46.7,94.0 40.3,92.6C33.8,91.3 26.8,89.6 21.4,85.9C16.0,82.1 10.8,76.3 7.9,70.3C4.9,64.3 3.8,56.8 3.8,50.0C3.7,43.2 4.9,35.7 7.8,29.7C10.7,23.6 15.8,17.9 21.1,13.8C26.4,9.7 33.2,6.5 39.7,5.1C46.3,3.7 53.9,3.6 60.2,5.3C66.5,7.1 72.3,11.4 77.4,15.6C82.5,19.8 87.2,24.7 90.5,30.5C93.9,36.2 97.2,43.3 97.6,50.0Z' fill='none' stroke='rgba(255,225,195,0.35)' stroke-width='1.2' transform='translate(0,-0.8)'/%3E%3Cpath d='M72.1,77.8C68.0,80.8 62.5,82.8 57.6,83.6C52.6,84.5 47.3,84.0 42.4,82.9C37.5,81.8 32.2,80.2 28.2,77.3C24.1,74.3 20.3,69.8 18.1,65.3C15.9,60.7 14.9,55.0 14.9,49.9C14.9,44.8 15.9,39.1 18.1,34.5C20.3,30.0 24.1,25.6 28.1,22.4C32.2,19.3 37.3,16.9 42.3,15.8C47.2,14.7 53.0,14.7 57.8,16.0C62.7,17.3 67.3,20.4 71.2,23.6C75.1,26.7 78.6,30.7 81.1,35.1C83.5,39.5 85.7,45.0 85.9,50.1C86.1,55.2 84.6,61.0 82.3,65.7C80.0,70.3 76.2,74.8 72.1,77.8Z' fill='none' stroke='rgba(90,38,18,0.5)' stroke-width='1.5'/%3E%3Cpath d='M72.1,77.8C68.0,80.8 62.5,82.8 57.6,83.6C52.6,84.5 47.3,84.0 42.4,82.9C37.5,81.8 32.2,80.2 28.2,77.3C24.1,74.3 20.3,69.8 18.1,65.3C15.9,60.7 14.9,55.0 14.9,49.9C14.9,44.8 15.9,39.1 18.1,34.5C20.3,30.0 24.1,25.6 28.1,22.4C32.2,19.3 37.3,16.9 42.3,15.8C47.2,14.7 53.0,14.7 57.8,16.0C62.7,17.3 67.3,20.4 71.2,23.6C75.1,26.7 78.6,30.7 81.1,35.1C83.5,39.5 85.7,45.0 85.9,50.1C86.1,55.2 84.6,61.0 82.3,65.7C80.0,70.3 76.2,74.8 72.1,77.8Z' fill='none' stroke='rgba(255,225,195,0.35)' stroke-width='1' transform='translate(0,1.1)'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 5px 8px rgba(80, 35, 20, 0.4));
   z-index: 6;
   cursor: pointer;
   transition: transform 0.4s ease, opacity 0.5s ease;
 }
 
-.wax-seal::before,
-.wax-seal::after {
-  content: "";
-  position: absolute;
-  background: #b95a34;
-  box-shadow: inset 0 -2px 3px rgba(90, 40, 20, 0.35), inset 0 1px 2px rgba(255, 225, 195, 0.25);
-}
-
-.wax-seal::before {
-  width: 20px;
-  height: 17px;
-  left: -8px;
-  top: 34px;
-  border-radius: 62% 38% 55% 45% / 50% 62% 38% 50%;
-}
-
-.wax-seal::after {
-  width: 15px;
-  height: 14px;
-  right: -6px;
-  top: 14px;
-  border-radius: 40% 60% 50% 50% / 55% 45% 55% 45%;
-}
-
 .wax-seal:hover {
-  transform: translateX(-50%) rotate(-7deg) scale(1.06);
+  transform: translateX(-50%) scale(1.06);
 }
 
 .wax-seal-inner {
-  position: relative;
-  z-index: 1;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 42%, #c96c44 0%, #b65a35 72%);
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 55, 25, 0.5),
-    inset 0 2px 4px rgba(90, 40, 20, 0.45),
-    0 1px 1px rgba(255, 225, 195, 0.35);
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -521,12 +479,12 @@ button {
 
 .wax-monogram {
   font-family: var(--font-script);
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   line-height: 1;
   white-space: nowrap;
   color: #7a3416;
-  text-shadow: 0 1px 0 rgba(255, 220, 185, 0.4), 0 -1px 1px rgba(70, 25, 8, 0.45);
-  transform: translateY(2px);
+  text-shadow: 0 1px 0 rgba(255, 220, 185, 0.45), 0 -1px 1px rgba(70, 25, 8, 0.45);
+  padding-bottom: 0.18em; /* script ascenders sit high; nudge the visual centre */
 }
 
 .envelope-overlay.opened-flap .wax-seal {
@@ -1687,32 +1645,13 @@ select.form-control {
   }
 
   .wax-seal {
-    top: 114px;
+    top: 112px;
     width: 66px;
-    height: 62px;
-  }
-
-  .wax-seal::before {
-    width: 17px;
-    height: 15px;
-    top: 29px;
-    left: -7px;
-  }
-
-  .wax-seal::after {
-    width: 13px;
-    height: 12px;
-    top: 12px;
-    right: -5px;
-  }
-
-  .wax-seal-inner {
-    width: 48px;
-    height: 48px;
+    height: 66px;
   }
 
   .wax-monogram {
-    font-size: 1.45rem;
+    font-size: 1.3rem;
   }
 
   .envelope-letter {
