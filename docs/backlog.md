@@ -7,7 +7,7 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 | # | What | How to deliver it | Then Claude… |
 | --- | --- | --- | --- |
 | 1 | **Short texts** for each section (welcome line, intro band, timeline lines, RSVP, gift, playlist, photos, farewell) | Fill the "Textos cortos" table at the end of the data doc (link in `NOTES.local.md`). Empty rows = nothing shown. | applies them, writes the English versions, publishes |
-| 2 | **Photos** of you two | `assets/`: one landscape ≥1920 px wide for desktop, one portrait ≥1080 px wide for phones. Optional: 1–2 extra snapshots for the intro band. JPG, ideally <400 KB each. | replaces the stock hero photos, builds the WhatsApp preview image from one of them |
+| 2 | **Photos** of you two | `assets/`: one landscape ≥1920 px wide for desktop, one portrait ≥1080 px wide for phones. Optional: 1–2 extra snapshots for the intro band. JPG, ideally <400 KB each. | replaces the stock hero photos; optionally redoes the WhatsApp preview image with one of them |
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
@@ -15,7 +15,7 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 ## B. Claude does once A arrives
 
 - [ ] English versions of the texts in A1 (same commit, `js/i18n.js`).
-- [ ] Open Graph image (1200 × 630) + `og:image` tag so the WhatsApp link shows a picture (needs A2).
+- [x] Open Graph image (`assets/og.jpg`, envelope + names) and `og:image` tags (2026-10-07). Optionally redo with a photo of the couple once A2 arrives.
 - [ ] Seed the playlist with A5.
 
 ## C. Pending in the other working session (RSVP)
