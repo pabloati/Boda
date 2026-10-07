@@ -2,6 +2,7 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-10-07 — RSVP can no longer be sent by WhatsApp; the prefilled-message button is gone. WhatsApp remains only as a "¿Alguna duda? Escríbenos" contact link under the form.
 - 2026-10-07 — RSVP menu options reduced to Normal / Vegetariano (no vegan option). A free-text "Déjanos un mensajito (el más original tiene premio)" box closes the form, shown to everyone, including guests who are not coming.
 - 2026-10-07 — RSVP replies go to a Google Sheet through a Google Apps Script web app (free, the Sheet is the couple's private view). The form POSTs JSON as text/plain to avoid the CORS preflight. A hidden honeypot field drops bots. Bus question changed: instead of the boarding point, the guest picks "Ida", "Vuelta" or "Ida y vuelta". Setup in `docs/rsvp.md`.
 - 2026-10-07 — Envelope photo re-cropped by the couple to 1440×1776 (top 784 px removed): shorter envelope, title (Nos casamos / names / date) back above it, no text button, seal enlarged to 36% of the width with the monogram nudged left for optical centring.

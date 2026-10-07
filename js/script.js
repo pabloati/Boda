@@ -20,7 +20,7 @@
   const secondsEl = document.getElementById('seconds');
   const btnAddCalendar = document.getElementById('btn-add-calendar');
   const rsvpForm = document.getElementById('rsvp-form');
-  const btnSubmitWhatsapp = document.getElementById('btn-submit-whatsapp');
+  const rsvpWhatsappLink = document.getElementById('rsvp-whatsapp-link');
   const rsvpStatusMessage = document.getElementById('rsvp-status-message');
   const rsvpAttendanceDetails = document.getElementById('rsvp-attendance-details');
   const btnCopyIban = document.getElementById('btn-copy-iban');
@@ -201,7 +201,7 @@
     });
   }
 
-  // --- 7. RSVP FORM SUBMISSION & WHATSAPP GENERATOR ---
+  // --- 7. RSVP FORM SUBMISSION & WHATSAPP CONTACT LINK ---
   function readValue(id, fallback) {
     const el = document.getElementById(id);
     const v = el ? el.value.trim() : '';
@@ -242,46 +242,14 @@
     };
   }
 
-  if (btnSubmitWhatsapp) {
-    btnSubmitWhatsapp.addEventListener('click', function () {
-      const data = getRsvpFormData();
-
-      if (!data.guestName) {
-        alert('Por favor indica tu nombre y apellidos antes de enviar la confirmación.');
-        const nameInput = document.getElementById('guest-name');
-        nameInput && nameInput.focus();
-        return;
-      }
-
-      let whatsappText = '';
-      if (data.status === 'asistire') {
-        whatsappText = `¡Hola Mª Ángeles y Pablo! 💍✨\n\nConfirmo mi asistencia a vuestra boda:\n\n` +
-          `👤 *Nombre:* ${data.guestName}\n` +
-          (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
-          `✅ *Asistencia:* ¡Sí, estaré allí con mucha ilusión!\n` +
-          `👥 *Acompañantes:* ${data.companions.length ? data.companions.join(', ') : 'Ninguno'}\n` +
-          `🚌 *Autobús:* ${data.bus}${data.busType ? ` (${data.busType.toLowerCase()})` : ''}\n` +
-          `🍽️ *Alergias:* ${data.diet}\n` +
-          `🥗 *Menú especial:* ${data.menu}\n`;
-      } else {
-        whatsappText = `¡Hola Mª Ángeles y Pablo! 💍✨\n\n` +
-          `👤 *Nombre:* ${data.guestName}\n` +
-          (data.phone ? `📞 *Teléfono:* ${data.phone}\n` : '') +
-          `❌ *Asistencia:* Lamentablemente no podré acompañaros en esta ocasión, ¡pero os deseo todo lo mejor en este gran día!\n`;
-      }
-
-      if (data.message) {
-        whatsappText += `\n💌 *Mensajito:* ${data.message}\n`;
-      }
-
-      whatsappText += `\n¡Un abrazo grande!`;
-
-      const waNumber = (window.RSVP_CONFIG && window.RSVP_CONFIG.whatsappNumber) || '';
-      const encodedUrl = waNumber
-        ? `https://wa.me/${waNumber}?text=${encodeURIComponent(whatsappText)}`
-        : `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
-      window.open(encodedUrl, '_blank');
-    });
+  // WhatsApp is only for questions: the link opens a chat with the couple,
+  // with no prefilled text. Hidden until a number is set in js/rsvp-config.js.
+  if (rsvpWhatsappLink) {
+    const waNumber = (window.RSVP_CONFIG && window.RSVP_CONFIG.whatsappNumber) || '';
+    if (waNumber) {
+      rsvpWhatsappLink.href = `https://wa.me/${waNumber}`;
+      rsvpWhatsappLink.style.display = '';
+    }
   }
 
   // Replies are POSTed as JSON to a Google Apps Script web app that appends a
@@ -338,7 +306,7 @@
         showRsvpStatus('success', `<i class="fa-solid fa-circle-check"></i> ¡Muchas gracias, <strong>${escapeHtml(data.guestName)}</strong>! Hemos recibido tu respuesta. ${thanks}`);
       }).catch(err => {
         console.warn('RSVP not saved:', err);
-        showRsvpStatus('error', 'No hemos podido guardar tu respuesta. Inténtalo de nuevo en un momento o envíanosla por WhatsApp con el enlace de arriba.');
+        showRsvpStatus('error', 'No hemos podido guardar tu respuesta. Inténtalo de nuevo en un momento y, si sigue fallando, escríbenos por WhatsApp.');
         sending = false;
         if (submitButton) submitButton.disabled = false;
       });

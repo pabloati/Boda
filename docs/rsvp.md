@@ -2,12 +2,12 @@
 
 The "Confirmar" button POSTs the form as JSON to a Google Apps Script web app. The script appends one row per reply to a Google Sheet the couple owns. Google hosts the script for free and the Sheet is the private view of the responses; no extra account or server is needed.
 
-"o enviarlo por WhatsApp" stays as a fallback: it opens WhatsApp with the reply already written. It needs the couple's number in `js/rsvp-config.js` to open the right chat.
+WhatsApp is not a way to send the form any more. Under the button, "¿Alguna duda? Escríbenos por WhatsApp" opens a chat with the couple (number from `js/rsvp-config.js`) for questions only; the link is hidden while the number is empty.
 
 ## Files
 
-- `js/rsvp-config.js`: web app URL and WhatsApp number. Empty URL = the form cannot save and asks the guest to use WhatsApp.
-- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows the pending / success / error message.
+- `js/rsvp-config.js`: web app URL and WhatsApp number. Empty URL = the form cannot save and shows an error.
+- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows the pending / success / error message, sets the WhatsApp contact link.
 - `docs/rsvp-apps-script.gs`: the server side, to paste into Google.
 
 ## Fields sent
