@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Two interlocking gold rings -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6cb84"/>
+      <stop offset="0.55" stop-color="#c9a35a"/>
+      <stop offset="1" stop-color="#8a6c2c"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#g)" stroke-width="6" stroke-linecap="butt">
+    <circle cx="24" cy="34" r="16"/>
+    <circle cx="40" cy="30" r="16"/>
+    <!-- left ring passes over the right one at the lower crossing -->
+    <path d="M38.5 40.8 A16 16 0 0 1 30.8 48.5"/>
+  </g>
+</svg>

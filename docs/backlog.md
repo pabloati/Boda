@@ -45,6 +45,8 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [x] Song suggestions widget (search + vote + Excel/TSV export, demo mode).
 - [x] Create the Supabase project, run `docs/playlist-schema.sql`, fill `js/playlist-config.js` (2026-10-07; keep-alive GitHub Action every 3 days).
 - [ ] Load the couple's starting song list into Supabase (SQL insert; waiting for the list).
+- [ ] GitHub disables scheduled workflows after 60 days without commits (it emails first). If that happens, run "Keep the playlist database awake" manually once or push any change; otherwise the free Supabase project pauses after 7 idle days.
+- [x] Favicon: two gold rings (`assets/favicon.svg` + PNG fallbacks, 2026-10-07).
 - [x] Remove the fake "Guardar confirmación" success message.
 - [x] Private view of responses for the couple: the Google Sheet itself.
 
