@@ -1,0 +1,19 @@
+# Free Supabase projects pause after ~7 days without traffic. This pings the
+# public ranking function every three days so the playlist stays awake.
+# The anon key is public by design (it is also in js/playlist-config.js).
+name: Keep the playlist database awake
+on:
+  schedule:
+    - cron: '17 6 */3 * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call get_ranking
+        run: |
+          KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZmVudmZwemJvZWFyYXl6ZG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTgyNjYsImV4cCI6MjEwNjk3NDI2Nn0.qmiFXxpsL3G1Dxftd15wgS6loIyNFu3xSfXGGLB90bE'
+          curl --fail --silent --show-error -X POST \
+            'https://tmfenvfpzboearayzdoj.supabase.co/rest/v1/rpc/get_ranking' \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H 'Content-Type: application/json' -d '{}' | head -c 300

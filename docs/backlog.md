@@ -43,11 +43,12 @@ Source: the couple's Claude Doc (link in `docs/decisions.md`). Applied on 2026-1
 - [x] WhatsApp number (in `js/rsvp-config.js`; used only by the "¿Alguna duda?" link, the form is no longer sent by WhatsApp).
 - [ ] RSVP latency (saves take 1 to 40 s, a third look failed but are saved): apply the fixes in `docs/rsvp-latency.md`, in order. Fix 1 (one row per device) first.
 - [x] Song suggestions widget (search + vote + Excel/TSV export, demo mode).
-- [ ] Create the Supabase project, run `docs/playlist-schema.sql`, fill `js/playlist-config.js`.
+- [x] Create the Supabase project, run `docs/playlist-schema.sql`, fill `js/playlist-config.js` (2026-10-07; keep-alive GitHub Action every 3 days).
+- [ ] Load the couple's starting song list into Supabase (SQL insert; waiting for the list).
 - [x] Remove the fake "Guardar confirmación" success message.
 - [x] Private view of responses for the couple: the Google Sheet itself.
 
 ## 4. Deploy
 - [x] Create GitHub repo, push `main` (https://github.com/pabloati/Boda).
-- [ ] GitHub Pages (the couple's choice; no custom domain). Expected URL: https://pabloati.github.io/Boda/
+- [x] GitHub Pages (the couple's choice; no custom domain). Expected URL: https://pabloati.github.io/Boda/
 - [ ] Test on a real phone from a WhatsApp link.
