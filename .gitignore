@@ -36,3 +36,6 @@ assets/Sobre.png
 # Large drawing sources (rendered to assets/dibujo-*.png) and Windows download markers
 assets/*.svg
 *:Zone.Identifier
+
+# Phone screenshots the couple drops in for debugging
+docs/issues/
