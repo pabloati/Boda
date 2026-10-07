@@ -776,6 +776,12 @@ button {
   margin: 0 auto 18px;
 }
 
+/* Wide drawing: fill the box height and crop the sides, keeping the house centred */
+.location-art-cover {
+  object-fit: cover;
+  object-position: 52% bottom;
+}
+
 .location-name {
   font-size: clamp(1.35rem, 4.6vw, 2rem);
   color: var(--ink);
