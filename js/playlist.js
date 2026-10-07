@@ -10,6 +10,8 @@
 (function () {
   'use strict';
 
+  const t = function (key, vars) { return window.I18N ? window.I18N.t(key, vars) : key; };
+
   // --- 1. CONFIG & HELPERS ---
   const cfg = Object.assign({
     supabaseUrl: '',
@@ -437,10 +439,10 @@
   }
 
   const ERROR_TEXT = {
-    vote_limit: 'Ya has usado tus ' + cfg.votesPerGuest + ' corazones. Quita uno de otra canción para votar esta.',
-    song_limit: 'Ya has propuesto ' + cfg.songsPerGuest + ' canciones. ¡Ahora toca votar las de los demás!',
-    not_found: 'Esa canción ya no está en la lista.',
-    network: 'No hemos podido conectar. Inténtalo de nuevo en un momento.'
+    vote_limit: function () { return t('pl.err.voteLimit', { n: cfg.votesPerGuest }); },
+    song_limit: function () { return t('pl.err.songLimit', { n: cfg.songsPerGuest }); },
+    not_found: function () { return t('pl.err.notFound'); },
+    network: function () { return t('pl.err.network'); }
   };
 
   // Notices: a short message, optionally with action buttons ([{label, primary, onClick}])
@@ -471,7 +473,7 @@
 
   function handleError(err) {
     const code = err && err.code ? err.code : 'network';
-    showNotice(ERROR_TEXT[code] || ERROR_TEXT.network, 'error');
+    showNotice((ERROR_TEXT[code] || ERROR_TEXT.network)(), 'error');
     if (code !== 'network') refresh();
   }
 
@@ -485,11 +487,11 @@
         row.appendChild(icon(i < left ? 'fa-solid fa-heart' : 'fa-regular fa-heart'));
       }
       heartsEl.appendChild(row);
-      heartsEl.appendChild(el('span', null, left === 1 ? 'Te queda 1 corazón' : 'Te quedan ' + left + ' corazones'));
+      heartsEl.appendChild(el('span', null, left === 1 ? t('pl.heartsOne') : t('pl.hearts', { n: left })));
     }
     if (countEl) {
       const n = state.songs.length;
-      countEl.textContent = n === 1 ? '1 canción' : n + ' canciones';
+      countEl.textContent = n === 1 ? t('pl.countOne') : t('pl.count', { n: n });
     }
   }
 
@@ -545,7 +547,7 @@
 
     rankingEl.replaceChildren();
     if (!state.songs.length) {
-      const empty = el('li', 'pl-empty', 'Todavía no hay canciones. ¡Estrena tú la playlist!');
+      const empty = el('li', 'pl-empty', t('pl.empty'));
       rankingEl.appendChild(empty);
     }
 
@@ -590,7 +592,7 @@
     if (moreBtn) {
       const hiddenCount = state.songs.length - VISIBLE_ROWS;
       moreBtn.hidden = hiddenCount <= 0;
-      moreBtn.textContent = state.expanded ? 'Ver solo el top ' + VISIBLE_ROWS : 'Ver las ' + state.songs.length + ' canciones';
+      moreBtn.textContent = state.expanded ? t('pl.showTop', { n: VISIBLE_ROWS }) : t('pl.showAll', { n: state.songs.length });
     }
 
     if (highlightId) {
@@ -642,8 +644,8 @@
       .then(function (res) {
         closeSearch(true);
         showNotice(res && res.created
-          ? '¡Añadida! Ya lleva tu corazón. Compártela para que suba 🎶'
-          : 'Esa ya estaba en la lista: le hemos sumado tu corazón 💛', 'ok');
+          ? t('pl.added')
+          : t('pl.addedExisting'), 'ok');
         return refresh(res && res.id);
       })
       .catch(handleError)
@@ -669,12 +671,12 @@
       }
       return;
     }
-    showNotice('¿Te refieres a «' + dup.title + ' – ' + dup.artist + '», que ya está en la lista?', 'ask', [
-      { label: 'Sí, votar esa', primary: true, onClick: function () {
+    showNotice(t('pl.askDuplicate', { title: dup.title, artist: dup.artist }), 'ask', [
+      { label: t('pl.askYes'), primary: true, onClick: function () {
         closeSearch(true);
         if (!state.mine.has(dup.id)) vote(dup.id); else refresh(dup.id);
       } },
-      { label: 'No, es otra', onClick: function () { addSong(song); } }
+      { label: t('pl.askNo'), onClick: function () { addSong(song); } }
     ]);
   }
 
@@ -688,9 +690,9 @@
     } else {
       const add = el('button', 'pl-add');
       add.type = 'button';
-      add.setAttribute('aria-label', 'Añadir ' + song.title + ' de ' + song.artist);
+      add.setAttribute('aria-label', t('pl.addAria', { title: song.title, artist: song.artist }));
       add.appendChild(icon('fa-solid fa-plus'));
-      add.appendChild(el('span', null, 'Añadir'));
+      add.appendChild(el('span', null, t('pl.add')));
       add.addEventListener('click', function () { confirmAndAdd(song); });
       row.appendChild(add);
     }
@@ -713,7 +715,7 @@
       .map(function (x) { return x.song; });
 
     if (inList.length) {
-      resultsEl.appendChild(el('p', 'pl-results-heading', 'Ya en la lista'));
+      resultsEl.appendChild(el('p', 'pl-results-heading', t('pl.inList')));
       inList.forEach(function (s) { resultsEl.appendChild(resultRow(s, s)); });
     }
 
@@ -732,22 +734,22 @@
         }
       });
       if (fresh.length) {
-        resultsEl.appendChild(el('p', 'pl-results-heading', 'Añadir una nueva'));
+        resultsEl.appendChild(el('p', 'pl-results-heading', t('pl.addNew')));
         fresh.forEach(function (r) { resultsEl.appendChild(resultRow(r, null)); });
       }
       if (cat.status === 'error') {
-        resultsEl.appendChild(el('p', 'pl-results-status', 'No hemos podido buscar en el catálogo de música.'));
+        resultsEl.appendChild(el('p', 'pl-results-status', t('pl.catalogError')));
       } else if (!fresh.length && !inList.length && !cat.results.length) {
-        resultsEl.appendChild(el('p', 'pl-results-status', 'Sin resultados para «' + term + '».'));
+        resultsEl.appendChild(el('p', 'pl-results-status', t('pl.noResults', { term: term })));
       }
     } else {
       const loading = el('p', 'pl-results-status');
       loading.appendChild(icon('fa-solid fa-spinner fa-spin'));
-      loading.appendChild(document.createTextNode(' Buscando…'));
+      loading.appendChild(document.createTextNode(t('pl.searching')));
       resultsEl.appendChild(loading);
     }
 
-    const manualBtn = el('button', 'pl-results-manual', '¿No la encuentras? Añádela a mano');
+    const manualBtn = el('button', 'pl-results-manual', t('pl.manual'));
     manualBtn.type = 'button';
     manualBtn.addEventListener('click', openManual);
     resultsEl.appendChild(manualBtn);
@@ -867,15 +869,22 @@
     previewAudio.play().then(function () {
       setPreview(key);
     }).catch(function () {
-      showNotice('No se ha podido reproducir el fragmento.', 'error');
+      showNotice(t('pl.previewError'), 'error');
     });
   }
 
   previewAudio.addEventListener('ended', function () { setPreview(null); });
 
   if (store.mode === 'demo') {
-    showNotice('Modo demo: las canciones y votos se guardan solo en este navegador.', 'info');
+    showNotice(t('pl.demo'), 'info');
   }
+
+  document.addEventListener('langchange', function () {
+    renderMeta();
+    renderRanking();
+    if (resultsEl && !resultsEl.hidden) renderResults();
+    if (store.mode === 'demo') showNotice(t('pl.demo'), 'info'); else hideNotice();
+  });
 
   refresh();
   setInterval(function () {

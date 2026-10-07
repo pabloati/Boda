@@ -474,6 +474,35 @@ button {
 }
 
 /* ========================================================
+   LANGUAGE TOGGLE (top left, above the envelope overlay too)
+======================================================== */
+.lang-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10000;
+  min-width: 44px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--paper-line);
+  border-radius: 999px;
+  background: rgba(243, 238, 227, 0.92);
+  color: var(--olive-deep);
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  box-shadow: 0 8px 24px -12px rgba(59, 56, 47, 0.5);
+  transition: var(--transition);
+}
+
+.lang-toggle:hover {
+  background: var(--olive-deep);
+  color: var(--cream-text);
+  border-color: var(--olive-deep);
+}
+
+/* ========================================================
    FLOATING MUSIC BUTTON
 ======================================================== */
 .floating-controls {
@@ -766,12 +795,20 @@ button {
   text-align: center;
 }
 
+/* Both drawings share one box height and rest on its bottom edge, so the labels line up */
 .location-art {
   display: block;
   width: 100%;
-  max-width: 220px;
-  height: auto;
-  margin: 0 auto 14px;
+  height: clamp(150px, 40vw, 230px);
+  object-fit: contain;
+  object-position: center bottom;
+  margin: 0 auto 18px;
+}
+
+/* Wide drawing: fill the box height and crop the sides, keeping the house centred */
+.location-art-cover {
+  object-fit: cover;
+  object-position: 52% bottom;
 }
 
 .location-name {

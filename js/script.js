@@ -6,6 +6,8 @@
 (function () {
   'use strict';
 
+  const t = function (key, vars) { return window.I18N ? window.I18N.t(key, vars) : key; };
+
   // --- 1. DOM REFERENCES ---
   const envelopeOverlay = document.getElementById('envelope-overlay');
   const btnOpenEnvelope = document.getElementById('btn-open-envelope');
@@ -159,8 +161,8 @@
         'DTSTAMP:20261006T120000Z',
         'DTSTART:20270313T113000Z', // 12:30 Madrid CET (UTC+1, winter time)
         'DTEND:20270313T220000Z',   // 23:00 Madrid
-        'SUMMARY:💍 Boda de Mª Ángeles & Pablo',
-        'DESCRIPTION:Ceremonia en la Parroquia de San José (C. Alcalá 43) a las 12:30 y convite en el Complejo La Cigüeña (Arganda del Rey) a las 14:30.',
+        'SUMMARY:💍 ' + t('ics.summary'),
+        'DESCRIPTION:' + t('ics.description'),
         'LOCATION:Parroquia de San José, C. Alcalá, 43, 28014 Madrid',
         'STATUS:CONFIRMED',
         'END:VEVENT',
@@ -289,7 +291,7 @@
       const data = getRsvpFormData();
 
       if (!data.guestName) {
-        alert('Por favor indica tu nombre y apellidos antes de guardar.');
+        alert(t('rsvp.alertName'));
         const nameInput = document.getElementById('guest-name');
         nameInput && nameInput.focus();
         return;
@@ -297,16 +299,14 @@
 
       sending = true;
       if (submitButton) submitButton.disabled = true;
-      showRsvpStatus('pending', '<i class="fa-solid fa-spinner fa-spin"></i> Enviando tu respuesta…');
+      showRsvpStatus('pending', '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('rsvp.sending'));
 
       sendRsvp(data).then(() => {
-        const thanks = data.status === 'asistire'
-          ? 'Nos alegra mucho celebrar contigo.'
-          : 'Gracias por avisarnos, te echaremos de menos.';
-        showRsvpStatus('success', `<i class="fa-solid fa-circle-check"></i> ¡Muchas gracias, <strong>${escapeHtml(data.guestName)}</strong>! Hemos recibido tu respuesta. ${thanks}`);
+        const thanks = t(data.status === 'asistire' ? 'rsvp.thanksYes' : 'rsvp.thanksNo');
+        showRsvpStatus('success', '<i class="fa-solid fa-circle-check"></i> ' + t('rsvp.thanks', { name: escapeHtml(data.guestName) }) + ' ' + thanks);
       }).catch(err => {
         console.warn('RSVP not saved:', err);
-        showRsvpStatus('error', 'No hemos podido guardar tu respuesta. Inténtalo de nuevo en un momento y, si sigue fallando, escríbenos por WhatsApp.');
+        showRsvpStatus('error', t('rsvp.error'));
         sending = false;
         if (submitButton) submitButton.disabled = false;
       });
@@ -350,12 +350,11 @@
       const iban = ibanValue.textContent.trim();
       copyToClipboard(iban, function () {
         btnCopyIban.classList.add('copied');
-        if (copyText) copyText.textContent = '¡Copiado!';
-        btnCopyIban.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
+        btnCopyIban.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('copy.done');
 
         setTimeout(() => {
           btnCopyIban.classList.remove('copied');
-          btnCopyIban.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
+          btnCopyIban.innerHTML = '<span id="copy-text" data-i18n="gifts.copy">' + t('gifts.copy') + '</span>';
         }, 2500);
       });
     });
@@ -366,7 +365,7 @@
       const tag = weddingHashtag.textContent.trim();
       copyToClipboard(tag, function () {
         const originalContent = btnCopyHashtag.innerHTML;
-        btnCopyHashtag.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
+        btnCopyHashtag.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('copy.done');
         setTimeout(() => {
           btnCopyHashtag.innerHTML = originalContent;
         }, 2000);

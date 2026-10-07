@@ -32,3 +32,7 @@ assets/Sobre.png
 # Office files and lock files dropped in the repo root
 *.docx
 ~$*
+
+# Large drawing sources (rendered to assets/dibujo-*.png) and Windows download markers
+assets/*.svg
+*:Zone.Identifier
