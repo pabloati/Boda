@@ -1021,6 +1021,10 @@ select.form-control {
   padding: 28px 24px;
 }
 
+.rsvp-playlist-hint {
+  margin-bottom: 22px;
+}
+
 .rsvp-playlist-hint a {
   border-bottom: 1px solid currentColor;
 }
