@@ -23,7 +23,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 - `index.html` — all markup, in section order: envelope overlay, floating controls (back-to-top + music), hero, intro band (quote), parents, countdown, venues (two columns with drawing slots), timeline, RSVP form, gift/IBAN, playlist (search + vote, `js/playlist.js`), photos/hashtag, footer.
 - `css/styles.css` — one file. Design tokens live in `:root` at the top (olive / cream paper / terracotta palette, `--font-serif` Cormorant Garamond for all text, `--font-script` Allison for headings, `--font-hand` Homemade Apple for handwritten labels). Paper grain is an inline SVG on `body::before`. The only breakpoint is `@media (max-width: 768px)` near the end.
 - `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit / WhatsApp text builder, clipboard copy, back-to-top.
-- `assets/` — images: `tarjeta.jpg` (the couple's card inside the envelope), stock hero photos (placeholders), drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). The background track is still hotlinked from a third-party URL in `index.html`.
+- `assets/` — images: `sobre.jpg`, `sello.png`, `sobre-papel.jpg` (envelope layers), `tarjeta.jpg` (the couple's card inside the envelope), stock hero photos (placeholders), drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). The background track is still hotlinked from a third-party URL in `index.html`.
 - `docs/backlog.md` — the agreed work plan. `docs/decisions.md` — one-line log of choices.
 
 ## Things that are easy to get wrong
@@ -37,7 +37,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 
 ## Design
 
-Target look (decided 2026-10-06): layout and tone of mieventobonito.com/marianoytere, colours of petalandpixel.wixsite.com/martaycarlos. No eyebrow labels, section descriptions, cards, badges or icon buttons; one script heading per section, text links instead of buttons except the terracotta primary. The wax seal is an SVG data URI in `.wax-seal` (the couple still finds it unconvincing; a plain disc is an acceptable fallback). Preview the branch as a private Claude artifact (link in `NOTES.local.md`) before merging to `main`.
+Target look (decided 2026-10-06): layout and tone of mieventobonito.com/marianoytere, colours of petalandpixel.wixsite.com/martaycarlos. No eyebrow labels, section descriptions, cards, badges or icon buttons; one script heading per section, text links instead of buttons except the terracotta primary. The envelope overlay is a photo (`assets/sobre.jpg`, 9:16) sliced into `clip-path` layers; the geometry percentages are documented in the HTML comment above `#envelope-overlay`. The seal is `assets/sello.png` with the monogram as CSS text. The older CSS-drawn envelope is kept in `docs/sobre-variante-css.css`. Preview the branch as a private Claude artifact (link in `NOTES.local.md`) before merging to `main`.
 
 ## Content and language
 

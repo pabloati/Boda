@@ -15,7 +15,7 @@
 ## 1b. Redesign (branch `redesign`, preview link in `NOTES.local.md`)
 - [x] New palette, fonts, paper texture; icons and card chrome removed.
 - [x] Merged into `main` on 2026-10-07 so the couple can review on their phones.
-- [ ] Wax seal: the couple still dislikes it; try a plainer disc or a real wax-seal photo/PNG.
+- [x] Wax seal: replaced by the real wax seal cut from the couple's reference photo (2026-10-07).
 - [ ] ES/EN language toggle (after the final texts).
 - [ ] Couple's short texts from the doc ("Textos cortos").
 - [ ] Couple's own photos (hero), ideally also one or two snapshots for the intro band.

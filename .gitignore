@@ -25,3 +25,6 @@ assets/*.TMP
 
 # Private working notes (doc links etc.)
 NOTES.local.md
+
+# 4 MB source of assets/sobre.jpg and assets/sello.png
+assets/Sobre.png

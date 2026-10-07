@@ -1,0 +1,321 @@
+/* Envelope variant A (olive CSS envelope with SVG wax seal), saved 2026-10-07.
+   Replaced by the photo-based envelope (assets/sobre.jpg). To bring it back, paste the
+   first block in place of the ENVELOPE OVERLAY section of css/styles.css and the second
+   inside the max-width:768px media query, and restore the envelope markup from git
+   (commit 4bcf6dc, index.html lines 46-77). */
+
+/* ========================================================
+   1. ENVELOPE OVERLAY
+======================================================== */
+.envelope-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background:
+    linear-gradient(180deg, rgba(243, 238, 227, 0.88) 0%, rgba(233, 226, 209, 0.94) 100%),
+    url('../assets/olive.jpg') center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+  overflow: hidden;
+}
+
+.envelope-overlay.opened {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.envelope-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px;
+}
+
+.envelope-card-preview {
+  text-align: center;
+  margin-bottom: 26px;
+  animation: fadeInDown 1s ease-out;
+  transition: opacity 0.4s ease;
+}
+
+.envelope-overlay.opened-flap .envelope-card-preview,
+.envelope-overlay.opened-flap .open-action-wrapper {
+  opacity: 0;
+}
+
+.envelope-subtitle {
+  font-size: 0.85rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+}
+
+.envelope-names {
+  font-family: var(--font-script);
+  font-size: 3.6rem;
+  line-height: 1;
+  color: var(--ink);
+  margin: 6px 0 8px;
+}
+
+.envelope-date {
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+}
+
+/* Envelope geometry: portrait, 270 × 380 */
+.envelope-container {
+  position: relative;
+  width: 270px;
+  height: 380px;
+  background: #a4a77c;
+  border-radius: 3px;
+  box-shadow: 0 25px 50px -14px rgba(59, 56, 47, 0.45);
+  cursor: pointer;
+  transition: transform 0.4s ease;
+}
+
+.envelope-container:hover {
+  transform: translateY(-4px);
+}
+
+.envelope-back {
+  position: absolute;
+  inset: 0;
+  background: #8f9268;
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.envelope-liner {
+  position: absolute;
+  inset: 6px;
+  background: var(--paper-deep);
+  border-radius: 2px;
+  opacity: 0.9;
+}
+
+.envelope-letter {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  width: 230px;
+  height: 345px;
+  background: #ffffff;
+  border: 1px solid var(--paper-line);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
+}
+
+.envelope-letter img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.envelope-overlay.opened-flap .envelope-letter {
+  transform: translateY(-250px) scale(1.03);
+}
+
+.envelope-front-left {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 135px solid #a7aa7f;
+  border-top: 155px solid transparent;
+  border-bottom: 225px solid #a7aa7f;
+  z-index: 3;
+}
+
+.envelope-front-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 135px solid #9c9f74;
+  border-top: 155px solid transparent;
+  border-bottom: 225px solid #9c9f74;
+  z-index: 3;
+}
+
+.envelope-front-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-bottom: 200px solid #b0b388;
+  border-left: 135px solid transparent;
+  border-right: 135px solid transparent;
+  z-index: 4;
+}
+
+.envelope-flap-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  z-index: 5;
+  transform-origin: top center;
+  backface-visibility: visible;
+  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s linear 0.5s;
+}
+
+.envelope-flap-top .flap-triangle {
+  width: 0;
+  height: 0;
+  border-top: 160px solid #b7ba8f;
+  border-left: 135px solid transparent;
+  border-right: 135px solid transparent;
+}
+
+.envelope-overlay.opened-flap .envelope-flap-top {
+  transform: rotateX(180deg);
+  z-index: 1;
+}
+
+/* Wax seal: a slightly irregular disc drawn as SVG, monogram pressed into it */
+.wax-seal {
+  position: absolute;
+  top: 122px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 76px;
+  height: 76px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='40%25' cy='34%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23d4835c'/%3E%3Cstop offset='0.55' stop-color='%23bf6038'/%3E%3Cstop offset='1' stop-color='%238e4327'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M97.6,50.0C98.0,56.7 96.0,64.6 93.0,70.7C89.9,76.8 84.8,82.9 79.3,86.7C73.8,90.6 66.5,92.9 60.0,93.9C53.5,94.9 46.7,94.0 40.3,92.6C33.8,91.3 26.8,89.6 21.4,85.9C16.0,82.1 10.8,76.3 7.9,70.3C4.9,64.3 3.8,56.8 3.8,50.0C3.7,43.2 4.9,35.7 7.8,29.7C10.7,23.6 15.8,17.9 21.1,13.8C26.4,9.7 33.2,6.5 39.7,5.1C46.3,3.7 53.9,3.6 60.2,5.3C66.5,7.1 72.3,11.4 77.4,15.6C82.5,19.8 87.2,24.7 90.5,30.5C93.9,36.2 97.2,43.3 97.6,50.0Z' fill='url(%23g)'/%3E%3Cpath d='M97.6,50.0C98.0,56.7 96.0,64.6 93.0,70.7C89.9,76.8 84.8,82.9 79.3,86.7C73.8,90.6 66.5,92.9 60.0,93.9C53.5,94.9 46.7,94.0 40.3,92.6C33.8,91.3 26.8,89.6 21.4,85.9C16.0,82.1 10.8,76.3 7.9,70.3C4.9,64.3 3.8,56.8 3.8,50.0C3.7,43.2 4.9,35.7 7.8,29.7C10.7,23.6 15.8,17.9 21.1,13.8C26.4,9.7 33.2,6.5 39.7,5.1C46.3,3.7 53.9,3.6 60.2,5.3C66.5,7.1 72.3,11.4 77.4,15.6C82.5,19.8 87.2,24.7 90.5,30.5C93.9,36.2 97.2,43.3 97.6,50.0Z' fill='none' stroke='rgba(255,225,195,0.35)' stroke-width='1.2' transform='translate(0,-0.8)'/%3E%3Cpath d='M72.1,77.8C68.0,80.8 62.5,82.8 57.6,83.6C52.6,84.5 47.3,84.0 42.4,82.9C37.5,81.8 32.2,80.2 28.2,77.3C24.1,74.3 20.3,69.8 18.1,65.3C15.9,60.7 14.9,55.0 14.9,49.9C14.9,44.8 15.9,39.1 18.1,34.5C20.3,30.0 24.1,25.6 28.1,22.4C32.2,19.3 37.3,16.9 42.3,15.8C47.2,14.7 53.0,14.7 57.8,16.0C62.7,17.3 67.3,20.4 71.2,23.6C75.1,26.7 78.6,30.7 81.1,35.1C83.5,39.5 85.7,45.0 85.9,50.1C86.1,55.2 84.6,61.0 82.3,65.7C80.0,70.3 76.2,74.8 72.1,77.8Z' fill='none' stroke='rgba(90,38,18,0.5)' stroke-width='1.5'/%3E%3Cpath d='M72.1,77.8C68.0,80.8 62.5,82.8 57.6,83.6C52.6,84.5 47.3,84.0 42.4,82.9C37.5,81.8 32.2,80.2 28.2,77.3C24.1,74.3 20.3,69.8 18.1,65.3C15.9,60.7 14.9,55.0 14.9,49.9C14.9,44.8 15.9,39.1 18.1,34.5C20.3,30.0 24.1,25.6 28.1,22.4C32.2,19.3 37.3,16.9 42.3,15.8C47.2,14.7 53.0,14.7 57.8,16.0C62.7,17.3 67.3,20.4 71.2,23.6C75.1,26.7 78.6,30.7 81.1,35.1C83.5,39.5 85.7,45.0 85.9,50.1C86.1,55.2 84.6,61.0 82.3,65.7C80.0,70.3 76.2,74.8 72.1,77.8Z' fill='none' stroke='rgba(255,225,195,0.35)' stroke-width='1' transform='translate(0,1.1)'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 5px 8px rgba(80, 35, 20, 0.4));
+  z-index: 6;
+  cursor: pointer;
+  transition: transform 0.4s ease, opacity 0.5s ease;
+}
+
+.wax-seal:hover {
+  transform: translateX(-50%) scale(1.06);
+}
+
+.wax-seal-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wax-monogram {
+  font-family: var(--font-script);
+  font-size: 1.5rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: #7a3416;
+  text-shadow: 0 1px 0 rgba(255, 220, 185, 0.45), 0 -1px 1px rgba(70, 25, 8, 0.45);
+  padding-bottom: 0.18em; /* script ascenders sit high; nudge the visual centre */
+}
+
+.envelope-overlay.opened-flap .wax-seal {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.6);
+}
+
+.open-action-wrapper {
+  margin-top: 34px;
+  text-align: center;
+  transition: opacity 0.4s ease;
+}
+
+.btn-open-invitation {
+  background: var(--terracotta);
+  color: var(--cream-text);
+  border: none;
+  padding: 12px 44px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px -10px rgba(143, 74, 47, 0.6);
+  transition: var(--transition);
+}
+
+.btn-open-invitation:hover {
+  background: var(--terracotta-deep);
+  transform: translateY(-2px);
+}
+
+
+/* --- mobile overrides --- */
+@media (max-width: 768px) {
+  /* Envelope: 240 × 340 on phones */
+  .envelope-container {
+    width: 240px;
+    height: 340px;
+  }
+
+  .envelope-front-left {
+    border-left: 120px solid #a7aa7f;
+    border-top: 140px solid transparent;
+    border-bottom: 200px solid #a7aa7f;
+  }
+
+  .envelope-front-right {
+    border-right: 120px solid #9c9f74;
+    border-top: 140px solid transparent;
+    border-bottom: 200px solid #9c9f74;
+  }
+
+  .envelope-front-bottom {
+    border-bottom: 180px solid #b0b388;
+    border-left: 120px solid transparent;
+    border-right: 120px solid transparent;
+  }
+
+  .envelope-flap-top {
+    height: 145px;
+  }
+
+  .envelope-flap-top .flap-triangle {
+    border-top: 145px solid #b7ba8f;
+    border-left: 120px solid transparent;
+    border-right: 120px solid transparent;
+  }
+
+  .wax-seal {
+    top: 112px;
+    width: 66px;
+    height: 66px;
+  }
+
+  .wax-monogram {
+    font-size: 1.3rem;
+  }
+
+  .envelope-letter {
+    top: 8px;
+    left: 12px;
+    width: 216px;
+    height: 324px;
+  }
+
+  .envelope-overlay.opened-flap .envelope-letter {
+    transform: translateY(-235px) scale(1.03);
+  }
+
+  .envelope-names {
+    font-size: 3rem;
+  }
+}
