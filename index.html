@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261007i">
+  <link rel="stylesheet" href="css/styles.css?v=20261018">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -134,26 +134,6 @@
       </div>
     </section>
 
-    <!-- PARENTS -->
-    <section class="section parents-section" id="parents">
-      <div class="container narrow text-center">
-        <h2 class="h-script" data-i18n="parents.title">Nuestros señores padres</h2>
-
-        <div class="parents-row">
-          <div class="parents-col">
-            <p class="hand-label" data-i18n="parents.bride">Padres de la novia</p>
-            <p class="parent-name">Mª Ángeles Sánchez Alcoba</p>
-            <p class="parent-name">Carlos Quijano Junquera</p>
-          </div>
-          <div class="parents-col">
-            <p class="hand-label" data-i18n="parents.groom">Padres del novio</p>
-            <p class="parent-name">Verónica López García</p>
-            <p class="parent-name">Pablo Atienza de Frutos</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- COUNTDOWN -->
     <section class="section countdown-section" id="countdown">
       <div class="container narrow text-center">
@@ -194,7 +174,7 @@
             <p class="hand-label" data-i18n="loc.ceremony">Ceremonia · 12:30</p>
             <h3 class="location-name">Parroquia de San José</h3>
             <p class="location-address">C. Alcalá, 43<br>Madrid</p>
-            <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver mapa</a>
+            <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver en el mapa</a>
           </article>
 
           <article class="location">
@@ -202,7 +182,7 @@
             <p class="hand-label" data-i18n="loc.reception">Convite · 14:30</p>
             <h3 class="location-name">Complejo La Cigüeña</h3>
             <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
-            <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver mapa</a>
+            <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver en el mapa</a>
           </article>
         </div>
       </div>
@@ -332,7 +312,13 @@
 
           <div class="form-actions">
             <button type="submit" id="btn-submit-direct" class="btn-primary" data-i18n="rsvp.submit">Confirmar</button>
-            <a id="rsvp-whatsapp-link" class="link-button" href="https://wa.me/" target="_blank" rel="noopener" style="display:none;" data-i18n="rsvp.whatsapp">¿Alguna duda? Escríbenos por WhatsApp</a>
+          </div>
+
+          <!-- Contact for questions only (the form cannot be sent by WhatsApp).
+               Links are built by js/script.js from whatsappContacts in js/rsvp-config.js. -->
+          <div id="rsvp-contact" class="rsvp-contact" style="display:none;">
+            <p class="rsvp-contact-label" data-i18n="rsvp.whatsapp">¿Alguna duda? Escríbenos por WhatsApp</p>
+            <ul id="rsvp-contact-list" class="rsvp-contact-list"></ul>
           </div>
 
           <div id="rsvp-status-message" class="rsvp-status-message" role="alert" style="display:none;"></div>
@@ -424,10 +410,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261007i"></script>
-  <script src="js/rsvp-config.js?v=20261007i"></script>
-  <script src="js/script.js?v=20261007i"></script>
-  <script src="js/playlist-config.js?v=20261007i"></script>
-  <script src="js/playlist.js?v=20261007i"></script>
+  <script src="js/i18n.js?v=20261018"></script>
+  <script src="js/rsvp-config.js?v=20261018"></script>
+  <script src="js/script.js?v=20261018"></script>
+  <script src="js/playlist-config.js?v=20261018"></script>
+  <script src="js/playlist.js?v=20261018"></script>
 </body>
 </html>

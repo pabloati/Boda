@@ -2,12 +2,12 @@
 
 The "Confirmar" button POSTs the form as JSON to a Google Apps Script web app. The script appends one row per reply to a Google Sheet the couple owns. Google hosts the script for free and the Sheet is the private view of the responses; no extra account or server is needed.
 
-WhatsApp is not a way to send the form any more. Under the button, "¿Alguna duda? Escríbenos por WhatsApp" opens a chat with the couple (number from `js/rsvp-config.js`) for questions only; the link is hidden while the number is empty.
+WhatsApp is not a way to send the form any more. Under the button, "¿Alguna duda? Escríbenos por WhatsApp" lists one link per person in `whatsappContacts` (`js/rsvp-config.js`): WhatsApp logo, name and number, opening a chat with no prefilled text. The block is hidden while the list is empty.
 
 ## Files
 
-- `js/rsvp-config.js`: web app URL and WhatsApp number. Empty URL = the form cannot save and shows an error.
-- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows the pending / success / error message, sets the WhatsApp contact link.
+- `js/rsvp-config.js`: web app URL and WhatsApp contacts (name + number). Empty URL = the form cannot save and shows an error.
+- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows the pending / success / error message, builds the WhatsApp contact links.
 - `docs/rsvp-apps-script.gs`: the server side, to paste into Google.
 
 ## Fields sent
@@ -34,7 +34,7 @@ When the guest is not coming, companions, bus, diet and menu are sent empty. The
 3. Deploy → New deployment → type "Web app". Description: "RSVP". Execute as: **Me**. Who has access: **Anyone**. Click Deploy.
 4. Google asks for authorisation the first time: Review permissions → choose the account → "Advanced" → "Go to … (unsafe)" → Allow. This warning only appears because the script is not published in the store; it is your own code.
 5. Copy the web app URL (ends in `/exec`). Open it in a browser: it must show `{"ok":true,"message":"RSVP endpoint activo"}`.
-6. Paste that URL into `endpoint` in `js/rsvp-config.js`, and the couple's number into `whatsappNumber` (digits only, with country code: `34600000000`).
+6. Paste that URL into `endpoint` in `js/rsvp-config.js`, and the couple's names and numbers into `whatsappContacts` (digits only, with country code: `34600000000`).
 7. Bump the `?v=` cache-buster on `js/rsvp-config.js` in `index.html`, commit, push. Send a test reply from the published site and check the row appears in the "Respuestas" sheet.
 
 ## After the first deploy

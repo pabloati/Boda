@@ -68,10 +68,6 @@ window.I18N = (function () {
     // --- intro ---
     'intro.text': '&laquo;There is no fear in love, but perfect love casts out fear.&raquo;',
     'intro.ref': '1 John 4:18',
-    // --- parents ---
-    'parents.title': 'Our parents',
-    'parents.bride': 'Parents of the bride',
-    'parents.groom': 'Parents of the groom',
     // --- countdown ---
     'countdown.title': 'Only a few days to go',
     'countdown.days': 'days',
@@ -83,7 +79,7 @@ window.I18N = (function () {
     'loc.title': 'Where and when',
     'loc.ceremony': 'Ceremony · 12:30',
     'loc.reception': 'Reception · 14:30',
-    'loc.map': 'See map',
+    'loc.map': 'See it on the map',
     // --- timeline ---
     'tl.title': 'The day',
     'tl.1.title': 'Ceremony',

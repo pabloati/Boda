@@ -659,9 +659,11 @@ button {
 }
 
 .hero-date {
-  font-size: 1.25rem;
+  font-size: 1.45rem;
+  font-weight: 600;
   letter-spacing: 2px;
-  color: var(--cream-text);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(0, 0, 0, 0.45);
 }
 
 .hero-location {
@@ -722,30 +724,6 @@ button {
   font-family: var(--font-hand);
   font-size: 0.85rem;
   color: rgba(246, 242, 232, 0.85);
-}
-
-/* ========================================================
-   PARENTS
-======================================================== */
-.parents-row {
-  display: flex;
-  justify-content: center;
-  gap: 0;
-}
-
-.parents-col {
-  flex: 1 1 0;
-  padding: 6px 28px;
-}
-
-.parents-col + .parents-col {
-  border-left: 1px solid var(--paper-line);
-}
-
-.parent-name {
-  font-size: 1.35rem;
-  color: var(--ink);
-  line-height: 1.4;
 }
 
 /* ========================================================
@@ -827,48 +805,60 @@ button {
 /* ========================================================
    TIMELINE
 ======================================================== */
+/* Geometry: the dots sit on a vertical axis at --tl-line from the list's left
+   edge; each item draws its own segment down to the next dot, so the line
+   starts at the first circle and ends at the last one. */
 .timeline {
+  --tl-line: 72px;
+  --tl-pad: 96px;
+  --tl-gap: 34px;
+  --tl-dot: 11px;
+  --tl-dot-top: 12px;
   list-style: none;
   max-width: 440px;
   margin: 0 auto;
   position: relative;
-  padding-left: 96px;
-}
-
-.timeline::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  left: 72px;
-  width: 1px;
-  background: var(--olive-soft);
+  padding-left: var(--tl-pad);
 }
 
 .timeline-item {
   position: relative;
-  margin-bottom: 34px;
+  margin-bottom: var(--tl-gap);
 }
 
 .timeline-item:last-child {
   margin-bottom: 0;
 }
 
+/* the dot, centred on the axis */
 .timeline-item::before {
   content: "";
   position: absolute;
-  left: -28px;
-  top: 12px;
-  width: 9px;
-  height: 9px;
+  z-index: 1;
+  left: calc(var(--tl-line) - var(--tl-pad) - var(--tl-dot) / 2);
+  top: var(--tl-dot-top);
+  width: var(--tl-dot);
+  height: var(--tl-dot);
+  box-sizing: border-box;
   border-radius: 50%;
   background: var(--paper);
   border: 1px solid var(--olive);
 }
 
+/* the segment from this dot's centre to the next dot's centre */
+.timeline-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--tl-line) - var(--tl-pad) - 0.5px);
+  top: calc(var(--tl-dot-top) + var(--tl-dot) / 2);
+  bottom: calc(-1 * (var(--tl-gap) + var(--tl-dot-top) + var(--tl-dot) / 2));
+  width: 1px;
+  background: var(--olive-soft);
+}
+
 .timeline-time {
   position: absolute;
-  left: -96px;
+  left: calc(-1 * var(--tl-pad));
   top: 2px;
   width: 56px;
   text-align: right;
@@ -1013,6 +1003,58 @@ select.form-control {
   font-size: 1.05rem;
   color: var(--olive-deep);
   border-top: 1px solid var(--paper-line);
+}
+
+/* questions by WhatsApp: one link per person, logo + name + number */
+.rsvp-contact {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.rsvp-contact-label {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.rsvp-contact-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 36px;
+  padding: 0;
+  margin: 0;
+}
+
+.rsvp-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--terracotta);
+  font-size: 1.1rem;
+  line-height: 1.4;
+  transition: var(--transition);
+}
+
+.rsvp-contact-link:hover {
+  color: var(--terracotta-deep);
+}
+
+.rsvp-contact-link .wa-logo {
+  flex: none;
+  color: var(--olive);
+}
+
+.rsvp-contact-name::after {
+  content: "\00B7";
+  margin: 0 6px;
+  color: var(--ink-soft);
+}
+
+.rsvp-contact-number {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  border-bottom: 1px solid currentColor;
 }
 
 /* ========================================================
@@ -1537,27 +1579,12 @@ select.form-control {
     margin-bottom: 30px;
   }
 
-  .parents-row {
-    flex-direction: column;
-    gap: 22px;
-  }
-
-  .parents-col + .parents-col {
-    border-left: none;
-    border-top: 1px solid var(--paper-line);
-    padding-top: 22px;
-  }
-
   .timeline {
-    padding-left: 80px;
-  }
-
-  .timeline::before {
-    left: 60px;
+    --tl-line: 60px;
+    --tl-pad: 80px;
   }
 
   .timeline-time {
-    left: -80px;
     width: 48px;
     font-size: 1rem;
   }
