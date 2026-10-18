@@ -12,6 +12,7 @@
   const envelopeOverlay = document.getElementById('envelope-overlay');
   const btnOpenEnvelope = document.getElementById('btn-open-envelope');
   const waxSeal = document.getElementById('wax-seal');
+  const envelopeLetter = document.getElementById('envelope-letter');
   const weddingAudio = document.getElementById('wedding-audio');
   const btnMusicToggle = document.getElementById('btn-music-toggle');
   const musicIcon = document.getElementById('music-icon');
@@ -85,24 +86,88 @@
   });
 
   // --- 3. ENVELOPE OPENING ANIMATION ---
+  // Flap up → the envelope falls away → the card turns over and grows → fade onto the hero.
+  // The CSS phases are the classes opened-flap / drop / flip / fill / opened on the overlay.
+
+  // Takes the card out of the envelope's layout: same screen box, but fixed to the viewport,
+  // so the envelope parts can fall past it. The .detached class drops the peek translate.
+  function detachLetter() {
+    if (!envelopeLetter) return;
+    const r = envelopeLetter.getBoundingClientRect();
+    envelopeLetter.style.transition = 'none';
+    envelopeLetter.style.position = 'fixed';
+    envelopeLetter.style.top = r.top + 'px';
+    envelopeLetter.style.left = r.left + 'px';
+    envelopeLetter.style.width = r.width + 'px';
+    envelopeLetter.style.height = r.height + 'px';
+    envelopeLetter.classList.add('detached');
+    envelopeLetter.getBoundingClientRect(); // flush, so the next values animate
+    envelopeLetter.style.transition = '';
+  }
+
+  // --s scales the hero copy on the card back: card width over viewport width (1 = the real hero)
+  function setLetterBox(top, left, width, height) {
+    if (!envelopeLetter) return;
+    envelopeLetter.style.top = top + 'px';
+    envelopeLetter.style.left = left + 'px';
+    envelopeLetter.style.width = width + 'px';
+    envelopeLetter.style.height = height + 'px';
+    envelopeLetter.style.setProperty('--s', (width / window.innerWidth).toFixed(4));
+  }
+
+  function syncLetterScale() {
+    if (!envelopeLetter || envelopeLetter.classList.contains('detached')) return;
+    const w = envelopeLetter.getBoundingClientRect().width;
+    if (w) envelopeLetter.style.setProperty('--s', (w / window.innerWidth).toFixed(4));
+  }
+  syncLetterScale();
+  window.addEventListener('resize', syncLetterScale);
+
+  function centerLetter() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = Math.min(vw * 0.78, vh * 0.56 * 2 / 3);
+    const h = w * 1.5;
+    setLetterBox((vh - h) / 2, (vw - w) / 2, w, h);
+  }
+
   function openEnvelope() {
     // 1. Play background music on user gesture
     playMusic();
+    if (!envelopeOverlay) return;
+    if (waxSeal) waxSeal.disabled = true;
 
-    // 2. Open flap 3D animation
-    if (envelopeOverlay) {
-      envelopeOverlay.classList.add('opened-flap');
-
-      // 3. After letter slides out and flap opens, fade out overlay
-      setTimeout(() => {
-        envelopeOverlay.classList.add('opened');
-      }, 1700);
-
-      // 4. Remove overlay from DOM flow after transition
-      setTimeout(() => {
-        envelopeOverlay.style.display = 'none';
-      }, 2600);
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      envelopeOverlay.classList.add('opened-flap', 'opened');
+      setTimeout(() => { envelopeOverlay.style.display = 'none'; }, 700);
+      return;
     }
+
+    // 2. 0.0s: flap opens, seal fades, the card peeks out
+    envelopeOverlay.classList.add('opened-flap');
+
+    // 3. 0.7s: the envelope falls off the screen while the card floats to the centre
+    setTimeout(() => {
+      envelopeOverlay.classList.add('drop');
+      detachLetter();
+      centerLetter();
+    }, 700);
+
+    // 4. 1.6s: the card turns over
+    setTimeout(() => envelopeOverlay.classList.add('flip'), 1600);
+
+    // 5. 2.1s: ...and grows to the viewport while turning; its back is the hero
+    setTimeout(() => {
+      envelopeOverlay.classList.add('fill');
+      setLetterBox(0, 0, window.innerWidth, window.innerHeight);
+    }, 2100);
+
+    // 6. 2.85s: overlay fades; the real hero underneath matches the card back
+    setTimeout(() => envelopeOverlay.classList.add('opened'), 2850);
+
+    // 7. Remove overlay from DOM flow after the fade
+    setTimeout(() => { envelopeOverlay.style.display = 'none'; }, 3500);
   }
 
   if (btnOpenEnvelope) {

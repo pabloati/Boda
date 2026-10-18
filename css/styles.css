@@ -278,7 +278,7 @@ button {
   justify-content: center;
   overflow: hidden;
   perspective: 1400px;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
 }
 
 .envelope-overlay.opened {
@@ -296,38 +296,6 @@ button {
   padding: 20px;
 }
 
-.envelope-card-preview {
-  text-align: center;
-  margin-bottom: 28px;
-  animation: fadeInDown 1s ease-out;
-  transition: opacity 0.4s ease;
-}
-
-.envelope-overlay.opened-flap .envelope-card-preview {
-  opacity: 0;
-}
-
-.envelope-subtitle {
-  font-size: 0.85rem;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--olive-deep);
-}
-
-.envelope-names {
-  font-family: var(--font-script);
-  font-size: 3.6rem;
-  line-height: 1;
-  color: var(--ink);
-  margin: 6px 0 8px;
-}
-
-.envelope-date {
-  font-size: 0.95rem;
-  letter-spacing: 2px;
-  color: var(--ink-soft);
-}
-
 /* The envelope keeps the photo's proportions (1440 × 1776). Desktop: sized by height; phones: by width. */
 .envelope-container {
   position: relative;
@@ -335,8 +303,26 @@ button {
   height: min(66vh, 620px);
   aspect-ratio: 1440 / 1776;
   border-radius: 3px;
-  box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
   /* no transform-style: preserve-3d here: flat stacking lets z-index put the card above the opened flap */
+}
+
+/* Phase 2: every part of the envelope falls off the screen; the card (detached, fixed) stays */
+.envelope-back,
+.envelope-front,
+.envelope-side {
+  transition: transform 0.9s cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+.envelope-overlay.drop .envelope-back,
+.envelope-overlay.drop .envelope-front,
+.envelope-overlay.drop .envelope-side {
+  transform: translateY(130vh);
+}
+
+/* needs the extra class to outrank the .opened-flap rotate rule below */
+.envelope-overlay.opened-flap.drop .envelope-flap-top {
+  transform: translateY(130vh) rotateX(180deg);
+  transition: transform 0.9s cubic-bezier(0.55, 0, 1, 0.45);
 }
 
 /* Every layer is the same photo stretched to the container, so the clip-path percentages line up */
@@ -356,9 +342,10 @@ button {
   background:
     linear-gradient(180deg, rgba(55, 58, 38, 0.4) 0%, rgba(55, 58, 38, 0.24) 60%),
     url('../assets/sobre-papel.jpg') center / cover no-repeat;
+  box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
 }
 
-/* z2 — the card, 2:3, sitting inside the pocket */
+/* z2 — the card, 2:3, sitting inside the pocket. Two faces: tarjeta.jpg in front, the hero behind. */
 .envelope-letter {
   position: absolute;
   top: 7%;
@@ -366,23 +353,121 @@ button {
   width: 70%;
   aspect-ratio: 2 / 3;
   z-index: 2;
-  background: #ffffff;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+}
+
+/* Phase 1: the card peeks out while the flap opens */
+.envelope-overlay.opened-flap .envelope-letter:not(.detached) {
+  transform: translateY(-22%);
+}
+
+/* Phase 2+: openEnvelope() fixes the card to the viewport at its current box and animates top/left/width/height */
+.envelope-letter.detached {
+  aspect-ratio: auto;
+  transition:
+    top 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+/* Phase 3: the card turns over */
+.envelope-overlay.flip .envelope-letter {
+  transform: rotateY(-180deg);
+}
+
+/* Phase 4: ...and grows to the viewport while turning */
+.envelope-overlay.fill .envelope-letter {
+  transition:
+    top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: 1.5% / 1%;
   overflow: hidden;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
+  transition: border-radius 0.8s ease, box-shadow 0.8s ease;
 }
 
-.envelope-letter img {
+.envelope-overlay.fill .card-face {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card-front {
+  background: #ffffff;
+}
+
+.card-front img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.envelope-overlay.opened-flap .envelope-letter {
-  transform: translateY(-46%);
+/* The back is the hero (same photo, overlay and copy) so the fade onto the page is a match cut.
+   Everything inside is the hero's own geometry multiplied by --s, the card width over the viewport
+   width (set by openEnvelope()). At --s: 1 it is the hero, pixel for pixel. */
+.card-back {
+  --s: 1;
+  --card-t: 0s;
+  --card-ease: ease;
+  transform: rotateY(180deg);
+  background: var(--olive-deep) url('../assets/hero.jpg') center 40% / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(60px * var(--s)) calc(20px * var(--s));
+  color: var(--cream-text);
+  transition: border-radius 0.8s ease, box-shadow 0.8s ease, padding var(--card-t) var(--card-ease);
 }
+
+.envelope-letter.detached .card-back {
+  --card-t: 0.9s;
+  --card-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.envelope-overlay.fill .card-back {
+  --card-t: 0.8s;
+  --card-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(40, 38, 30, 0.35) 0%, rgba(40, 38, 30, 0.2) 45%, rgba(60, 60, 40, 0.65) 100%);
+}
+
+.card-back-content {
+  position: relative;
+  max-width: calc(760px * var(--s));
+  padding: calc(20px * var(--s)) calc(10px * var(--s));
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+}
+
+.card-back-content,
+.card-back-content * {
+  transition: all var(--card-t) var(--card-ease);
+}
+
+.card-back .hero-pretitle { font-size: calc(0.95rem * var(--s)); letter-spacing: calc(6px * var(--s)); margin-bottom: calc(6px * var(--s)); }
+.card-back .hero-title { font-size: calc(clamp(3.6rem, 14vw, 7.5rem) * var(--s)); margin-bottom: calc(18px * var(--s)); }
+.card-back .hero-date { font-size: calc(1.45rem * var(--s)); letter-spacing: calc(2px * var(--s)); white-space: nowrap; /* no one-frame rewrap mid-growth */ }
+.card-back .hero-location { font-size: calc(1rem * var(--s)); letter-spacing: calc(4px * var(--s)); margin: calc(6px * var(--s)) 0 calc(44px * var(--s)); }
+.card-back .scroll-indicator { font-size: calc(0.8rem * var(--s)); letter-spacing: calc(3px * var(--s)); gap: calc(10px * var(--s)); }
+.card-back .chevron { width: calc(10px * var(--s)); height: calc(10px * var(--s)); }
 
 /* z3 — the body of the envelope: the photo minus the flap triangle */
 .envelope-front {
@@ -471,6 +556,8 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   .wax-seal { animation: none; }
+  /* openEnvelope() also skips straight to the fade when this matches */
+  .envelope-overlay *, .envelope-overlay .envelope-letter.detached { transition-duration: 0.01ms !important; }
 }
 
 /* ========================================================
@@ -1635,25 +1722,20 @@ select.form-control {
     gap: 24px 16px;
   }
 
-  /* Envelope: as wide as the phone allows while leaving room for the title above */
+  /* Envelope: as wide as the phone allows */
   .envelope-container {
     height: auto;
-    width: min(100vw - 56px, calc((100vh - 240px) * 1440 / 1776));
-    width: min(100vw - 56px, calc((100svh - 240px) * 1440 / 1776));
+    width: min(100vw - 56px, calc((100vh - 160px) * 1440 / 1776));
+    width: min(100vw - 56px, calc((100svh - 160px) * 1440 / 1776));
   }
 
-  .envelope-names {
-    font-size: 3rem;
+  .card-back {
+    background-image: url('../assets/hero-portrait.jpg');
+    background-position: center 30%;
+  }
+
+  .card-back .hero-location {
+    margin-bottom: calc(30px * var(--s));
   }
 }
 
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}

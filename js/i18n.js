@@ -58,7 +58,6 @@ window.I18N = (function () {
 
   const EN = {
     // --- envelope ---
-    'env.subtitle': "We're getting married",
     'env.sealAria': 'Open the invitation',
     // --- hero ---
     'hero.pretitle': "We're getting married",

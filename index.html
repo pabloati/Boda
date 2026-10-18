@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261018">
+  <link rel="stylesheet" href="css/styles.css?v=20261018b">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -56,20 +56,29 @@
   <!-- 13.9%, flap tip (50%, 62.6%), side flaps meet at          -->
   <!-- (50%, 14%), side/flap edges cross at (20.3%, 33.7%),      -->
   <!-- seal centre (50%, 53.2%), seal diameter 27.8% of width.   -->
+  <!-- Opening: flap up, the envelope falls away, the card turns  -->
+  <!-- over and its back (the hero) grows to fill the screen.     -->
+  <!-- Timings live in openEnvelope() in js/script.js.            -->
   <!-- ======================================================== -->
   <div id="envelope-overlay" class="envelope-overlay" role="dialog" aria-modal="true" aria-label="Apertura de la invitación">
     <div class="envelope-scene">
-    <div class="envelope-card-preview" id="card-preview">
-      <p class="envelope-subtitle" data-i18n="env.subtitle">Nos casamos</p>
-      <h2 class="envelope-names">Mª Ángeles &amp; Pablo</h2>
-      <p class="envelope-date">13 · 03 · 2027 &nbsp;·&nbsp; Madrid</p>
-    </div>
-
     <div class="envelope-container" id="envelope-container">
       <div class="envelope-back" aria-hidden="true"></div>
 
       <div class="envelope-letter" id="envelope-letter">
-        <img src="assets/tarjeta.jpg" alt="Tarjeta de invitación de Mª Ángeles y Pablo" width="800" height="1200" decoding="async">
+        <div class="card-face card-front">
+          <img src="assets/tarjeta.jpg" alt="Tarjeta de invitación de Mª Ángeles y Pablo" width="800" height="1200" decoding="async">
+        </div>
+        <!-- The back repeats the hero so the reveal lands on the page unchanged -->
+        <div class="card-face card-back" aria-hidden="true">
+          <div class="card-back-content">
+            <p class="hero-pretitle" data-i18n="hero.pretitle">Nos casamos</p>
+            <p class="hero-title">Mª Ángeles <span class="nowrap">&amp; Pablo</span></p>
+            <p class="hero-date" data-i18n="hero.date">Sábado, 13 de marzo de 2027</p>
+            <p class="hero-location">Madrid</p>
+            <span class="scroll-indicator"><span data-i18n="hero.scroll">Desliza</span><span class="chevron"></span></span>
+          </div>
+        </div>
       </div>
 
       <div class="envelope-front" aria-hidden="true"></div>
@@ -410,10 +419,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261018"></script>
-  <script src="js/rsvp-config.js?v=20261018"></script>
-  <script src="js/script.js?v=20261018"></script>
-  <script src="js/playlist-config.js?v=20261018"></script>
-  <script src="js/playlist.js?v=20261018"></script>
+  <script src="js/i18n.js?v=20261018b"></script>
+  <script src="js/rsvp-config.js?v=20261018b"></script>
+  <script src="js/script.js?v=20261018b"></script>
+  <script src="js/playlist-config.js?v=20261018b"></script>
+  <script src="js/playlist.js?v=20261018b"></script>
 </body>
 </html>
