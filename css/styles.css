@@ -303,6 +303,7 @@ button {
   height: min(66vh, 620px);
   aspect-ratio: 1440 / 1776;
   border-radius: 3px;
+  container-type: inline-size;   /* cqw units for .envelope-side */
   /* no transform-style: preserve-3d here: flat stacking lets z-index put the card above the opened flap */
 }
 
@@ -472,13 +473,17 @@ button {
 /* z3 — the body of the envelope: the photo minus the flap triangle */
 .envelope-front {
   z-index: 3;
-  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 100% 13.9%, 50% 62.6%, 0 13.9%);
+  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 100% 15.5%, 50% 62.6%, 0 13.9%);
 }
 
-/* z3 — the side flaps continue under the top flap; plain paper from a lineless part of the photo */
+/* z3 — the side flaps continue under the top flap. The photo has nothing to
+   show there, so the same photo is sampled 33% of its height lower (sharp,
+   lineless bottom-flap paper of the same tone): 0.33 × 1776/1440 = 40.7cqw.
+   Paper from the flap itself was out of focus and showed a ghost V. */
 .envelope-side {
   z-index: 3;
-  background: url('../assets/sobre-papel.jpg') center / cover no-repeat;
+  background-position: 0 -40.7cqw;
+  filter: brightness(1.012);   /* that paper is ~1% darker than the paper beside it */
 }
 
 .envelope-side-left {
@@ -486,13 +491,13 @@ button {
 }
 
 .envelope-side-right {
-  clip-path: polygon(79.7% 33.7%, 50% 14%, 50% 62.6%);
+  clip-path: polygon(80% 34.3%, 50% 14%, 50% 62.6%);
 }
 
 /* z5 — the flap: the photo above the diagonals, hinged on the top edge */
 .envelope-flap-top {
   z-index: 5;
-  clip-path: polygon(0 0, 100% 0, 100% 13.9%, 50% 62.6%, 0 13.9%);
+  clip-path: polygon(0 0, 100% 0, 100% 15.5%, 50% 62.6%, 0 13.9%);
   transform-origin: top center;
   backface-visibility: visible;
   transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s linear 0.5s;
