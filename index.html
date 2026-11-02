@@ -20,7 +20,7 @@
   <!-- Google Fonts: Cormorant Garamond (text), Allison (script headings), Homemade Apple (handwritten notes) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Tab icon: two gold rings. SVG for modern browsers, PNGs for the rest and for iOS home screens -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261102">
+  <link rel="stylesheet" href="css/styles.css?v=20261102b">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -72,6 +72,11 @@
         </div>
         <!-- The back repeats the hero so the reveal lands on the page unchanged -->
         <div class="card-face card-back" aria-hidden="true">
+          <span class="cover-spine"></span>
+          <div class="cover-frame">
+            <span class="cover-series" data-i18n="guide.series">Guía de la boda</span>
+            <span class="cover-edition" data-i18n="guide.edition">Edición limitada · 2027</span>
+          </div>
           <div class="card-back-content">
             <p class="hero-pretitle" data-i18n="hero.pretitle">Nos casamos</p>
             <p class="hero-title">Mª Ángeles <span class="nowrap">&amp; Pablo</span></p>
@@ -137,6 +142,13 @@
         <img src="assets/hero.jpg" alt="" loading="eager" decoding="async">
       </picture>
       <div class="hero-overlay" aria-hidden="true"></div>
+      <!-- Travel-guide trial: the hero is the guide's cover (frame, series line, spine).
+           The card back in the envelope repeats these, scaled by --s. -->
+      <span class="cover-spine" aria-hidden="true"></span>
+      <div class="cover-frame" aria-hidden="true">
+        <span class="cover-series" data-i18n="guide.series">Guía de la boda</span>
+        <span class="cover-edition" data-i18n="guide.edition">Edición limitada · 2027</span>
+      </div>
 
       <div class="hero-content">
         <p class="hero-pretitle" data-i18n="hero.pretitle">Nos casamos</p>
@@ -159,9 +171,38 @@
       </div>
     </section>
 
+    <!-- TRAVEL-GUIDE TRIAL: table of contents. Numbers are the chapter numbers. -->
+    <nav class="section guide-index" id="indice" aria-labelledby="indice-title">
+      <div class="container narrow">
+        <h2 class="h-script text-center" id="indice-title" data-i18n="guide.indexTitle">Índice</h2>
+        <ol class="toc">
+          <li><a href="#historia"><span class="toc-name" data-i18n="guide.toc1">Los viajeros</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">01</span></a></li>
+          <li><a href="#countdown"><span class="toc-name" data-i18n="guide.toc2">La cuenta atrás</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">02</span></a></li>
+          <li><a href="#locations"><span class="toc-name" data-i18n="guide.toc3">Cómo llegar</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">03</span></a></li>
+          <li><a href="#timeline"><span class="toc-name" data-i18n="guide.toc4">Itinerario</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">04</span></a></li>
+          <li><a href="#rsvp"><span class="toc-name" data-i18n="guide.toc5">Check-in</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">05</span></a></li>
+          <li><a href="#gifts"><span class="toc-name" data-i18n="guide.toc6">Equipaje</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">06</span></a></li>
+          <li><a href="#playlist"><span class="toc-name" data-i18n="guide.toc7">Banda sonora</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">07</span></a></li>
+          <li><a href="#social"><span class="toc-name" data-i18n="guide.toc8">Álbum</span><span class="toc-dots" aria-hidden="true"></span><span class="toc-num">08</span></a></li>
+        </ol>
+      </div>
+    </nav>
+
+    <!-- TRAVEL-GUIDE TRIAL: chapter 01, the couple's story. Placeholder until they write it. -->
+    <section class="section band-paper story-section" id="historia">
+      <div class="container narrow text-center">
+        <p class="chapter-label" data-i18n="guide.ch1">Capítulo 01 · Los viajeros</p>
+        <h2 class="h-script" data-i18n="story.title">Nuestra historia</h2>
+        <div class="story-placeholder">
+          <p data-i18n="story.placeholder">Aquí irá nuestra historia: cómo nos conocimos y el viaje que nos ha traído hasta aquí. (Texto pendiente)</p>
+        </div>
+      </div>
+    </section>
+
     <!-- COUNTDOWN -->
     <section class="section countdown-section" id="countdown">
       <div class="container narrow text-center">
+        <p class="chapter-label" data-i18n="guide.ch2">Capítulo 02 · La cuenta atrás</p>
         <h2 class="h-script" data-i18n="countdown.title">Faltan muy pocos días</h2>
 
         <div class="countdown-grid" id="countdown-clock" data-target-date="2027-03-13T12:30:00">
@@ -190,6 +231,7 @@
     <!-- WHERE & WHEN -->
     <section class="section band-paper locations-section" id="locations">
       <div class="container narrow text-center">
+        <p class="chapter-label" data-i18n="guide.ch3">Capítulo 03 · Cómo llegar</p>
         <h2 class="h-script" data-i18n="loc.title">Dónde y cuándo</h2>
 
         <div class="locations-grid">
@@ -216,6 +258,7 @@
     <!-- TIMELINE -->
     <section class="section timeline-section" id="timeline">
       <div class="container narrow">
+        <p class="chapter-label" data-i18n="guide.ch4">Capítulo 04 · Itinerario</p>
         <h2 class="h-script text-center" data-i18n="tl.title">Hoja de ruta</h2>
 
         <ol class="timeline">
@@ -254,6 +297,7 @@
     <!-- RSVP -->
     <section class="section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
+        <p class="chapter-label" data-i18n="guide.ch5">Capítulo 05 · Check-in</p>
         <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
         <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027. Una respuesta por persona.</p>
 
@@ -363,6 +407,7 @@
     <!-- GIFTS -->
     <section class="section gifts-section" id="gifts">
       <div class="container narrow text-center">
+        <p class="chapter-label" data-i18n="guide.ch6">Capítulo 06 · Equipaje</p>
         <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
         <p class="section-lead" data-i18n="gifts.lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
 
@@ -381,6 +426,7 @@
     <!-- PLAYLIST (search + vote, see js/playlist.js) -->
     <section class="section band-paper playlist-section" id="playlist">
       <div class="container narrow">
+        <p class="chapter-label" data-i18n="guide.ch7">Capítulo 07 · Banda sonora</p>
         <h2 class="h-script text-center" data-i18n="pl.title">La playlist</h2>
         <p class="section-lead text-center" data-i18n="pl.lead">Busca la canción que no puede faltar, o vota las que ya están.</p>
 
@@ -427,6 +473,7 @@
     <!-- PHOTOS / HASHTAG -->
     <section class="section social-section" id="social">
       <div class="container narrow text-center">
+        <p class="chapter-label" data-i18n="guide.ch8">Capítulo 08 · Álbum</p>
         <h2 class="h-script" data-i18n="social.title">Fotos</h2>
         <p class="section-lead" data-i18n="social.lead">Sube tus fotos y vídeos del día con el hashtag</p>
         <p class="hashtag-text" id="wedding-hashtag">#BodaMariAngelesYPablo</p>
@@ -444,10 +491,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261102"></script>
-  <script src="js/rsvp-config.js?v=20261102"></script>
-  <script src="js/script.js?v=20261102"></script>
-  <script src="js/playlist-config.js?v=20261102"></script>
-  <script src="js/playlist.js?v=20261102"></script>
+  <script src="js/i18n.js?v=20261102b"></script>
+  <script src="js/rsvp-config.js?v=20261102b"></script>
+  <script src="js/script.js?v=20261102b"></script>
+  <script src="js/playlist-config.js?v=20261102b"></script>
+  <script src="js/playlist.js?v=20261102b"></script>
 </body>
 </html>
