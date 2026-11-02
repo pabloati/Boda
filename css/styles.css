@@ -29,7 +29,6 @@
   --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-script: 'Allison', cursive;
   --font-hand: 'Homemade Apple', cursive;
-  --desk: #d3c9b0;   /* travel-guide trial: the linen the pages lie on */
   --font-type: 'Courier Prime', 'Courier New', monospace;   /* travel-guide trial: chapter labels, cover lines */
 
   --transition: all 0.3s ease;
@@ -1788,83 +1787,10 @@ html.rsvp-modal-open { overflow: hidden; }
   transition: all var(--card-t) var(--card-ease);
 }
 
-/* Pages: every section after the cover is a sheet of paper on the linen
-   "desk" (.main-content), with stacked page edges, a shaded binding on the
-   left and its page number at the bottom (CSS counter). Coloured sections
-   keep their colour, like a coloured insert in a guidebook. */
-.main-content {
-  background: var(--desk);
-  counter-reset: page;
-  padding-bottom: 28px;
-}
-
-.page {
-  position: relative;
-  width: min(100% - 22px, 780px);
-  margin: 26px auto 0;
-  background-color: var(--paper);
-  border-radius: 2px 4px 4px 2px;
-  counter-increment: page;
-  box-shadow:
-    2px 2px 0 -1px var(--paper),
-    2px 2px 0 0 var(--paper-line),
-    5px 5px 0 -1px var(--paper),
-    5px 5px 0 0 var(--paper-line),
-    0 22px 34px -22px rgba(59, 56, 47, 0.55);
-}
-
-.page.band-paper { background-color: var(--paper-deep); }
-.page.band-olive,
-.page.intro-band { background-color: var(--olive); }
-
-/* room for the folio; beats .section / .intro-band padding, including their mobile overrides */
-.main-content .page { padding-bottom: 92px; }
-
-/* binding shadow on the inner edge */
-.page::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 26px;
-  background: linear-gradient(90deg, rgba(59, 56, 47, 0.12), rgba(59, 56, 47, 0));
-  pointer-events: none;
-}
-
-/* folio */
-.page::after {
-  content: "— " counter(page) " —";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 30px;
-  text-align: center;
-  font-family: var(--font-type);
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  color: var(--ink-faint);
-}
-
-.page.band-olive::after,
-.page.intro-band::after { color: rgba(246, 242, 232, 0.7); }
-
-/* Paper: every page is a ruled travel-journal sheet, blue rules with a
-   terracotta margin line. On the olive pages the rules turn pale. */
-.page {
-  --rule-line: rgba(84, 110, 140, 0.16);
-  --rule-margin: rgba(179, 97, 63, 0.35);
-  background-image:
-    linear-gradient(90deg, transparent 46px, var(--rule-margin) 46px 47px, transparent 47px),
-    repeating-linear-gradient(180deg, transparent 0 33px, var(--rule-line) 33px 34px);
-  background-position: 0 0, 0 18px;
-}
-
-.page.band-olive,
-.page.intro-band {
-  --rule-line: rgba(246, 242, 232, 0.16);
-  --rule-margin: rgba(246, 242, 232, 0.32);
-}
+/* Every section after the cover carries class "page": the rolling header
+   (js/script.js §11) watches them. The book-sheet look (paper on linen, ruled
+   lines, page numbers) was tried and set aside on 2026-11-02; it lives in git
+   history (commit d6a79a5) for when it is tuned. */
 
 /* Chapter opener: a big chapter number, then the chapter name between rules */
 .chapter-opener {
