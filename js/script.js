@@ -556,4 +556,47 @@
     });
   }
 
+  // --- 11. ROLLING HEADER (travel-guide trial) ---
+  // Every page after the cover has class "page". The header stays hidden while
+  // the cover is on screen; then it names the page in the middle of the screen:
+  // "Capítulo 03 · Cómo llegar" from the chapter opener, or the page's data-rh
+  // key (epigraph, contents, back cover), plus its page number.
+  const runningHead = document.getElementById('running-head');
+  const heroEl = document.getElementById('hero');
+  if (runningHead && 'IntersectionObserver' in window) {
+    const pages = Array.from(document.querySelectorAll('.page'));
+    const rhChapter = runningHead.querySelector('.rh-chapter');
+    const rhPage = runningHead.querySelector('.rh-page');
+    let currentPage = null;
+
+    const renderRunningHead = function () {
+      if (!currentPage) return;
+      const num = currentPage.querySelector('.chapter-num');
+      const name = currentPage.querySelector('.chapter-name');
+      const label = num && name
+        ? t('guide.rhChapter', { n: num.textContent.trim(), name: name.textContent.trim() })
+        : (currentPage.dataset.rh ? t(currentPage.dataset.rh) : '');
+      if (rhChapter) rhChapter.textContent = label;
+      if (rhPage) rhPage.textContent = t('guide.rhPage', { n: pages.indexOf(currentPage) + 1 });
+    };
+
+    const pageWatcher = new IntersectionObserver(function (entries) {
+      entries.forEach(e => {
+        if (e.isIntersecting) { currentPage = e.target; renderRunningHead(); }
+      });
+    }, { rootMargin: '-45% 0px -54% 0px' });   // a thin line across the middle of the screen
+    pages.forEach(p => pageWatcher.observe(p));
+
+    if (heroEl) {
+      new IntersectionObserver(function (entries) {
+        const e = entries[0];
+        runningHead.classList.toggle('is-shown', !e.isIntersecting || e.intersectionRatio < 0.15);
+      }, { threshold: [0, 0.15] }).observe(heroEl);
+    } else {
+      runningHead.classList.add('is-shown');
+    }
+
+    document.addEventListener('langchange', renderRunningHead);
+  }
+
 })();

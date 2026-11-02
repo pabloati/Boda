@@ -2,7 +2,7 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
-- 2026-11-02 — On trial (branch `travel-guide`): the site as a travel guidebook. The hero is the guide's cover (frame, series line, sage spine) and the envelope opening still turns the couple's postcard over onto it; then a table of contents, chapter 01 for the couple's story (placeholder) and "Capítulo NN" labels on every section. If adopted, rewrite the Design section of CLAUDE.md.
+- 2026-11-02 — On trial (branch `travel-guide`): the site as a travel guidebook. The hero is the guide's cover (frame, series line, sage spine) and the envelope opening still turns the couple's postcard over onto it; then a table of contents, chapter 01 for the couple's story (placeholder) chapter openers (big number + name) on every section, every section after the cover drawn as a sheet of paper on linen with stacked edges, binding shadow and a page number, and a rolling header (book · chapter · page) that appears once the cover scrolls away. Original olive/terracotta palette. If adopted, rewrite the Design section of CLAUDE.md.
 - 2026-11-02 — On trial: guests taking the return bus choose where to be dropped off, Cibeles or Avenida de América. Needs the Apps Script republished to reach the Sheet (backlog D).
 - 2026-11-02 — RSVP is one reply per person: the companions box is gone, the form clears after each save so it can be sent again, and progress shows in a card over the whole page with a photo of the couple.
 - 2026-10-18 — Parents section removed from the invitation.

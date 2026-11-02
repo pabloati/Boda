@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261102b">
+  <link rel="stylesheet" href="css/styles.css?v=20261102c">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -102,6 +102,14 @@
   <!-- Language toggle: shows the language you can switch TO -->
   <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Cambiar a inglés">EN</button>
 
+  <!-- Travel-guide trial: rolling header. Hidden on the cover; while reading it
+       shows the book, the chapter in view and its page number (js/script.js §11). -->
+  <div id="running-head" class="running-head" aria-hidden="true">
+    <span class="rh-book" data-i18n="guide.series">Guía de la boda</span>
+    <span class="rh-chapter"></span>
+    <span class="rh-page"></span>
+  </div>
+
   <!-- RSVP progress card: covers the page while a reply is sent, then shows the
        result. Filled and shown by js/script.js section 7.
        Photo slot: drop a square photo at assets/foto-envio.jpg (about 800x800).
@@ -164,7 +172,7 @@
     </header>
 
     <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
-    <section class="intro-band" id="intro">
+    <section class="page intro-band" id="intro" data-rh="guide.rhEpigraph">
       <div class="container narrow text-center">
         <p class="intro-text" data-i18n="intro.text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
         <p class="intro-ref" data-i18n="intro.ref">1 Juan 4:18</p>
@@ -172,7 +180,7 @@
     </section>
 
     <!-- TRAVEL-GUIDE TRIAL: table of contents. Numbers are the chapter numbers. -->
-    <nav class="section guide-index" id="indice" aria-labelledby="indice-title">
+    <nav class="page section guide-index" id="indice" data-rh="guide.rhIndex" aria-labelledby="indice-title">
       <div class="container narrow">
         <h2 class="h-script text-center" id="indice-title" data-i18n="guide.indexTitle">Índice</h2>
         <ol class="toc">
@@ -189,9 +197,9 @@
     </nav>
 
     <!-- TRAVEL-GUIDE TRIAL: chapter 01, the couple's story. Placeholder until they write it. -->
-    <section class="section band-paper story-section" id="historia">
+    <section class="page section band-paper story-section" id="historia">
       <div class="container narrow text-center">
-        <p class="chapter-label" data-i18n="guide.ch1">Capítulo 01 · Los viajeros</p>
+        <p class="chapter-opener"><span class="chapter-num">01</span><span class="chapter-name" data-i18n="guide.toc1">Los viajeros</span></p>
         <h2 class="h-script" data-i18n="story.title">Nuestra historia</h2>
         <div class="story-placeholder">
           <p data-i18n="story.placeholder">Aquí irá nuestra historia: cómo nos conocimos y el viaje que nos ha traído hasta aquí. (Texto pendiente)</p>
@@ -200,9 +208,9 @@
     </section>
 
     <!-- COUNTDOWN -->
-    <section class="section countdown-section" id="countdown">
+    <section class="page section countdown-section" id="countdown">
       <div class="container narrow text-center">
-        <p class="chapter-label" data-i18n="guide.ch2">Capítulo 02 · La cuenta atrás</p>
+        <p class="chapter-opener"><span class="chapter-num">02</span><span class="chapter-name" data-i18n="guide.toc2">La cuenta atrás</span></p>
         <h2 class="h-script" data-i18n="countdown.title">Faltan muy pocos días</h2>
 
         <div class="countdown-grid" id="countdown-clock" data-target-date="2027-03-13T12:30:00">
@@ -229,9 +237,9 @@
     </section>
 
     <!-- WHERE & WHEN -->
-    <section class="section band-paper locations-section" id="locations">
+    <section class="page section band-paper locations-section" id="locations">
       <div class="container narrow text-center">
-        <p class="chapter-label" data-i18n="guide.ch3">Capítulo 03 · Cómo llegar</p>
+        <p class="chapter-opener"><span class="chapter-num">03</span><span class="chapter-name" data-i18n="guide.toc3">Cómo llegar</span></p>
         <h2 class="h-script" data-i18n="loc.title">Dónde y cuándo</h2>
 
         <div class="locations-grid">
@@ -256,9 +264,9 @@
     </section>
 
     <!-- TIMELINE -->
-    <section class="section timeline-section" id="timeline">
+    <section class="page section timeline-section" id="timeline">
       <div class="container narrow">
-        <p class="chapter-label" data-i18n="guide.ch4">Capítulo 04 · Itinerario</p>
+        <p class="chapter-opener"><span class="chapter-num">04</span><span class="chapter-name" data-i18n="guide.toc4">Itinerario</span></p>
         <h2 class="h-script text-center" data-i18n="tl.title">Hoja de ruta</h2>
 
         <ol class="timeline">
@@ -295,9 +303,9 @@
     </section>
 
     <!-- RSVP -->
-    <section class="section band-olive rsvp-section" id="rsvp">
+    <section class="page section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
-        <p class="chapter-label" data-i18n="guide.ch5">Capítulo 05 · Check-in</p>
+        <p class="chapter-opener"><span class="chapter-num">05</span><span class="chapter-name" data-i18n="guide.toc5">Check-in</span></p>
         <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
         <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027. Una respuesta por persona.</p>
 
@@ -405,9 +413,9 @@
     </section>
 
     <!-- GIFTS -->
-    <section class="section gifts-section" id="gifts">
+    <section class="page section gifts-section" id="gifts">
       <div class="container narrow text-center">
-        <p class="chapter-label" data-i18n="guide.ch6">Capítulo 06 · Equipaje</p>
+        <p class="chapter-opener"><span class="chapter-num">06</span><span class="chapter-name" data-i18n="guide.toc6">Equipaje</span></p>
         <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
         <p class="section-lead" data-i18n="gifts.lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
 
@@ -424,9 +432,9 @@
     </section>
 
     <!-- PLAYLIST (search + vote, see js/playlist.js) -->
-    <section class="section band-paper playlist-section" id="playlist">
+    <section class="page section band-paper playlist-section" id="playlist">
       <div class="container narrow">
-        <p class="chapter-label" data-i18n="guide.ch7">Capítulo 07 · Banda sonora</p>
+        <p class="chapter-opener"><span class="chapter-num">07</span><span class="chapter-name" data-i18n="guide.toc7">Banda sonora</span></p>
         <h2 class="h-script text-center" data-i18n="pl.title">La playlist</h2>
         <p class="section-lead text-center" data-i18n="pl.lead">Busca la canción que no puede faltar, o vota las que ya están.</p>
 
@@ -471,9 +479,9 @@
     </section>
 
     <!-- PHOTOS / HASHTAG -->
-    <section class="section social-section" id="social">
+    <section class="page section social-section" id="social">
       <div class="container narrow text-center">
-        <p class="chapter-label" data-i18n="guide.ch8">Capítulo 08 · Álbum</p>
+        <p class="chapter-opener"><span class="chapter-num">08</span><span class="chapter-name" data-i18n="guide.toc8">Álbum</span></p>
         <h2 class="h-script" data-i18n="social.title">Fotos</h2>
         <p class="section-lead" data-i18n="social.lead">Sube tus fotos y vídeos del día con el hashtag</p>
         <p class="hashtag-text" id="wedding-hashtag">#BodaMariAngelesYPablo</p>
@@ -482,7 +490,7 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="footer-section band-olive">
+    <footer class="page footer-section band-olive" data-rh="guide.rhEnd">
       <div class="container narrow text-center">
         <p class="footer-title h-script light" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
         <p class="footer-date">13 · 03 · 2027</p>
@@ -491,10 +499,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261102b"></script>
-  <script src="js/rsvp-config.js?v=20261102b"></script>
-  <script src="js/script.js?v=20261102b"></script>
-  <script src="js/playlist-config.js?v=20261102b"></script>
-  <script src="js/playlist.js?v=20261102b"></script>
+  <script src="js/i18n.js?v=20261102c"></script>
+  <script src="js/rsvp-config.js?v=20261102c"></script>
+  <script src="js/script.js?v=20261102c"></script>
+  <script src="js/playlist-config.js?v=20261102c"></script>
+  <script src="js/playlist.js?v=20261102c"></script>
 </body>
 </html>
