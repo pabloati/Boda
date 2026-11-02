@@ -20,7 +20,6 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 
 ## C. Pending in the other working session (RSVP)
 
-- [ ] **Publish the new RSVP script** (branch `rsvp-form`, 2026-11-02: queue + one-minute trigger, reply Ids against duplicates, new columns incl. "Destino vuelta", no "Acompañantes"). Couple: delete every row of "Respuestas" (all are tests), paste `docs/rsvp-apps-script.gs`, run **setup** once, Deploy → Manage deployments → New version. Then one real test reply to time it; delete it after. If the return drop-off question is dropped instead: remove `#return-stop-group` from `index.html` and `returnStop` from `js/script.js` and the script.
 - [ ] Decide whether the "¿Alguna duda? Escríbenos por WhatsApp" link stays under the form or moves to the footer.
 
 ## D. Before sending the invitations
