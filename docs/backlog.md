@@ -25,9 +25,10 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 
 ## D. Before sending the invitations
 
+- [ ] **Return drop-off (Cibeles / Avenida de América) is in the form but not yet in the Sheet** (added 2026-11-02, on trial). If it stays: paste the current `docs/rsvp-apps-script.gs` into the Apps Script editor, publish it as a new version (Deploy → Manage deployments → pencil → New version), and type `Destino vuelta` in the first empty header cell of the "Respuestas" sheet, right after "Mensaje". Until then the answer is sent but not saved. If it is dropped: remove `#return-stop-group` from `index.html` and `returnStop` from `js/script.js`.
 - [ ] Final run-through on two real phones (Android + iPhone) from a WhatsApp link: envelope, music, RSVP save, playlist vote, language toggle.
 - [ ] Check the Google Sheet receives a test reply and delete it.
-- [ ] Check the Supabase project is awake (open the site; the ranking loads) and that the Actions tab shows "Keep the playlist database awake" runs.
+- [ ] Restore the Supabase project (paused on purpose since 2026-11-02, the keep-alive pings did not stop the pause): Supabase dashboard → project → Restore. Then open the site and check the ranking loads.
 - [ ] Remove the olive quote band if the couple's intro text replaces it.
 
 ## E. Known maintenance
