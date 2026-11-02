@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone preview · Boda</title>
+<!--
+  Local preview tool, not part of the site. The folder starts with "_" so
+  GitHub Pages (Jekyll) never publishes it.
+
+  Use: run `python3 -m http.server 8000` in the repo (or a worktree) and open
+  http://localhost:8000/_dev/phones.html
+
+  Shows the site in several device frames at real CSS widths, so media queries
+  behave as on a phone. Auto-reload watches index.html, css/ and js/ and reloads
+  every frame when one changes. "Skip envelope" hides the opening overlay.
+  For touch, pixel ratio and user-agent emulation use the browser's own device
+  mode instead (Ctrl+Shift+M in Chrome / Edge / Firefox DevTools).
+-->
+<style>
+  :root {
+    --bg: #2b2a26; --panel: #36342f; --fg: #f1ece1; --muted: #b3ab9a; --accent: #c98a62; --line: #4a4740;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+  header {
+    position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+    padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header strong { font-size: 15px; margin-right: 6px; }
+  label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); cursor: pointer; }
+  input[type=text] { width: 160px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+  button {
+    padding: 5px 12px; border-radius: 4px; border: 1px solid var(--accent); background: none; color: var(--fg); cursor: pointer;
+  }
+  button:hover { background: var(--accent); color: #1e1d1a; }
+  .devices { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  #status { color: var(--muted); font-size: 12px; min-width: 120px; }
+  main { display: flex; flex-wrap: wrap; gap: 28px; padding: 24px 16px 48px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .shell { overflow: hidden; border-radius: 22px; border: 6px solid #111; background: #111; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+  .shell.desktop { border-radius: 6px; border-width: 4px; }
+  .shell iframe { display: block; border: 0; transform-origin: 0 0; background: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Phone preview</strong>
+  <div class="devices" id="devices"></div>
+  <label>Page <input type="text" id="path" value="../index.html"></label>
+  <label>Scale <input type="range" id="scale" min="40" max="100" step="5" value="75"> <span id="scale-val">75%</span></label>
+  <label><input type="checkbox" id="skip-envelope"> Skip envelope</label>
+  <label><input type="checkbox" id="auto" checked> Auto-reload</label>
+  <button type="button" id="reload">Reload all</button>
+  <span id="status"></span>
+</header>
+<main id="frames"></main>
+
+<script>
+(function () {
+  'use strict';
+  const DEVICES = [
+    { id: 'se',      name: 'iPhone SE',         w: 375,  h: 667,  on: true },
+    { id: 'iphone',  name: 'iPhone 15',         w: 393,  h: 852,  on: true },
+    { id: 'android', name: 'Android (Galaxy)',  w: 360,  h: 780,  on: true },
+    { id: 'pixel',   name: 'Pixel 7',           w: 412,  h: 915,  on: false },
+    { id: 'ipad',    name: 'iPad mini',         w: 768,  h: 1024, on: false },
+    { id: 'desktop', name: 'Desktop',           w: 1280, h: 800,  on: false }
+  ];
+  const WATCH = ['../index.html', '../css/styles.css', '../js/script.js', '../js/i18n.js', '../js/playlist.js', '../js/rsvp-config.js'];
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('phones.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('phones.' + k, JSON.stringify(v)); } catch (e) { /* private mode */ } }
+  };
+
+  const $ = id => document.getElementById(id);
+  const framesEl = $('frames'), devicesEl = $('devices'), statusEl = $('status');
+  const pathEl = $('path'), scaleEl = $('scale'), scaleVal = $('scale-val'), skipEl = $('skip-envelope'), autoEl = $('auto');
+
+  const enabled = store.get('enabled', DEVICES.filter(d => d.on).map(d => d.id));
+  pathEl.value = store.get('path', pathEl.value);
+  scaleEl.value = store.get('scale', scaleEl.value);
+  skipEl.checked = store.get('skip', false);
+  autoEl.checked = store.get('auto', true);
+
+  DEVICES.forEach(d => {
+    const l = document.createElement('label');
+    l.innerHTML = '<input type="checkbox" value="' + d.id + '"' + (enabled.includes(d.id) ? ' checked' : '') + '> ' + d.name;
+    devicesEl.appendChild(l);
+  });
+
+  function status(msg) { statusEl.textContent = msg; }
+
+  // Hide the envelope in a frame (same origin, so the document is reachable).
+  function applySkip(iframe) {
+    if (!skipEl.checked) return;
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc || doc.getElementById('dev-skip-envelope')) return;
+      const st = doc.createElement('style');
+      st.id = 'dev-skip-envelope';
+      st.textContent = '#envelope-overlay{display:none!important}';
+      doc.head.appendChild(st);
+    } catch (e) { /* cross-origin page: nothing to do */ }
+  }
+
+  function render() {
+    const scale = Number(scaleEl.value) / 100;
+    scaleVal.textContent = scaleEl.value + '%';
+    const ids = Array.from(devicesEl.querySelectorAll('input:checked')).map(i => i.value);
+    framesEl.textContent = '';
+    DEVICES.filter(d => ids.includes(d.id)).forEach(d => {
+      const fig = document.createElement('figure');
+      const cap = document.createElement('figcaption');
+      cap.textContent = d.name + ' · ' + d.w + '×' + d.h;
+      const shell = document.createElement('div');
+      shell.className = 'shell' + (d.id === 'desktop' ? ' desktop' : '');
+      shell.style.width = Math.round(d.w * scale) + 'px';
+      shell.style.height = Math.round(d.h * scale) + 'px';
+      const iframe = document.createElement('iframe');
+      iframe.width = d.w;
+      iframe.height = d.h;
+      iframe.style.transform = 'scale(' + scale + ')';
+      iframe.title = d.name;
+      iframe.addEventListener('load', () => applySkip(iframe));
+      iframe.src = pathEl.value;
+      shell.appendChild(iframe);
+      fig.append(cap, shell);
+      framesEl.appendChild(fig);
+    });
+    store.set('enabled', ids);
+    store.set('scale', scaleEl.value);
+    store.set('path', pathEl.value);
+  }
+
+  // Refetch every stylesheet and script the frame uses with cache: 'reload',
+  // so the reload below cannot pick up a stale copy from the HTTP cache.
+  async function reloadAll() {
+    const frames = Array.from(framesEl.querySelectorAll('iframe'));
+    const urls = new Set();
+    frames.forEach(f => {
+      try {
+        f.contentDocument.querySelectorAll('link[rel=stylesheet][href], script[src]').forEach(el => {
+          const u = el.href || el.src;
+          if (u && u.startsWith(location.origin)) urls.add(u);
+        });
+      } catch (e) { /* ignore */ }
+    });
+    await Promise.all(Array.from(urls).map(u => fetch(u, { cache: 'reload' }).catch(() => null)));
+    frames.forEach(f => { try { f.contentWindow.location.reload(); } catch (e) { f.src = f.src; } });
+    status('Reloaded ' + new Date().toLocaleTimeString());
+  }
+
+  // Auto-reload: poll Last-Modified of the watched files (python http.server sends it).
+  const seen = {};
+  async function poll() {
+    if (!autoEl.checked) return;
+    let changed = false;
+    for (const f of WATCH) {
+      try {
+        const r = await fetch(f, { method: 'HEAD', cache: 'no-store' });
+        const lm = r.headers.get('last-modified') || '';
+        if (seen[f] !== undefined && seen[f] !== lm) changed = true;
+        seen[f] = lm;
+      } catch (e) { /* server down: keep waiting */ }
+    }
+    if (changed) reloadAll();
+  }
+  setInterval(poll, 1500);
+  poll();
+
+  devicesEl.addEventListener('change', render);
+  scaleEl.addEventListener('input', render);
+  pathEl.addEventListener('change', render);
+  skipEl.addEventListener('change', () => { store.set('skip', skipEl.checked); render(); });
+  autoEl.addEventListener('change', () => store.set('auto', autoEl.checked));
+  $('reload').addEventListener('click', reloadAll);
+
+  if (location.protocol === 'file:') {
+    status('Open this through the local server: http://localhost:8000/_dev/phones.html');
+  }
+  render();
+})();
+</script>
+</body>
+</html>

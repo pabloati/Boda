@@ -14,6 +14,8 @@ There is no build, lint, or test suite. Preview locally with:
 python3 -m http.server 8000     # then open http://localhost:8000
 ```
 
+To see the site in several phone frames at once, open http://localhost:8000/_dev/phones.html while the server runs: real CSS widths per device, auto-reload when `index.html`, `css/` or `js/` change, and a "Skip envelope" switch. `_dev/` starts with an underscore, so GitHub Pages (Jekyll) never publishes it.
+
 Opening `index.html` directly from the filesystem also works, but the clipboard API only works over `http://localhost` or `https://`.
 
 To screenshot at phone and desktop widths, Playwright is available via Node (`npx playwright`). Install Chromium once with `npx playwright install chromium` in a scratch directory, not in the repo.
