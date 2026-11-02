@@ -1,6 +1,7 @@
 /* ========================================================
    WEDDING INVITATION - STYLESHEET
-   Palette: olive, cream paper and terracotta.
+   Palette (spring trial): sage, ivory, dusty blue and rose.
+   Token names still say olive/terracotta; values are sage/rose.
    Type: Cormorant Garamond (text), Allison (script headings),
          Homemade Apple (handwritten labels).
    No icon font: the playlist widget's Font Awesome class names are
@@ -9,22 +10,22 @@
 
 /* ---------- Tokens ---------- */
 :root {
-  --paper: #f3eee3;
-  --paper-deep: #e9e2d1;
-  --paper-line: #d9d0ba;
+  --paper: #f6f4ef;
+  --paper-deep: #e3eaf0;
+  --paper-line: #cfd7da;
 
-  --olive: #8e9166;
-  --olive-deep: #6c6f48;
-  --olive-soft: #c8c9ab;
-  --olive-wash: rgba(142, 145, 102, 0.16);
+  --olive: #7e9479;
+  --olive-deep: #5f7563;
+  --olive-soft: #c3cfbf;
+  --olive-wash: rgba(126, 148, 121, 0.16);
 
-  --terracotta: #b3613f;
-  --terracotta-deep: #8f4a2f;
+  --terracotta: #b4566c;
+  --terracotta-deep: #934257;
 
-  --ink: #3b382f;
-  --ink-soft: #6f6a5c;
-  --ink-faint: #9b958a;
-  --cream-text: #f6f2e8;
+  --ink: #33404d;
+  --ink-soft: #5f6b78;
+  --ink-faint: #8f98a3;
+  --cream-text: #f7f5f0;
 
   --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-script: 'Allison', cursive;
@@ -65,7 +66,7 @@ body::before {
   pointer-events: none;
   opacity: 0.22;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.52 0 0 0 0 0.45 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.47 0 0 0 0 0.50 0 0 0 0 0.53 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .main-content {
@@ -151,7 +152,7 @@ button {
   inset: 5% -6% -10% -6%;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 60%, var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%);
+  background: radial-gradient(ellipse at 50% 60%, var(--olive-wash) 0%, rgba(126, 148, 121, 0) 68%);
 }
 
 .h-script.light {
@@ -159,7 +160,7 @@ button {
 }
 
 .h-script.light::before {
-  background: radial-gradient(ellipse at 50% 60%, rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%);
+  background: radial-gradient(ellipse at 50% 60%, rgba(246, 244, 239, 0.16) 0%, rgba(246, 244, 239, 0) 68%);
 }
 
 /* Centre an inline-block heading inside a block parent */
@@ -260,7 +261,7 @@ button {
   border: 1px solid var(--paper-line);
   border-radius: 3px;
   padding: 36px 32px;
-  box-shadow: 0 18px 40px -24px rgba(59, 56, 47, 0.35);
+  box-shadow: 0 18px 40px -24px rgba(51, 64, 77, 0.35);
 }
 
 /* ========================================================
@@ -271,7 +272,7 @@ button {
   inset: 0;
   z-index: 9999;
   background:
-    linear-gradient(180deg, rgba(243, 238, 227, 0.88) 0%, rgba(233, 226, 209, 0.94) 100%),
+    linear-gradient(180deg, rgba(246, 244, 239, 0.88) 0%, rgba(227, 234, 240, 0.94) 100%),
     url('../assets/olive.jpg') center / cover no-repeat;
   display: flex;
   align-items: center;
@@ -340,9 +341,9 @@ button {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(55, 58, 38, 0.4) 0%, rgba(55, 58, 38, 0.24) 60%),
+    linear-gradient(180deg, rgba(42, 56, 60, 0.4) 0%, rgba(42, 56, 60, 0.24) 60%),
     url('../assets/sobre-papel.jpg') center / cover no-repeat;
-  box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
+  box-shadow: 0 30px 60px -22px rgba(51, 64, 77, 0.5);
 }
 
 /* z2 — the card, 2:3, sitting inside the pocket. Two faces: tarjeta.jpg in front, the hero behind. */
@@ -447,7 +448,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(40, 38, 30, 0.35) 0%, rgba(40, 38, 30, 0.2) 45%, rgba(60, 60, 40, 0.65) 100%);
+  background: linear-gradient(180deg, rgba(30, 38, 46, 0.35) 0%, rgba(30, 38, 46, 0.2) 45%, rgba(38, 50, 52, 0.65) 100%);
 }
 
 .card-back-content {
@@ -573,13 +574,13 @@ button {
   padding: 0 12px;
   border: 1px solid var(--paper-line);
   border-radius: 999px;
-  background: rgba(243, 238, 227, 0.92);
+  background: rgba(246, 244, 239, 0.92);
   color: var(--olive-deep);
   font-family: var(--font-serif);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 2px;
-  box-shadow: 0 8px 24px -12px rgba(59, 56, 47, 0.5);
+  box-shadow: 0 8px 24px -12px rgba(51, 64, 77, 0.5);
   transition: var(--transition);
 }
 
@@ -633,10 +634,10 @@ button {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(243, 238, 227, 0.92);
+  background: rgba(246, 244, 239, 0.92);
   border: 1px solid var(--paper-line);
   color: var(--olive-deep);
-  box-shadow: 0 8px 24px -10px rgba(59, 56, 47, 0.5);
+  box-shadow: 0 8px 24px -10px rgba(51, 64, 77, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -712,7 +713,7 @@ button {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(40, 38, 30, 0.35) 0%, rgba(40, 38, 30, 0.2) 45%, rgba(60, 60, 40, 0.65) 100%);
+  background: linear-gradient(180deg, rgba(30, 38, 46, 0.35) 0%, rgba(30, 38, 46, 0.2) 45%, rgba(38, 50, 52, 0.65) 100%);
   pointer-events: none;
 }
 
@@ -757,7 +758,7 @@ button {
   font-size: 1rem;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: rgba(246, 242, 232, 0.85);
+  color: rgba(247, 245, 240, 0.85);
   margin: 6px 0 44px;
 }
 
@@ -766,7 +767,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: rgba(246, 242, 232, 0.8);
+  color: rgba(247, 245, 240, 0.8);
   font-size: 0.8rem;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -810,7 +811,7 @@ button {
 .intro-ref {
   font-family: var(--font-hand);
   font-size: 0.85rem;
-  color: rgba(246, 242, 232, 0.85);
+  color: rgba(247, 245, 240, 0.85);
 }
 
 /* ========================================================
@@ -1004,7 +1005,7 @@ button {
   font-family: var(--font-serif);
   font-size: 1.05rem;
   color: var(--ink);
-  background-color: #fbf9f3;
+  background-color: #fcfbf8;
   border: 1px solid var(--paper-line);
   border-radius: 2px;
   outline: none;
@@ -1059,7 +1060,7 @@ select.form-control {
   padding: 9px 20px;
   border: 1px solid var(--paper-line);
   border-radius: 999px;
-  background: #fbf9f3;
+  background: #fcfbf8;
   color: var(--ink);
   font-size: 1.05rem;
   transition: var(--transition);
@@ -1211,10 +1212,10 @@ select.form-control {
   top: calc(100% + 6px);
   max-height: min(420px, 60vh);
   overflow-y: auto;
-  background: #fbf9f3;
+  background: #fcfbf8;
   border: 1px solid var(--paper-line);
   border-radius: 3px;
-  box-shadow: 0 18px 40px -20px rgba(59, 56, 47, 0.45);
+  box-shadow: 0 18px 40px -20px rgba(51, 64, 77, 0.45);
   padding: 6px;
 }
 
@@ -1354,7 +1355,7 @@ select.form-control {
 }
 
 .playlist-notice.is-error {
-  background: #f1dcd3;
+  background: #f3dde2;
   color: var(--terracotta-deep);
 }
 
@@ -1463,7 +1464,7 @@ select.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(59, 56, 47, 0.35);
+  background: rgba(51, 64, 77, 0.35);
   color: var(--cream-text);
   font-size: 0.85rem;
   opacity: 0.85;
@@ -1473,7 +1474,7 @@ select.form-control {
 .pl-cover.has-preview:hover .pl-cover-play,
 .pl-cover.is-playing .pl-cover-play {
   opacity: 1;
-  background: rgba(143, 74, 47, 0.65);
+  background: rgba(147, 66, 87, 0.65);
 }
 
 .pl-info {
@@ -1597,7 +1598,7 @@ select.form-control {
 .footer-date {
   letter-spacing: 4px;
   font-size: 1rem;
-  color: rgba(246, 242, 232, 0.85);
+  color: rgba(247, 245, 240, 0.85);
 }
 
 /* ========================================================
