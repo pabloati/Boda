@@ -1849,74 +1849,22 @@ html.rsvp-modal-open { overflow: hidden; }
 .page.band-olive::after,
 .page.intro-band::after { color: rgba(246, 242, 232, 0.7); }
 
-/* Paper stock: each page gets its own paper so the guide does not read as one
-   flat colour. Textures are CSS gradients and inline SVG noise tiles
-   (paper mottling, age specks); they sit under the content and over the page colour. */
+/* Paper: every page is a ruled travel-journal sheet, blue rules with a
+   terracotta margin line. On the olive pages the rules turn pale. */
 .page {
-  --tx-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.33 0 0 0 0 0.24 0 0 0 0 0.12 0 0 0 0.3 0'/%3E%3C/filter%3E%3Cfilter id='g' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='12' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.33 0 0 0 0 0.24 0 0 0 0 0.12 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
-  --tx-fibre-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.98 0 0 0 0 0.96 0 0 0 0 0.9 0 0 0 0.13 0'/%3E%3C/filter%3E%3Cfilter id='g' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='6' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.98 0 0 0 0 0.96 0 0 0 0 0.9 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
-  --tx-specks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.30 0 0 0 0 0.14 0 0 0 12 -9.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
-  --tx-edges: radial-gradient(ellipse at 50% 45%, rgba(120, 90, 40, 0) 58%, rgba(120, 90, 40, 0.16) 100%);
-}
-
-/* handmade paper: soft cloudy mottling + fine grain (dark on kraft, pale on the olive pages) */
-.paper-fibre {
-  background-image: var(--tx-fibre);
-}
-
-.band-olive.paper-fibre,
-.intro-band.paper-fibre {
-  background-image: var(--tx-fibre-light), var(--tx-edges);
-}
-
-/* laid paper: fine laid lines and wide chain lines, like old book paper */
-.paper-laid {
+  --rule-line: rgba(84, 110, 140, 0.16);
+  --rule-margin: rgba(179, 97, 63, 0.35);
   background-image:
-    repeating-linear-gradient(90deg, rgba(110, 90, 50, 0.07) 0 1px, transparent 1px 92px),
-    repeating-linear-gradient(0deg, rgba(110, 90, 50, 0.045) 0 1px, transparent 1px 4px);
-}
-
-/* travel journal: blue rules and a terracotta margin line */
-.paper-ruled {
-  background-image:
-    linear-gradient(90deg, transparent 46px, rgba(179, 97, 63, 0.35) 46px 47px, transparent 47px),
-    repeating-linear-gradient(180deg, transparent 0 33px, rgba(84, 110, 140, 0.16) 33px 34px);
+    linear-gradient(90deg, transparent 46px, var(--rule-margin) 46px 47px, transparent 47px),
+    repeating-linear-gradient(180deg, transparent 0 33px, var(--rule-line) 33px 34px);
   background-position: 0 0, 0 18px;
 }
 
-/* map grid */
-.paper-grid {
-  background-image:
-    repeating-linear-gradient(90deg, rgba(108, 111, 72, 0.10) 0 1px, transparent 1px 26px),
-    repeating-linear-gradient(0deg, rgba(108, 111, 72, 0.10) 0 1px, transparent 1px 26px);
+.page.band-olive,
+.page.intro-band {
+  --rule-line: rgba(246, 242, 232, 0.16);
+  --rule-margin: rgba(246, 242, 232, 0.32);
 }
-
-/* dotted notebook */
-.paper-dots {
-  background-image: radial-gradient(circle, rgba(59, 56, 47, 0.16) 1.1px, transparent 1.6px);
-  background-size: 20px 20px;
-}
-
-/* old paper: browned edges and a few age specks */
-.paper-aged {
-  background-image: var(--tx-edges), var(--tx-specks);
-}
-
-.paper-laid.paper-aged {
-  background-image:
-    var(--tx-edges),
-    repeating-linear-gradient(90deg, rgba(110, 90, 50, 0.07) 0 1px, transparent 1px 92px),
-    repeating-linear-gradient(0deg, rgba(110, 90, 50, 0.045) 0 1px, transparent 1px 4px);
-}
-
-/* kraft: brown envelope paper with fibres */
-.page.paper-kraft {
-  background-color: #d9c4a0;
-  background-image: var(--tx-fibre), var(--tx-edges);
-}
-
-.paper-kraft .section-lead,
-.paper-kraft .chapter-name { color: var(--ink); }
 
 /* Chapter opener: a big chapter number, then the chapter name between rules */
 .chapter-opener {

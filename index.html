@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261102d">
+  <link rel="stylesheet" href="css/styles.css?v=20261102e">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -172,7 +172,7 @@
     </header>
 
     <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
-    <section class="page paper-fibre intro-band" id="intro" data-rh="guide.rhEpigraph">
+    <section class="page intro-band" id="intro" data-rh="guide.rhEpigraph">
       <div class="container narrow text-center">
         <p class="intro-text" data-i18n="intro.text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
         <p class="intro-ref" data-i18n="intro.ref">1 Juan 4:18</p>
@@ -180,7 +180,7 @@
     </section>
 
     <!-- TRAVEL-GUIDE TRIAL: table of contents. Numbers are the chapter numbers. -->
-    <nav class="page paper-laid paper-aged section guide-index" id="indice" data-rh="guide.rhIndex" aria-labelledby="indice-title">
+    <nav class="page section guide-index" id="indice" data-rh="guide.rhIndex" aria-labelledby="indice-title">
       <div class="container narrow">
         <h2 class="h-script text-center" id="indice-title" data-i18n="guide.indexTitle">Índice</h2>
         <ol class="toc">
@@ -197,7 +197,7 @@
     </nav>
 
     <!-- TRAVEL-GUIDE TRIAL: chapter 01, the couple's story. Placeholder until they write it. -->
-    <section class="page paper-ruled section band-paper story-section" id="historia">
+    <section class="page section band-paper story-section" id="historia">
       <div class="container narrow text-center">
         <p class="chapter-opener"><span class="chapter-num">01</span><span class="chapter-name" data-i18n="guide.toc1">Los viajeros</span></p>
         <h2 class="h-script" data-i18n="story.title">Nuestra historia</h2>
@@ -208,7 +208,7 @@
     </section>
 
     <!-- COUNTDOWN -->
-    <section class="page paper-aged section countdown-section" id="countdown">
+    <section class="page section countdown-section" id="countdown">
       <div class="container narrow text-center">
         <p class="chapter-opener"><span class="chapter-num">02</span><span class="chapter-name" data-i18n="guide.toc2">La cuenta atrás</span></p>
         <h2 class="h-script" data-i18n="countdown.title">Faltan muy pocos días</h2>
@@ -237,7 +237,7 @@
     </section>
 
     <!-- WHERE & WHEN -->
-    <section class="page paper-grid section band-paper locations-section" id="locations">
+    <section class="page section band-paper locations-section" id="locations">
       <div class="container narrow text-center">
         <p class="chapter-opener"><span class="chapter-num">03</span><span class="chapter-name" data-i18n="guide.toc3">Cómo llegar</span></p>
         <h2 class="h-script" data-i18n="loc.title">Dónde y cuándo</h2>
@@ -264,7 +264,7 @@
     </section>
 
     <!-- TIMELINE -->
-    <section class="page paper-dots section timeline-section" id="timeline">
+    <section class="page section timeline-section" id="timeline">
       <div class="container narrow">
         <p class="chapter-opener"><span class="chapter-num">04</span><span class="chapter-name" data-i18n="guide.toc4">Itinerario</span></p>
         <h2 class="h-script text-center" data-i18n="tl.title">Hoja de ruta</h2>
@@ -303,7 +303,7 @@
     </section>
 
     <!-- RSVP -->
-    <section class="page paper-fibre section band-olive rsvp-section" id="rsvp">
+    <section class="page section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
         <p class="chapter-opener"><span class="chapter-num">05</span><span class="chapter-name" data-i18n="guide.toc5">Check-in</span></p>
         <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
@@ -413,7 +413,7 @@
     </section>
 
     <!-- GIFTS -->
-    <section class="page paper-kraft section gifts-section" id="gifts">
+    <section class="page section gifts-section" id="gifts">
       <div class="container narrow text-center">
         <p class="chapter-opener"><span class="chapter-num">06</span><span class="chapter-name" data-i18n="guide.toc6">Equipaje</span></p>
         <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
@@ -432,7 +432,7 @@
     </section>
 
     <!-- PLAYLIST (search + vote, see js/playlist.js) -->
-    <section class="page paper-laid section band-paper playlist-section" id="playlist">
+    <section class="page section band-paper playlist-section" id="playlist">
       <div class="container narrow">
         <p class="chapter-opener"><span class="chapter-num">07</span><span class="chapter-name" data-i18n="guide.toc7">Banda sonora</span></p>
         <h2 class="h-script text-center" data-i18n="pl.title">La playlist</h2>
@@ -479,7 +479,7 @@
     </section>
 
     <!-- PHOTOS / HASHTAG -->
-    <section class="page paper-aged section social-section" id="social">
+    <section class="page section social-section" id="social">
       <div class="container narrow text-center">
         <p class="chapter-opener"><span class="chapter-num">08</span><span class="chapter-name" data-i18n="guide.toc8">Álbum</span></p>
         <h2 class="h-script" data-i18n="social.title">Fotos</h2>
@@ -490,7 +490,7 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="page paper-fibre footer-section band-olive" data-rh="guide.rhEnd">
+    <footer class="page footer-section band-olive" data-rh="guide.rhEnd">
       <div class="container narrow text-center">
         <p class="footer-title h-script light" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
         <p class="footer-date">13 · 03 · 2027</p>
@@ -499,10 +499,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261102d"></script>
-  <script src="js/rsvp-config.js?v=20261102d"></script>
-  <script src="js/script.js?v=20261102d"></script>
-  <script src="js/playlist-config.js?v=20261102d"></script>
-  <script src="js/playlist.js?v=20261102d"></script>
+  <script src="js/i18n.js?v=20261102e"></script>
+  <script src="js/rsvp-config.js?v=20261102e"></script>
+  <script src="js/script.js?v=20261102e"></script>
+  <script src="js/playlist-config.js?v=20261102e"></script>
+  <script src="js/playlist.js?v=20261102e"></script>
 </body>
 </html>
