@@ -154,20 +154,24 @@
       centerLetter();
     }, 700);
 
-    // 4. 1.6s: the card turns over
-    setTimeout(() => envelopeOverlay.classList.add('flip'), 1600);
+    // 4. 1.6s: the card has landed in the centre; the postmark stamps it
+    setTimeout(() => envelopeOverlay.classList.add('stamped'), 1600);
 
-    // 5. 2.1s: ...and grows to the viewport while turning; its back is the hero
+    // 5. 2.5s: the card turns over (STAMP_PAUSE leaves time to see the postmark)
+    const STAMP_PAUSE = 900;
+    setTimeout(() => envelopeOverlay.classList.add('flip'), 1600 + STAMP_PAUSE);
+
+    // 6. 3.0s: ...and grows to the viewport while turning; its back is the hero
     setTimeout(() => {
       envelopeOverlay.classList.add('fill');
       setLetterBox(0, 0, window.innerWidth, window.innerHeight);
-    }, 2100);
+    }, 2100 + STAMP_PAUSE);
 
-    // 6. 2.85s: overlay fades; the real hero underneath matches the card back
-    setTimeout(() => envelopeOverlay.classList.add('opened'), 2850);
+    // 7. 3.75s: overlay fades; the real hero underneath matches the card back
+    setTimeout(() => envelopeOverlay.classList.add('opened'), 2850 + STAMP_PAUSE);
 
-    // 7. Remove overlay from DOM flow after the fade
-    setTimeout(() => { envelopeOverlay.style.display = 'none'; }, 3500);
+    // 8. Remove overlay from DOM flow after the fade
+    setTimeout(() => { envelopeOverlay.style.display = 'none'; }, 3500 + STAMP_PAUSE);
   }
 
   if (btnOpenEnvelope) {

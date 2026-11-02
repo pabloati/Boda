@@ -415,6 +415,45 @@ button {
   object-fit: cover;
 }
 
+/* Postmark: blue-black postal ink over the card, hidden until openEnvelope()
+   adds "stamped" to the overlay; then it lands like a rubber stamp and the
+   card gives a small thud. */
+.postmark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: #262b3d;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.postmark .pm-ink { opacity: 0; }
+.postmark .pm-ring { font: 700 19px 'Courier New', Courier, monospace; letter-spacing: 5px; fill: currentColor; }
+.postmark .pm-date { font: 700 22px 'Courier New', Courier, monospace; letter-spacing: 1px; fill: currentColor; }
+
+.envelope-overlay.stamped .postmark .pm-ink {
+  opacity: 0.82;
+  transform-box: fill-box;
+  transform-origin: 20% 70%;
+  animation: pm-land 0.32s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.envelope-overlay.stamped .card-front {
+  animation: pm-thud 0.32s ease-out 0.12s;
+}
+
+@keyframes pm-land {
+  0%   { opacity: 0;    transform: scale(1.45) rotate(4deg); }
+  55%  { opacity: 0.9;  transform: scale(0.97) rotate(0deg); }
+  100% { opacity: 0.82; transform: scale(1); }
+}
+
+@keyframes pm-thud {
+  0%, 100% { transform: scale(1); }
+  35%      { transform: scale(0.982); }
+}
+
 /* The back is the hero (same photo, overlay and copy) so the fade onto the page is a match cut.
    Everything inside is the hero's own geometry multiplied by --s, the card width over the viewport
    width (set by openEnvelope()). At --s: 1 it is the hero, pixel for pixel. */
@@ -555,6 +594,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .envelope-overlay.stamped .postmark .pm-ink,
+  .envelope-overlay.stamped .card-front { animation: none; }
   .wax-seal { animation: none; }
   /* openEnvelope() also skips straight to the fade when this matches */
   .envelope-overlay *, .envelope-overlay .envelope-letter.detached { transition-duration: 0.01ms !important; }
