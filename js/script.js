@@ -557,27 +557,40 @@
   }
 
   // --- 11. ROLLING HEADER (travel-guide trial) ---
-  // Every page after the cover has class "page". The header stays hidden while
-  // the cover is on screen; then it names the page in the middle of the screen:
-  // "Capítulo 03 · Cómo llegar" from the chapter opener, or the page's data-rh
-  // key (epigraph, contents, back cover), plus its page number.
+  // Every page after the cover has class "page". The header stays hidden (and
+  // inert) while the cover is on screen; then it shows the chapter of the page
+  // in the middle of the screen ("Capítulo 03"), or the page's data-rh key for
+  // pages without a chapter. Tapping it opens the list of chapters (#rh-menu);
+  // a choice, a tap outside or Esc closes it.
   const runningHead = document.getElementById('running-head');
   const heroEl = document.getElementById('hero');
   if (runningHead && 'IntersectionObserver' in window) {
     const pages = Array.from(document.querySelectorAll('.page'));
     const rhChapter = runningHead.querySelector('.rh-chapter');
-    const rhPage = runningHead.querySelector('.rh-page');
+    const rhToggle = document.getElementById('rh-toggle');
+    const rhMenu = document.getElementById('rh-menu');
     let currentPage = null;
+
+    const setMenu = function (open) {
+      if (!rhMenu || !rhToggle) return;
+      rhMenu.hidden = !open;
+      rhToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      runningHead.classList.toggle('menu-open', open);
+    };
 
     const renderRunningHead = function () {
       if (!currentPage) return;
       const num = currentPage.querySelector('.chapter-num');
-      const name = currentPage.querySelector('.chapter-name');
-      const label = num && name
-        ? t('guide.rhChapter', { n: num.textContent.trim(), name: name.textContent.trim() })
+      const label = num
+        ? t('guide.rhChapter', { n: num.textContent.trim() })
         : (currentPage.dataset.rh ? t(currentPage.dataset.rh) : '');
       if (rhChapter) rhChapter.textContent = label;
-      if (rhPage) rhPage.textContent = t('guide.rhPage', { n: pages.indexOf(currentPage) + 1 });
+      if (rhMenu) {
+        rhMenu.querySelectorAll('a').forEach(a => {
+          if (a.getAttribute('href') === '#' + currentPage.id) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      }
     };
 
     const pageWatcher = new IntersectionObserver(function (entries) {
@@ -587,13 +600,29 @@
     }, { rootMargin: '-45% 0px -54% 0px' });   // a thin line across the middle of the screen
     pages.forEach(p => pageWatcher.observe(p));
 
+    const showHead = function (shown) {
+      runningHead.classList.toggle('is-shown', shown);
+      runningHead.inert = !shown;
+      if (!shown) setMenu(false);
+    };
     if (heroEl) {
       new IntersectionObserver(function (entries) {
         const e = entries[0];
-        runningHead.classList.toggle('is-shown', !e.isIntersecting || e.intersectionRatio < 0.15);
+        showHead(!e.isIntersecting || e.intersectionRatio < 0.15);
       }, { threshold: [0, 0.15] }).observe(heroEl);
     } else {
-      runningHead.classList.add('is-shown');
+      showHead(true);
+    }
+
+    if (rhToggle && rhMenu) {
+      rhToggle.addEventListener('click', () => setMenu(rhMenu.hidden));
+      rhMenu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+      document.addEventListener('click', e => {
+        if (!rhMenu.hidden && !runningHead.contains(e.target)) setMenu(false);
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !rhMenu.hidden) { setMenu(false); rhToggle.focus(); }
+      });
     }
 
     document.addEventListener('langchange', renderRunningHead);

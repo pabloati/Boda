@@ -1907,8 +1907,9 @@ html.rsvp-modal-open { overflow: hidden; }
 .band-olive .chapter-num,
 .band-olive .chapter-name { color: var(--cream-text); }
 
-/* Rolling header: fixed at the top once the cover has scrolled away.
-   Left padding leaves room for the language toggle (fixed at 16px). */
+/* Rolling header: fixed at the top once the cover has scrolled away. It shows
+   the chapter in view ("Capítulo 03") as a button; tapping it drops the list
+   of chapters (#rh-menu). The language toggle (fixed at 16px) sits at its left. */
 .running-head {
   position: fixed;
   top: 0;
@@ -1917,19 +1918,13 @@ html.rsvp-modal-open { overflow: hidden; }
   z-index: 950;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
   height: calc(46px + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) 18px 0 76px;
-  background: rgba(243, 238, 227, 0.95);
+  padding: env(safe-area-inset-top, 0px) 76px 0;
+  background: rgba(243, 238, 227, 0.96);
   border-bottom: 1px solid var(--paper-line);
-  font-family: var(--font-type);
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--ink-soft);
   transform: translateY(-100%);
   transition: transform 0.3s ease;
-  pointer-events: none;
 }
 
 .running-head.is-shown { transform: none; }
@@ -1938,36 +1933,79 @@ html.rsvp-modal-open { overflow: hidden; }
 .lang-toggle { transition: var(--transition), top 0.3s ease; }
 body:has(.running-head.is-shown) .lang-toggle { top: calc(7px + env(safe-area-inset-top, 0px)); }
 
-.rh-chapter {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.rh-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  font-family: var(--font-type);
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   color: var(--ink);
+  cursor: pointer;
 }
 
-.rh-book,
-.rh-page { flex: none; }
+.rh-toggle:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
 
-@media (max-width: 560px) {
-  .rh-book { display: none; }
-  .rh-chapter { text-align: left; }
+.rh-caret {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.running-head.menu-open .rh-caret { transform: translateY(2px) rotate(-135deg); }
+
+/* the chapter list: a sheet dropping from the bar */
+.rh-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: min(420px, 100% - 20px);
+  max-height: calc(100vh - 70px);
+  max-height: calc(100svh - 70px);
+  overflow-y: auto;
+  padding: 14px 22px 16px;
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(180deg, transparent 0 33px, rgba(84, 110, 140, 0.16) 33px 34px);
+  background-position: 0 14px;
+  border: 1px solid var(--paper-line);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 22px 34px -18px rgba(59, 56, 47, 0.55);
+  transform: translateX(-50%);
+}
+
+.rh-menu[hidden] { display: none; }
+
+/* each row is exactly one rule tall, so every name sits on its line */
+.rh-menu .toc a { height: 34px; padding: 0; align-items: center; font-size: 1.2rem; line-height: 1; }
+.rh-menu .toc a[aria-current="true"] .toc-name { color: var(--terracotta); }
+
+/* jumping to a chapter leaves room for the bar */
+.page { scroll-margin-top: 56px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .running-head, .rh-caret { transition: none; }
 }
 
 @media (max-width: 420px) {
   .chapter-name { gap: 8px; letter-spacing: 2px; font-size: 0.72rem; }
   .chapter-name::before,
   .chapter-name::after { width: 14px; }
-  .running-head { letter-spacing: 1px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .running-head { transition: none; }
-}
 
-/* Table of contents with dot leaders */
+/* Chapter list (in the rolling header) with dot leaders */
 .toc {
   list-style: none;
   max-width: 460px;
