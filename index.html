@@ -41,6 +41,7 @@
     assets/hero-portrait.jpg  Céline Druguet    https://unsplash.com/photos/Rnton6rhDe4
     assets/eucalyptus.jpg     Iain Robertson    https://unsplash.com/photos/whLbVUIw7JE
     assets/olive.jpg          Sixteen Miles Out https://unsplash.com/photos/IVCI2rmcJE8
+    assets/foto-envio.jpg     Megamind "No bitches?" meme, via Know Your Meme https://x.com/knowyourmeme/status/1486475599073918978
   -->
 
   <!-- Background audio: the couple's song, starts on the first tap (the seal) -->
@@ -95,6 +96,21 @@
 
   <!-- Language toggle: shows the language you can switch TO -->
   <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Cambiar a inglés">EN</button>
+
+  <!-- RSVP progress card: covers the page while a reply is sent, then shows the
+       result. Filled and shown by js/script.js section 7.
+       Photo slot: drop a square photo at assets/foto-envio.jpg (about 800x800).
+       While the file is missing a dashed placeholder shows instead. -->
+  <div id="rsvp-modal" class="rsvp-modal" role="dialog" aria-modal="true" aria-labelledby="rsvp-modal-title" hidden>
+    <div class="rsvp-modal-card">
+      <div class="rsvp-modal-photo">
+        <img src="assets/foto-envio.jpg" alt="" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+      </div>
+      <p id="rsvp-modal-title" class="rsvp-modal-title"></p>
+      <div id="rsvp-modal-text" class="rsvp-modal-text" aria-live="polite"></div>
+      <button type="button" id="rsvp-modal-close" class="btn-primary rsvp-modal-close" data-i18n="rsvp.close" hidden>Cerrar</button>
+    </div>
+  </div>
 
   <!-- Floating music toggle -->
   <aside class="floating-controls" aria-label="Controles de la página">
@@ -239,7 +255,7 @@
     <section class="section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
         <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
-        <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027.</p>
+        <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027. Una respuesta por persona.</p>
 
         <form id="rsvp-form" class="rsvp-form paper-panel" novalidate>
           <div class="form-group">
@@ -267,11 +283,6 @@
           </fieldset>
 
           <div id="rsvp-attendance-details" class="conditional-fields">
-            <div class="form-group">
-              <label for="guest-companions" class="form-label" data-i18n="rsvp.companions">Acompañantes <span class="optional">(nombre y apellidos, uno por línea)</span></label>
-              <textarea id="guest-companions" name="guestCompanions" rows="2" class="form-control"></textarea>
-            </div>
-
             <div class="form-row">
               <div class="form-group">
                 <label for="guest-bus" class="form-label" data-i18n="rsvp.bus">Autobús</label>
@@ -290,6 +301,21 @@
                 </select>
               </div>
             </div>
+
+            <!-- Shown only when the guest takes the return bus (Vuelta / Ida y vuelta). -->
+            <fieldset class="form-group" id="return-stop-group" style="display:none;">
+              <legend class="form-label" data-i18n="rsvp.returnStop">¿Dónde te dejamos a la vuelta?</legend>
+              <div class="choice-group">
+                <label class="choice">
+                  <input type="radio" name="returnStop" value="Cibeles">
+                  <span>Cibeles</span>
+                </label>
+                <label class="choice">
+                  <input type="radio" name="returnStop" value="Avenida de América">
+                  <span>Avenida de América</span>
+                </label>
+              </div>
+            </fieldset>
 
             <div class="form-row">
               <div class="form-group">
@@ -330,7 +356,6 @@
             <ul id="rsvp-contact-list" class="rsvp-contact-list"></ul>
           </div>
 
-          <div id="rsvp-status-message" class="rsvp-status-message" role="alert" style="display:none;"></div>
         </form>
       </div>
     </section>

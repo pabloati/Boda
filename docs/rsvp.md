@@ -7,7 +7,7 @@ WhatsApp is not a way to send the form any more. Under the button, "¿Alguna dud
 ## Files
 
 - `js/rsvp-config.js`: web app URL and WhatsApp contacts (name + number). Empty URL = the form cannot save and shows an error.
-- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows the pending / success / error message, builds the WhatsApp contact links.
+- `js/script.js`, section 7: builds the reply (`getRsvpFormData`), sends it (`sendRsvp`), shows a card over the whole page while sending (it cannot be closed until the answer arrives) and then the success or error message with a "Cerrar" button, clears the form after a save, builds the WhatsApp contact links.
 - `docs/rsvp-apps-script.gs`: the server side, to paste into Google.
 
 ## Fields sent
@@ -17,15 +17,17 @@ WhatsApp is not a way to send the form any more. Under the button, "¿Alguna dud
 | guestName | Nombre y apellidos | free text, required |
 | phone | Teléfono | free text, optional |
 | status | ¿Vienes? | `asistire` / `no_asistire` |
-| companions | Acompañantes | list of names, one per line |
 | bus | Autobús | `No, voy por mi cuenta` / `Si, necesito plaza en el autobus` |
 | busType | ¿Qué bus necesitas? | `Ida` / `Vuelta` / `Ida y vuelta`, only when bus is needed |
+| returnStop | ¿Dónde te dejamos a la vuelta? | `Cibeles` / `Avenida de América`, only when busType is `Vuelta` or `Ida y vuelta`; required then |
 | diet | Alergias o intolerancias | free text, `Ninguna` when empty |
 | menu | Menú | `Ninguno` / `Vegetariano` |
 | message | Déjanos un mensajito | free text, optional, asked to everyone |
 | website | hidden honeypot | always empty for real guests; bots fill it and are dropped |
 
-When the guest is not coming, companions, bus, diet and menu are sent empty. The message is kept either way.
+When the guest is not coming, bus, diet and menu are sent empty. The message is kept either way.
+
+One reply per person (decided 2026-11-02): there is no companions box. After a successful save the form clears itself so the next person, often on the same phone, can send theirs. The sending card has a square photo slot, `assets/foto-envio.jpg` (about 800×800); while that file is missing a dashed placeholder shows. The script still writes an "Acompañantes" column; it stays empty for new replies.
 
 ## Setup (about 10 minutes, once)
 

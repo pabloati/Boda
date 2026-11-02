@@ -25,7 +25,7 @@
   const rsvpForm = document.getElementById('rsvp-form');
   const rsvpContact = document.getElementById('rsvp-contact');
   const rsvpContactList = document.getElementById('rsvp-contact-list');
-  const rsvpStatusMessage = document.getElementById('rsvp-status-message');
+  const rsvpModal = document.getElementById('rsvp-modal');
   const rsvpAttendanceDetails = document.getElementById('rsvp-attendance-details');
   const btnCopyIban = document.getElementById('btn-copy-iban');
   const ibanValue = document.getElementById('iban-value');
@@ -261,13 +261,25 @@
     });
   });
 
+  // Bus: "Sí" shows the outward/return choice; a return trip (Vuelta or
+  // Ida y vuelta) also asks where to be dropped off.
   const busSelect = document.getElementById('guest-bus');
   const busTypeGroup = document.getElementById('bus-type-group');
-  if (busSelect && busTypeGroup) {
-    busSelect.addEventListener('change', function () {
-      busTypeGroup.style.display = this.value.startsWith('Si') ? 'block' : 'none';
-    });
+  const busTypeSelect = document.getElementById('guest-bus-type');
+  const returnStopGroup = document.getElementById('return-stop-group');
+
+  function needsReturnStop() {
+    return !!(busSelect && busSelect.value.startsWith('Si') &&
+      busTypeSelect && busTypeSelect.value !== 'Ida');
   }
+
+  function updateBusFields() {
+    if (busTypeGroup && busSelect) busTypeGroup.style.display = busSelect.value.startsWith('Si') ? 'block' : 'none';
+    if (returnStopGroup) returnStopGroup.style.display = needsReturnStop() ? 'block' : 'none';
+  }
+
+  if (busSelect) busSelect.addEventListener('change', updateBusFields);
+  if (busTypeSelect) busTypeSelect.addEventListener('change', updateBusFields);
 
   // --- 7. RSVP FORM SUBMISSION & WHATSAPP CONTACT LINK ---
   function readValue(id, fallback) {
@@ -283,15 +295,12 @@
     const statusEl = document.querySelector('input[name="attendanceStatus"]:checked');
     const status = statusEl ? statusEl.value : 'asistire';
 
-    const companionsRaw = readValue('guest-companions', '');
-    const companions = companionsRaw
-      .split('\n')
-      .map(line => line.trim())
-      .filter(Boolean);
-
     const attending = status === 'asistire';
     const bus = attending ? readValue('guest-bus', 'No, voy por mi cuenta') : '';
     const busType = attending && bus.startsWith('Si') ? readValue('guest-bus-type', 'Ida y vuelta') : '';
+
+    const returnStopEl = document.querySelector('input[name="returnStop"]:checked');
+    const returnStop = attending && needsReturnStop() && returnStopEl ? returnStopEl.value : '';
 
     const diet = attending ? readValue('guest-diet', 'Ninguna') : '';
     const menu = attending ? readValue('guest-menu', 'Ninguno') : '';
@@ -300,9 +309,9 @@
       guestName,
       phone,
       status,
-      companions: attending ? companions : [],
       bus,
       busType,
+      returnStop,
       diet,
       menu,
       message: readValue('guest-message', ''),
@@ -338,11 +347,59 @@
   // Replies are POSTed as JSON to a Google Apps Script web app that appends a
   // row to the couple's Google Sheet (docs/rsvp.md). The body is sent as plain
   // text so the browser skips the CORS preflight, which Apps Script cannot answer.
-  function showRsvpStatus(kind, html) {
-    if (!rsvpStatusMessage) return;
-    rsvpStatusMessage.style.display = 'block';
-    rsvpStatusMessage.className = 'rsvp-status-message ' + kind;
-    rsvpStatusMessage.innerHTML = html;
+  // One reply per person: after a successful save the form is cleared so the
+  // next person (often on the same phone) can send theirs.
+  const SEND_TIMEOUT_MS = 60000;   // worst save measured: 41 s (docs/rsvp-latency.md)
+  const SLOW_HINT_MS = 8000;       // swap the pending text so the card never looks frozen
+
+  // A card over the whole page (#rsvp-modal), so the guest sees it wherever
+  // they are scrolled. kind: 'pending' | 'success' | 'error'. While pending it
+  // cannot be closed; afterwards the "Cerrar" button, Esc or a tap outside
+  // the card closes it.
+  const modalTitle = document.getElementById('rsvp-modal-title');
+  const modalText = document.getElementById('rsvp-modal-text');
+  const modalClose = document.getElementById('rsvp-modal-close');
+  let modalKind = null;
+  let modalOnClose = null;
+
+  function showRsvpStatus(kind, title, html, onClose) {
+    if (!rsvpModal) return;
+    modalKind = kind;
+    modalOnClose = onClose || null;
+    rsvpModal.className = 'rsvp-modal ' + kind;
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalText) modalText.innerHTML = html;
+    if (modalClose) modalClose.hidden = kind === 'pending';
+    if (rsvpModal.hidden) {
+      rsvpModal.hidden = false;
+      document.documentElement.classList.add('rsvp-modal-open');
+      // next frame, so the fade-in transition runs after display changes
+      requestAnimationFrame(() => rsvpModal.classList.add('is-shown'));
+    } else {
+      rsvpModal.classList.add('is-shown');
+    }
+    if (kind !== 'pending' && modalClose) modalClose.focus({ preventScroll: true });
+  }
+
+  function hideRsvpStatus() {
+    if (!rsvpModal || rsvpModal.hidden || modalKind === 'pending') return;
+    rsvpModal.classList.remove('is-shown');
+    document.documentElement.classList.remove('rsvp-modal-open');
+    setTimeout(() => { rsvpModal.hidden = true; }, 250);
+    const done = modalOnClose;
+    modalKind = null;
+    modalOnClose = null;
+    if (done) done();
+  }
+
+  if (rsvpModal) {
+    if (modalClose) modalClose.addEventListener('click', hideRsvpStatus);
+    rsvpModal.addEventListener('click', e => {
+      if (e.target === rsvpModal) hideRsvpStatus();   // tap on the dimmed backdrop
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') hideRsvpStatus();
+    });
   }
 
   function sendRsvp(data) {
@@ -350,16 +407,27 @@
     if (!endpoint) {
       return Promise.reject(new Error('rsvp endpoint not configured'));
     }
+    const controller = window.AbortController ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), SEND_TIMEOUT_MS) : null;
     return fetch(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      signal: controller ? controller.signal : undefined
     }).then(res => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     }).then(json => {
       if (!json || json.ok !== true) throw new Error((json && json.error) || 'bad response');
       return json;
-    });
+    }).finally(() => clearTimeout(timer));
+  }
+
+  // Back to a blank form: reset() restores the defaults in the HTML, but the
+  // fields shown or hidden by section 6 have to be put back by hand.
+  function resetRsvpForm() {
+    rsvpForm.reset();
+    if (rsvpAttendanceDetails) rsvpAttendanceDetails.style.display = 'block';
+    updateBusFields();
   }
 
   if (rsvpForm) {
@@ -378,18 +446,37 @@
         return;
       }
 
+      if (data.status === 'asistire' && needsReturnStop() && !data.returnStop) {
+        alert(t('rsvp.alertReturnStop'));
+        if (returnStopGroup) returnStopGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       sending = true;
       if (submitButton) submitButton.disabled = true;
-      showRsvpStatus('pending', '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('rsvp.sending'));
+      const spinner = '<i class="fa-solid fa-spinner fa-spin"></i> ';
+      showRsvpStatus('pending', t('rsvp.titleSending'), spinner + t('rsvp.sending'));
+      const slowHint = setTimeout(() => {
+        if (modalText) modalText.innerHTML = spinner + t('rsvp.stillSending');
+      }, SLOW_HINT_MS);
 
       sendRsvp(data).then(() => {
+        clearTimeout(slowHint);
         const thanks = t(data.status === 'asistire' ? 'rsvp.thanksYes' : 'rsvp.thanksNo');
-        showRsvpStatus('success', '<i class="fa-solid fa-circle-check"></i> ' + t('rsvp.thanks', { name: escapeHtml(data.guestName) }) + ' ' + thanks);
-      }).catch(err => {
-        console.warn('RSVP not saved:', err);
-        showRsvpStatus('error', t('rsvp.error'));
+        resetRsvpForm();
         sending = false;
         if (submitButton) submitButton.disabled = false;
+        // after closing, bring the (now empty) form into view for the next person
+        showRsvpStatus('success', t('rsvp.titleDone'),
+          '<p>' + t('rsvp.thanks', { name: escapeHtml(data.guestName) }) + ' ' + thanks + '</p>' +
+          '<p class="rsvp-modal-note">' + t('rsvp.another') + '</p>',
+          () => rsvpForm.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }).catch(err => {
+        clearTimeout(slowHint);
+        console.warn('RSVP not saved:', err);
+        sending = false;
+        if (submitButton) submitButton.disabled = false;
+        showRsvpStatus('error', t('rsvp.titleError'), '<p>' + t('rsvp.error') + '</p>');
       });
     });
   }

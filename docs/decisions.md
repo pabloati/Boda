@@ -2,6 +2,8 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-11-02 — On trial: guests taking the return bus choose where to be dropped off, Cibeles or Avenida de América. Needs the Apps Script republished to reach the Sheet (backlog D).
+- 2026-11-02 — RSVP is one reply per person: the companions box is gone, the form clears after each save so it can be sent again, and progress shows in a card over the whole page with a photo of the couple.
 - 2026-10-18 — Parents section removed from the invitation.
 - 2026-10-18 — The WhatsApp contact under the form shows both Pablo and Mª Ángeles (logo, name, number), from `whatsappContacts` in `js/rsvp-config.js`.
 - 2026-10-18 — Timeline redrawn: dots centred on the axis, line runs from the first circle to the last (per-item segments).
