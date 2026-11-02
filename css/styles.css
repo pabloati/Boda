@@ -511,9 +511,10 @@ button {
 /* z6 — the wax seal cut from the photo (assets/sello.png), lettering replaced by the monogram */
 .wax-seal {
   position: absolute;
-  top: 53.2%;
-  left: 50%;
-  width: 36%;
+  /* sized so the wax rim meets the photo's fold lines (fitted 2026-11-02) */
+  top: 53.3%;
+  left: 49.6%;
+  width: 42.5%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   padding: 0;
