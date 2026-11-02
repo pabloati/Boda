@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261102p">
+  <link rel="stylesheet" href="css/styles.css?v=20261102r">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg">
@@ -69,38 +69,6 @@
       <div class="envelope-letter" id="envelope-letter">
         <div class="card-face card-front">
           <img src="assets/tarjeta.jpg" alt="Tarjeta de invitación de Mª Ángeles y Pablo" width="800" height="1200" decoding="async">
-          <!-- Postmark stamped on the card while it floats out (class "stamped",
-               js/script.js openEnvelope). Coordinates are tarjeta.jpg pixels
-               (800×1200): the round date stamp sits on the cream strip at the
-               bottom left, the wavy lines run between the title and the © line.
-               It is part of the picture, so its text is not translated. -->
-          <svg class="postmark" viewBox="0 0 800 1200" aria-hidden="true" focusable="false">
-            <defs>
-              <filter id="pm-ink" x="-10%" y="-10%" width="120%" height="120%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="grain"/>
-                <feDisplacementMap in="SourceGraphic" in2="grain" scale="3" result="wobbly"/>
-                <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="9" result="blots"/>
-                <feColorMatrix in="blots" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 2.15" result="inkmask"/>
-                <feComposite in="wobbly" in2="inkmask" operator="in"/>
-              </filter>
-              <path id="pm-top" d="M 52 1148 A 62 62 0 0 1 176 1148"/>
-              <path id="pm-bottom" d="M 44 1148 A 70 70 0 0 0 184 1148"/>
-            </defs>
-            <g class="pm-ink" filter="url(#pm-ink)">
-              <g class="pm-stamp" transform="rotate(-9 114 1148)">
-                <circle cx="114" cy="1148" r="80" fill="none" stroke="currentColor" stroke-width="5"/>
-                <circle cx="114" cy="1148" r="50" fill="none" stroke="currentColor" stroke-width="2.5"/>
-                <text class="pm-ring"><textPath href="#pm-top" startOffset="50%" text-anchor="middle">MADRID</textPath></text>
-                <text class="pm-ring"><textPath href="#pm-bottom" startOffset="50%" text-anchor="middle">ESPAÑA</textPath></text>
-                <text class="pm-date" x="114" y="1144" text-anchor="middle">13 MAR</text>
-                <text class="pm-date" x="114" y="1170" text-anchor="middle">2027</text>
-              </g>
-              <path class="pm-waves" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"
-                d="M 205 1098 q 15 -8 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0
-                   M 205 1114 q 15 -8 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0
-                   M 205 1130 q 15 -8 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0 t 30 0"/>
-            </g>
-          </svg>
         </div>
         <!-- The back repeats the hero so the reveal lands on the page unchanged -->
         <div class="card-face card-back" aria-hidden="true">
@@ -476,10 +444,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261102p"></script>
-  <script src="js/rsvp-config.js?v=20261102p"></script>
-  <script src="js/script.js?v=20261102p"></script>
-  <script src="js/playlist-config.js?v=20261102p"></script>
-  <script src="js/playlist.js?v=20261102p"></script>
+  <script src="js/i18n.js?v=20261102r"></script>
+  <script src="js/rsvp-config.js?v=20261102r"></script>
+  <script src="js/script.js?v=20261102r"></script>
+  <script src="js/playlist-config.js?v=20261102r"></script>
+  <script src="js/playlist.js?v=20261102r"></script>
 </body>
 </html>

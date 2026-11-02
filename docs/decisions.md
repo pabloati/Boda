@@ -2,7 +2,6 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
-- 2026-11-02 — Opening: a postmark ("MADRID · ESPAÑA · 13 MAR 2027" with wavy cancellation lines) lands on the couple's postcard once it floats out of the envelope; the card turns over 0.9 s later. The postmark is part of the picture and is not translated.
 - 2026-11-02 — RSVP speed: the Apps Script queues each reply in Script Properties and answers at once; a one-minute trigger writes the queue to the Sheet. Each reply carries an Id so a resend after a false error overwrites its row. Sheet columns: Acompañantes removed, Destino vuelta and Id added.
 - 2026-11-02 — On trial: guests taking the return bus choose where to be dropped off, Cibeles or Avenida de América. Needs the Apps Script republished to reach the Sheet (backlog D).
 - 2026-11-02 — RSVP is one reply per person: the companions box is gone, the form clears after each save so it can be sent again, and progress shows in a card over the whole page with a photo of the couple.
