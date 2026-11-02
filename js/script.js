@@ -288,6 +288,20 @@
     return v || fallback;
   }
 
+  // Id of the reply being filled in. It survives a failed send, so pressing
+  // Confirmar again after an error overwrites the same row in the Sheet instead
+  // of adding a duplicate (Google sometimes reports an error although it saved).
+  // A successful send clears it: the next person gets a new Id.
+  let replyId = null;
+  function currentReplyId() {
+    if (!replyId) {
+      replyId = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+    return replyId;
+  }
+
   function getRsvpFormData() {
     const guestName = readValue('guest-name', '');
     const phone = readValue('guest-phone', '');
@@ -315,6 +329,7 @@
       diet,
       menu,
       message: readValue('guest-message', ''),
+      replyId: currentReplyId(),
       website: readValue('guest-website', '')
     };
   }
@@ -464,6 +479,7 @@
         clearTimeout(slowHint);
         const thanks = t(data.status === 'asistire' ? 'rsvp.thanksYes' : 'rsvp.thanksNo');
         resetRsvpForm();
+        replyId = null;
         sending = false;
         if (submitButton) submitButton.disabled = false;
         // after closing, bring the (now empty) form into view for the next person

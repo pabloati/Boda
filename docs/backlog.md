@@ -20,12 +20,11 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 
 ## C. Pending in the other working session (RSVP)
 
-- [ ] RSVP latency: saves take 1 to 40 s; apply the fixes in `docs/rsvp-latency.md` in order, fix 1 first.
+- [ ] **Publish the new RSVP script** (branch `rsvp-form`, 2026-11-02: queue + one-minute trigger, reply Ids against duplicates, new columns incl. "Destino vuelta", no "Acompañantes"). Couple: delete every row of "Respuestas" (all are tests), paste `docs/rsvp-apps-script.gs`, run **setup** once, Deploy → Manage deployments → New version. Then one real test reply to time it; delete it after. If the return drop-off question is dropped instead: remove `#return-stop-group` from `index.html` and `returnStop` from `js/script.js` and the script.
 - [ ] Decide whether the "¿Alguna duda? Escríbenos por WhatsApp" link stays under the form or moves to the footer.
 
 ## D. Before sending the invitations
 
-- [ ] **Return drop-off (Cibeles / Avenida de América) is in the form but not yet in the Sheet** (added 2026-11-02, on trial). If it stays: paste the current `docs/rsvp-apps-script.gs` into the Apps Script editor, publish it as a new version (Deploy → Manage deployments → pencil → New version), and type `Destino vuelta` in the first empty header cell of the "Respuestas" sheet, right after "Mensaje". Until then the answer is sent but not saved. If it is dropped: remove `#return-stop-group` from `index.html` and `returnStop` from `js/script.js`.
 - [ ] Final run-through on two real phones (Android + iPhone) from a WhatsApp link: envelope, music, RSVP save, playlist vote, language toggle.
 - [ ] Check the Google Sheet receives a test reply and delete it.
 - [ ] Restore the Supabase project (paused on purpose since 2026-11-02, the keep-alive pings did not stop the pause): Supabase dashboard → project → Restore. Then open the site and check the ranking loads.
