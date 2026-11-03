@@ -25,6 +25,14 @@
   --ink-soft: #6f6a5c;
   --ink-faint: #9b958a;
   --cream-text: #f6f2e8;
+  --gold: #a8853f;   /* the wax seal's gold: the line under the hero veil */
+
+  /* Hero veil: milky paper over the photo, wavy bottom edge (same curve in
+     --veil-wave and the .veil-line SVG, both stretched to the edge band) */
+  --veil: rgba(243, 238, 227, 0.9);
+  --veil-h: 64%;
+  --veil-edge: clamp(26px, 7vw, 84px);
+  --veil-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V22C320 30 260 6 200 6C140 6 80 34 0 26Z'/%3E%3C/svg%3E");
 
   --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-script: 'Allison', cursive;
@@ -44,6 +52,7 @@ html {
   scroll-behavior: smooth;
   font-size: 17px;
   overflow-x: hidden;
+  overflow-x: clip;   /* hidden makes a scroll container and breaks the sticky hero */
 }
 
 body {
@@ -53,6 +62,7 @@ body {
   color: var(--ink);
   line-height: 1.6;
   overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -416,7 +426,7 @@ button {
   object-fit: cover;
 }
 
-/* The back is the hero (same photo, overlay and copy) so the fade onto the page is a match cut.
+/* The back is the hero (same photo, veil and copy) so the fade onto the page is a match cut.
    Everything inside is the hero's own geometry multiplied by --s, the card width over the viewport
    width (set by openEnvelope()). At --s: 1 it is the hero, pixel for pixel. */
 .card-back {
@@ -425,13 +435,14 @@ button {
   --card-ease: ease;
   transform: rotateY(180deg);
   background: var(--olive-deep) url('../assets/hero.jpg') center 40% / cover no-repeat;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: calc(60px * var(--s)) calc(20px * var(--s));
-  color: var(--cream-text);
-  transition: border-radius 0.8s ease, box-shadow 0.8s ease, padding var(--card-t) var(--card-ease);
+  transition: border-radius 0.8s ease, box-shadow 0.8s ease;
+}
+
+.card-back .hero-veil { --edge: calc(var(--veil-edge) * var(--s)); }
+
+.card-back .veil-sheet {
+  padding: calc(56px * var(--s)) calc(20px * var(--s)) var(--edge);
+  transition: padding var(--card-t) var(--card-ease);
 }
 
 .envelope-letter.detached .card-back {
@@ -444,18 +455,10 @@ button {
   --card-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-back::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(40, 38, 30, 0.35) 0%, rgba(40, 38, 30, 0.2) 45%, rgba(60, 60, 40, 0.65) 100%);
-}
-
 .card-back-content {
   position: relative;
   max-width: calc(760px * var(--s));
   padding: calc(20px * var(--s)) calc(10px * var(--s));
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
 }
 
 .card-back-content,
@@ -464,7 +467,7 @@ button {
 }
 
 .card-back .hero-pretitle { font-size: calc(0.95rem * var(--s)); letter-spacing: calc(6px * var(--s)); margin-bottom: calc(6px * var(--s)); }
-.card-back .hero-title { font-size: calc(clamp(3.6rem, 14vw, 7.5rem) * var(--s)); margin-bottom: calc(18px * var(--s)); }
+.card-back .hero-title { font-size: calc(clamp(3.2rem, min(14vw, 11.5vh), 7.5rem) * var(--s)); margin-bottom: calc(18px * var(--s)); }
 .card-back .hero-date { font-size: calc(1.45rem * var(--s)); letter-spacing: calc(2px * var(--s)); white-space: nowrap; /* no one-frame rewrap mid-growth */ }
 .card-back .hero-location { font-size: calc(1rem * var(--s)); letter-spacing: calc(4px * var(--s)); margin: calc(6px * var(--s)) 0 calc(44px * var(--s)); }
 .card-back .scroll-indicator { font-size: calc(0.8rem * var(--s)); letter-spacing: calc(3px * var(--s)); gap: calc(10px * var(--s)); }
@@ -687,16 +690,18 @@ button {
 ======================================================== */
 .hero-section {
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 20px;
-  background: var(--olive-deep);
+  height: 200vh;     /* one screen to look at + one screen of scroll that lifts the veil */
+  height: 200svh;
+  background: var(--paper);
+}
+
+.hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
   overflow: hidden;
-  color: var(--cream-text);
+  background: var(--olive-deep);
 }
 
 .hero-photo {
@@ -713,35 +718,81 @@ button {
   display: block;
 }
 
-.hero-overlay {
+/* The veil: a wrapper that moves (transform set by script.js), holding the
+   masked paper sheet and, beside it, the gold line along the wavy edge (a
+   child of the sheet would be clipped by the mask). Used twice: in the hero
+   and on the card back, where --edge is scaled by --s. */
+.hero-veil {
+  --edge: var(--veil-edge);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--veil-h);
+  z-index: 2;
+}
+
+#hero-veil { will-change: transform; }
+
+@media (min-width: 769px) {
+  :root { --veil-h: 70%; }
+}
+
+.veil-sheet {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(40, 38, 30, 0.35) 0%, rgba(40, 38, 30, 0.2) 45%, rgba(60, 60, 40, 0.65) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 56px 20px var(--edge);
+  background: var(--veil);
+  color: var(--ink);
+  -webkit-mask:
+    linear-gradient(#000, #000) top / 100% calc(100% - var(--edge) + 1px) no-repeat,
+    var(--veil-wave) bottom / 100% var(--edge) no-repeat;
+  mask:
+    linear-gradient(#000, #000) top / 100% calc(100% - var(--edge) + 1px) no-repeat,
+    var(--veil-wave) bottom / 100% var(--edge) no-repeat;
+}
+
+.veil-line {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--edge);
+  overflow: visible;
   pointer-events: none;
+}
+
+.veil-line path {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
 }
 
 .hero-content {
   position: relative;
-  z-index: 2;
   max-width: 760px;
   padding: 20px 10px;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
 }
 
 .hero-pretitle {
   font-size: 0.95rem;
   letter-spacing: 6px;
   text-transform: uppercase;
-  color: var(--cream-text);
+  color: var(--ink-soft);
   margin-bottom: 6px;
 }
 
 .hero-title {
   font-family: var(--font-script);
   font-size: clamp(3.6rem, 14vw, 7.5rem);
+  font-size: clamp(3.2rem, min(14vw, 11.5vh), 7.5rem);   /* short landscape screens: fit the veil */
   line-height: 1;
-  color: var(--cream-text);
+  color: var(--ink);
   margin-bottom: 18px;
   padding: 0 0.2em;
 }
@@ -754,15 +805,14 @@ button {
   font-size: 1.45rem;
   font-weight: 600;
   letter-spacing: 2px;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
 }
 
 .hero-location {
   font-size: 1rem;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: rgba(246, 242, 232, 0.85);
+  color: var(--ink-soft);
   margin: 6px 0 44px;
 }
 
@@ -771,14 +821,14 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: rgba(246, 242, 232, 0.8);
+  color: var(--ink-soft);
   font-size: 0.8rem;
   letter-spacing: 3px;
   text-transform: uppercase;
 }
 
 .scroll-indicator:hover {
-  color: var(--cream-text);
+  color: var(--terracotta);
 }
 
 .chevron {

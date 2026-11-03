@@ -2,6 +2,7 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-11-03 — On trial (branch `hero-veil`): veiled hero after weddingbook.framer.website. The photo is pinned while a milky paper veil with the names and a gold wavy edge (the seal's gold) slides up as you scroll. The envelope card back shows the same veiled view, so the opening still lands on the page unchanged.
 - 2026-11-02 — RSVP speed: the Apps Script queues each reply in Script Properties and answers at once; a one-minute trigger writes the queue to the Sheet. Each reply carries an Id so a resend after a false error overwrites its row. Sheet columns: Acompañantes removed, Destino vuelta and Id added.
 - 2026-11-02 — On trial: guests taking the return bus choose where to be dropped off, Cibeles or Avenida de América. Needs the Apps Script republished to reach the Sheet (backlog D).
 - 2026-11-02 — RSVP is one reply per person: the companions box is gone, the form clears after each save so it can be sent again, and progress shows in a card over the whole page with a photo of the couple.

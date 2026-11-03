@@ -572,4 +572,28 @@
     });
   }
 
+  // --- 11. HERO VEIL ---
+  // The hero stage is sticky inside a section two screens tall. Over the first
+  // 80% of that extra scroll the veil (names, date, gold wavy line) slides up
+  // off the photo; then the photo holds a moment and the page moves on.
+  const heroSection = document.getElementById('hero');
+  const heroVeil = document.getElementById('hero-veil');
+  if (heroSection && heroVeil) {
+    let veilQueued = false;
+    const placeVeil = function () {
+      veilQueued = false;
+      const travel = heroSection.offsetHeight - window.innerHeight;
+      const p = travel > 0
+        ? Math.min(1, Math.max(0, (window.scrollY - heroSection.offsetTop) / (travel * 0.8)))
+        : 0;
+      heroVeil.style.transform = 'translate3d(0, ' + (-p * (heroVeil.offsetHeight + 6)).toFixed(1) + 'px, 0)';
+    };
+    const queueVeil = function () {
+      if (!veilQueued) { veilQueued = true; requestAnimationFrame(placeVeil); }
+    };
+    window.addEventListener('scroll', queueVeil, { passive: true });
+    window.addEventListener('resize', queueVeil);
+    placeVeil();
+  }
+
 })();
