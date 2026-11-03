@@ -8,8 +8,10 @@
   Local preview tool, not part of the site. The folder starts with "_" so
   GitHub Pages (Jekyll) never publishes it.
 
-  Use: run `python3 -m http.server 8000` in the repo (or a worktree) and open
-  http://localhost:8000/_dev/phones.html
+  Use: run `python3 _dev/serve.py` in the repo (or any worktree) and open
+  http://localhost:8000/_dev/phones.html . The Version menu then lists every
+  worktree (live files) and every other branch (its last commit). With plain
+  `python3 -m http.server` the page still works, for that folder only.
 
   Shows the site in several device frames at real CSS widths, so media queries
   behave as on a phone. Auto-reload watches index.html, css/ and js/ and reloads
@@ -30,6 +32,7 @@
   }
   header strong { font-size: 15px; margin-right: 6px; }
   label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); cursor: pointer; }
+  select { max-width: 280px; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
   input[type=text] { width: 160px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
   button {
     padding: 5px 12px; border-radius: 4px; border: 1px solid var(--accent); background: none; color: var(--fg); cursor: pointer;
@@ -49,7 +52,8 @@
 <header>
   <strong>Phone preview</strong>
   <div class="devices" id="devices"></div>
-  <label>Page <input type="text" id="path" value="../index.html"></label>
+  <label id="source-wrap" hidden>Version <select id="source"></select></label>
+  <label>Page <input type="text" id="path" value="index.html"></label>
   <label>Scale <input type="range" id="scale" min="40" max="100" step="5" value="75"> <span id="scale-val">75%</span></label>
   <label><input type="checkbox" id="skip-envelope"> Skip envelope</label>
   <label><input type="checkbox" id="auto" checked> Auto-reload</label>
@@ -69,7 +73,7 @@
     { id: 'ipad',    name: 'iPad mini',         w: 768,  h: 1024, on: false },
     { id: 'desktop', name: 'Desktop',           w: 1280, h: 800,  on: false }
   ];
-  const WATCH = ['../index.html', '../css/styles.css', '../js/script.js', '../js/i18n.js', '../js/playlist.js', '../js/rsvp-config.js'];
+  const WATCH = ['index.html', 'css/styles.css', 'js/script.js', 'js/i18n.js', 'js/playlist.js', 'js/rsvp-config.js'];
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('phones.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -78,10 +82,14 @@
 
   const $ = id => document.getElementById(id);
   const framesEl = $('frames'), devicesEl = $('devices'), statusEl = $('status');
+  const sourceEl = $('source');
+  // base: where the site lives. '../' = the folder this page is served from;
+  // with _dev/serve.py, '/', '/wt/<name>/' or '/b/<branch>/'.
+  let base = '../', live = true, rev = null, sourceList = [];
   const pathEl = $('path'), scaleEl = $('scale'), scaleVal = $('scale-val'), skipEl = $('skip-envelope'), autoEl = $('auto');
 
   const enabled = store.get('enabled', DEVICES.filter(d => d.on).map(d => d.id));
-  pathEl.value = store.get('path', pathEl.value);
+  pathEl.value = String(store.get('path', pathEl.value)).replace(/^(\.\.\/)+/, '');
   scaleEl.value = store.get('scale', scaleEl.value);
   skipEl.checked = store.get('skip', false);
   autoEl.checked = store.get('auto', true);
@@ -115,7 +123,7 @@
     DEVICES.filter(d => ids.includes(d.id)).forEach(d => {
       const fig = document.createElement('figure');
       const cap = document.createElement('figcaption');
-      cap.textContent = d.name + ' · ' + d.w + '×' + d.h;
+      cap.textContent = d.name + ' · ' + d.w + '×' + d.h + (sourceEl.value ? ' · ' + sourceEl.selectedOptions[0].dataset.short : '');
       const shell = document.createElement('div');
       shell.className = 'shell' + (d.id === 'desktop' ? ' desktop' : '');
       shell.style.width = Math.round(d.w * scale) + 'px';
@@ -126,7 +134,7 @@
       iframe.style.transform = 'scale(' + scale + ')';
       iframe.title = d.name;
       iframe.addEventListener('load', () => applySkip(iframe));
-      iframe.src = pathEl.value;
+      iframe.src = base + pathEl.value.replace(/^\/+/, '');
       shell.appendChild(iframe);
       fig.append(cap, shell);
       framesEl.appendChild(fig);
@@ -154,14 +162,21 @@
     status('Reloaded ' + new Date().toLocaleTimeString());
   }
 
-  // Auto-reload: poll Last-Modified of the watched files (python http.server sends it).
-  const seen = {};
+  // Auto-reload. Live folders: poll Last-Modified of the watched files.
+  // Branches without a folder: poll the branch's last commit in sources.json.
+  let seen = {};
   async function poll() {
     if (!autoEl.checked) return;
+    if (!live) {
+      const s = await loadSources();
+      const now = s && s.find(x => x.url === base);
+      if (now && rev && now.rev !== rev) { rev = now.rev; reloadAll(); }
+      return;
+    }
     let changed = false;
     for (const f of WATCH) {
       try {
-        const r = await fetch(f, { method: 'HEAD', cache: 'no-store' });
+        const r = await fetch(base + f, { method: 'HEAD', cache: 'no-store' });
         const lm = r.headers.get('last-modified') || '';
         if (seen[f] !== undefined && seen[f] !== lm) changed = true;
         seen[f] = lm;
@@ -172,6 +187,49 @@
   setInterval(poll, 1500);
   poll();
 
+  // Version menu, filled from _dev/serve.py; hidden with a plain http.server.
+  async function loadSources() {
+    try {
+      const r = await fetch('/_dev/sources.json', { cache: 'no-store' });
+      if (!r.ok) return null;
+      const s = await r.json();
+      return s.worktrees.concat(s.branches);
+    } catch (e) { return null; }
+  }
+
+  function pickSource() {
+    const src = sourceList.find(x => x.url === sourceEl.value);
+    if (!src) return;
+    base = src.url; live = src.live; rev = src.rev || null; seen = {};
+    store.set('source', src.live ? 'wt:' + src.name : 'b:' + src.branch);
+  }
+
+  async function initSources() {
+    const list = await loadSources();
+    if (!list) return;
+    sourceList = list;
+    const saved = store.get('source', '');
+    const groups = [['Folders (live files)', list.filter(x => x.live)], ['Branches (last commit)', list.filter(x => !x.live)]];
+    groups.forEach(([label, items]) => {
+      if (!items.length) return;
+      const g = document.createElement('optgroup');
+      g.label = label;
+      items.forEach(x => {
+        const o = document.createElement('option');
+        o.value = x.url;
+        o.textContent = x.live ? x.branch + '  ·  ' + x.name : x.branch + '  ·  ' + x.rev;
+        o.dataset.short = x.branch;
+        o.selected = saved === (x.live ? 'wt:' + x.name : 'b:' + x.branch);
+        g.appendChild(o);
+      });
+      sourceEl.appendChild(g);
+    });
+    if (!list.some(x => saved === (x.live ? 'wt:' + x.name : 'b:' + x.branch))) sourceEl.value = '/';   // first visit: the folder serving this page
+    $('source-wrap').hidden = false;
+    pickSource();
+  }
+
+  sourceEl.addEventListener('change', () => { pickSource(); render(); });
   devicesEl.addEventListener('change', render);
   scaleEl.addEventListener('input', render);
   pathEl.addEventListener('change', render);
@@ -182,7 +240,7 @@
   if (location.protocol === 'file:') {
     status('Open this through the local server: http://localhost:8000/_dev/phones.html');
   }
-  render();
+  initSources().then(render);
 })();
 </script>
 </body>

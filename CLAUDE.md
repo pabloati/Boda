@@ -14,7 +14,7 @@ There is no build, lint, or test suite. Preview locally with:
 python3 -m http.server 8000     # then open http://localhost:8000
 ```
 
-To see the site in several phone frames at once, open http://localhost:8000/_dev/phones.html while the server runs: real CSS widths per device, auto-reload when `index.html`, `css/` or `js/` change, and a "Skip envelope" switch. `_dev/` starts with an underscore, so GitHub Pages (Jekyll) never publishes it.
+To compare work in progress, run `python3 _dev/serve.py` (port 8000) instead and open http://localhost:8000/_dev/phones.html: phone frames at real CSS widths, a **Version** menu with every worktree (live files, auto-reload on changes to `index.html`, `css/`, `js/`) and every other branch (served from its last commit with `git show`), and a "Skip envelope" switch. With plain `http.server` the page still works for that one folder. `_dev/` starts with an underscore, so GitHub Pages (Jekyll) never publishes it.
 
 Opening `index.html` directly from the filesystem also works, but the clipboard API only works over `http://localhost` or `https://`.
 
@@ -25,7 +25,7 @@ To screenshot at phone and desktop widths, Playwright is available via Node (`np
 - `index.html` — all markup, in section order: envelope overlay, floating controls (back-to-top + music), hero, intro band (quote), countdown, venues (two columns with drawing slots), timeline, RSVP form, gift/IBAN, playlist (search + vote, `js/playlist.js`), photos/hashtag, footer.
 - `css/styles.css` — one file. Design tokens live in `:root` at the top (olive / cream paper / terracotta palette, `--font-serif` Cormorant Garamond for all text, `--font-script` Allison for headings, `--font-hand` Homemade Apple for handwritten labels). Paper grain is an inline SVG on `body::before`. The only breakpoint is `@media (max-width: 768px)` near the end.
 - `js/script.js` — one IIFE, numbered sections: DOM refs, audio engine, envelope open, countdown, `.ics` generator, RSVP conditional fields, RSVP submit (POST to Apps Script) + WhatsApp contact link, clipboard copy, back-to-top. `js/rsvp-config.js` holds the endpoint URL and the WhatsApp contacts.
-- `assets/` — images: `sobre.jpg`, `sello.png`, `sobre-papel.jpg` (envelope layers), `tarjeta.jpg` (the couple's card inside the envelope), stock hero photos (placeholders), drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). Background track: `assets/Emborracharme.mp3`.
+- `assets/` — images: `sobre.jpg`, `sello.png`, `sobre-papel.jpg` (envelope layers), `tarjeta.jpg` (the couple's card inside the envelope), the couple's hero photos `hero-desktop.jpg` / `hero-mobile.jpg` (under the veil), the RSVP sending-card photo `foto-envio.jpg`, drawing slots `dibujo-iglesia.png` / `dibujo-convite.png` (appear when the files exist). Background track: `assets/Emborracharme.mp3`.
 - `docs/backlog.md` — the roadmap: only open items, grouped by who acts (couple / Claude / other session / pre-launch). `docs/decisions.md` — one-line log of choices.
 
 ## Things that are easy to get wrong
