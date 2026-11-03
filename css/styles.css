@@ -897,79 +897,98 @@ button {
 /* ========================================================
    TIMELINE
 ======================================================== */
-/* Geometry: the dots sit on a vertical axis at --tl-line from the list's left
-   edge; each item draws its own segment down to the next dot, so the line
-   starts at the first circle and ends at the last one. */
-.timeline {
-  --tl-line: 72px;
-  --tl-pad: 96px;
-  --tl-gap: 34px;
-  --tl-dot: 11px;
-  --tl-dot-top: 12px;
+/* The route: two columns per stop (drawing, text), sides alternating. Under
+   every stop but the last, a dashed path with an arrow runs from this
+   drawing's column to the next one (the SVG is mirrored on even stops). */
+.ruta {
+  --ruta-path: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'%3E%3Cpath d='M100 4 C 100 52, 300 34, 300 82' fill='none' stroke='%239b958a' stroke-width='1.6' stroke-dasharray='5 6' stroke-linecap='round'/%3E%3Cpath d='M291 70 L300 84 L309 70' fill='none' stroke='%239b958a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   list-style: none;
-  max-width: 440px;
-  margin: 0 auto;
+  max-width: 620px;
+  margin: 12px auto 0;
+}
+
+.ruta-stop {
   position: relative;
-  padding-left: var(--tl-pad);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 8px 22px;
+  padding-bottom: 96px;
 }
 
-.timeline-item {
-  position: relative;
-  margin-bottom: var(--tl-gap);
-}
+.ruta-stop:last-child { padding-bottom: 0; }
 
-.timeline-item:last-child {
-  margin-bottom: 0;
-}
+.ruta-stop:nth-child(even) .ruta-art { order: 2; }
 
-/* the dot, centred on the axis */
-.timeline-item::before {
+.ruta-stop:not(:last-child)::after {
   content: "";
   position: absolute;
-  z-index: 1;
-  left: calc(var(--tl-line) - var(--tl-pad) - var(--tl-dot) / 2);
-  top: var(--tl-dot-top);
-  width: var(--tl-dot);
-  height: var(--tl-dot);
-  box-sizing: border-box;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  height: 84px;
+  background: var(--ruta-path) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.ruta-stop:nth-child(even)::after { transform: scaleX(-1); }
+
+.ruta-art {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.ruta-art img {
+  display: block;
+  width: 100%;
+  max-width: 230px;
+  height: 190px;
+  object-fit: contain;
+}
+
+/* empty drawing slot: dashed frame named after the file it waits for */
+.ruta-art.is-empty {
+  height: 190px;
+  align-items: center;
+  border: 1px dashed var(--paper-line);
   border-radius: 50%;
-  background: var(--paper);
-  border: 1px solid var(--olive);
+  color: var(--ink-faint);
+  font-family: var(--font-hand);
+  font-size: 0.7rem;
 }
 
-/* the segment from this dot's centre to the next dot's centre */
-.timeline-item:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: calc(var(--tl-line) - var(--tl-pad) - 0.5px);
-  top: calc(var(--tl-dot-top) + var(--tl-dot) / 2);
-  bottom: calc(-1 * (var(--tl-gap) + var(--tl-dot-top) + var(--tl-dot) / 2));
-  width: 1px;
-  background: var(--olive-soft);
-}
+.ruta-art.is-empty::after { content: attr(data-slot); }
 
-.timeline-time {
-  position: absolute;
-  left: calc(-1 * var(--tl-pad));
-  top: 2px;
-  width: 56px;
-  text-align: right;
-  font-size: 1.1rem;
+.ruta-text { min-width: 0; }
+
+.ruta-stop:nth-child(odd) .ruta-text { text-align: left; }
+.ruta-stop:nth-child(even) .ruta-text { text-align: right; }
+
+.ruta-time {
+  display: block;
+  font-size: 2rem;
   font-weight: 500;
+  line-height: 1;
   color: var(--olive-deep);
   font-variant-numeric: tabular-nums;
 }
 
-.timeline-title {
+.ruta-title {
   font-family: var(--font-hand);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   color: var(--terracotta);
   line-height: 1.6;
-  margin-bottom: 2px;
+  margin: 8px 0 2px;
 }
 
-.timeline-desc {
-  font-size: 1.1rem;
+.ruta-desc { font-size: 1.1rem; }
+
+@media (max-width: 480px) {
+  .ruta-stop { gap: 6px 14px; padding-bottom: 72px; }
+  .ruta-stop:not(:last-child)::after { height: 64px; }
+  .ruta-art img, .ruta-art.is-empty { height: 150px; }
+  .ruta-time { font-size: 1.6rem; }
 }
 
 /* ========================================================
@@ -1755,15 +1774,6 @@ html.rsvp-modal-open { overflow: hidden; }
     margin-bottom: 30px;
   }
 
-  .timeline {
-    --tl-line: 60px;
-    --tl-pad: 80px;
-  }
-
-  .timeline-time {
-    width: 48px;
-    font-size: 1rem;
-  }
 
   .paper-panel {
     padding: 26px 18px;
