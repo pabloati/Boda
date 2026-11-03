@@ -434,7 +434,7 @@ button {
   --card-t: 0s;
   --card-ease: ease;
   transform: rotateY(180deg);
-  background: var(--olive-deep) url('../assets/hero.jpg') center 40% / cover no-repeat;
+  background: var(--olive-deep) url('../assets/hero-desktop.jpg') center 18% / cover no-repeat;
   transition: border-radius 0.8s ease, box-shadow 0.8s ease;
 }
 
@@ -714,7 +714,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: center 18%;   /* hero-desktop.jpg: keep the tops of their heads in frame */
   display: block;
 }
 
@@ -1798,7 +1798,11 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .hero-photo img {
-    object-position: center 30%;
+    object-position: 53% 50%;   /* hero-mobile.jpg: the couple is just right of centre */
+  }
+
+  :root {
+    --veil-edge: clamp(44px, 14vw, 84px);   /* deeper curve on phones */
   }
 
   .hero-location {
@@ -1869,8 +1873,8 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .card-back {
-    background-image: url('../assets/hero-portrait.jpg');
-    background-position: center 30%;
+    background-image: url('../assets/hero-mobile.jpg');
+    background-position: 53% 50%;
   }
 
   .card-back .hero-location {
