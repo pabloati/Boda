@@ -11,7 +11,7 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
-| 9 | **Two pencil drawings for the Hoja de ruta**: the party (Fiesta, 19:00) and the bus home (Buses, 23:00), in the style of `assets/dibujo-*.png` | PNG with transparent background, olive-grey pencil lines, about 500 px wide, saved as `assets/ruta-fiesta.png` and `assets/ruta-buses.png` | they appear on their own; no code change |
+| 6 | **Two pencil drawings for the Hoja de ruta**: the party (Fiesta, 19:00) and the bus home (Buses, 23:00), in the style of `assets/dibujo-*.png` | PNG with transparent background, olive-grey pencil lines, about 500 px wide, saved as `assets/ruta-fiesta.png` and `assets/ruta-buses.png` | they appear on their own; no code change |
 
 ## B. Claude does once A arrives
 
