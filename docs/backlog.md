@@ -11,7 +11,6 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
-| 6 | **Bus photo for the Hoja de ruta** (Buses, 23:00). Fiesta is done (2026-11-03, from `Fiesta.jpg`). | A sharp photo of a bus, side-on, plain background, no people close up; drop it in `assets/` | cuts it out, converts it to the fine-line style and saves `assets/ruta-buses.png` |
 
 ## B. Claude does once A arrives
 

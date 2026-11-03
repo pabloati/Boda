@@ -2,6 +2,7 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-11-03 — Hoja de ruta drawings complete: Fiesta from the couple's party photo (background people removed), Buses from a friend's watercolour illustration, used with his permission (Arsenal crest painted out), both traced to the fine-line style.
 - 2026-11-03 — Hoja de ruta becomes an illustrated route (branch `hoja-ruta`): stops alternate sides, a dashed arrow path joins the drawings. Ceremonia and Convite use vignette crops of the venue sketches (church doorway, topiary swan); Fiesta and Buses wait for drawings in the same pencil style (`assets/ruta-fiesta.png`, `assets/ruta-buses.png`). Not wanted: skip-animation button, dress code, children section. Floral edge frames to come once the palette is chosen.
 - 2026-11-02 — RSVP speed: the Apps Script queues each reply in Script Properties and answers at once; a one-minute trigger writes the queue to the Sheet. Each reply carries an Id so a resend after a false error overwrites its row. Sheet columns: Acompañantes removed, Destino vuelta and Id added.
 - 2026-11-02 — On trial: guests taking the return bus choose where to be dropped off, Cibeles or Avenida de América. Needs the Apps Script republished to reach the Sheet (backlog D).
