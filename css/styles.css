@@ -332,7 +332,7 @@ button {
 .envelope-side {
   position: absolute;
   inset: 0;
-  background: url('../assets/sobre.jpg') 0 0 / 100% 100% no-repeat;
+  background: url('../assets/sobre.jpg?v=20261103') 0 0 / 100% 100% no-repeat;
 }
 
 /* z1 — pocket interior, visible once the flap is up: plain paper shifted up and darkened */
@@ -511,10 +511,9 @@ button {
 /* z6 — the wax seal cut from the photo (assets/sello.png), lettering replaced by the monogram */
 .wax-seal {
   position: absolute;
-  /* sized so the wax rim meets the photo's fold lines (fitted 2026-11-02) */
-  top: 53.3%;
-  left: 49.6%;
-  width: 42.5%;
+  top: 53.2%;
+  left: 50%;
+  width: 36%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   padding: 0;
