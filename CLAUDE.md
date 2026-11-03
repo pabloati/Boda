@@ -14,7 +14,7 @@ There is no build, lint, or test suite. Preview locally with:
 python3 -m http.server 8000     # then open http://localhost:8000
 ```
 
-To see the site in several phone frames at once, open http://localhost:8000/_dev/phones.html while the server runs: real CSS widths per device, auto-reload when `index.html`, `css/` or `js/` change, and a "Skip envelope" switch. `_dev/` starts with an underscore, so GitHub Pages (Jekyll) never publishes it.
+To compare work in progress, run `python3 _dev/serve.py` (port 8000) instead and open http://localhost:8000/_dev/phones.html: phone frames at real CSS widths, a **Version** menu with every worktree (live files, auto-reload on changes to `index.html`, `css/`, `js/`) and every other branch (served from its last commit with `git show`), and a "Skip envelope" switch. With plain `http.server` the page still works for that one folder. `_dev/` starts with an underscore, so GitHub Pages (Jekyll) never publishes it.
 
 Opening `index.html` directly from the filesystem also works, but the clipboard API only works over `http://localhost` or `https://`.
 
