@@ -29,7 +29,7 @@
 
   /* Hero veil: milky paper over the photo, wavy bottom edge (same curve in
      --veil-wave and the .veil-line SVG, both stretched to the edge band) */
-  --veil: rgba(243, 238, 227, 0.9);
+  --veil: rgba(243, 238, 227, 0.72);   /* translucent: the photo shows through */
   --veil-h: 64%;
   --veil-edge: clamp(26px, 7vw, 84px);
   --veil-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V22C320 30 260 6 200 6C140 6 80 34 0 26Z'/%3E%3C/svg%3E");
