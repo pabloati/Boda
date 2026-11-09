@@ -89,7 +89,7 @@ def clean_flores(items):
         out.append({
             'id': str(it['id'])[:12], 'sec': it['sec'], 'img': it['img'], 'w': round(float(it['w']), 1),
             'x': {'a': ax['a'], 'v': round(float(ax['v']), 1)}, 'y': {'a': ay['a'], 'v': round(float(ay['v']), 1)},
-            'flip': bool(it.get('flip')), 'rot': round(float(it.get('rot') or 0), 1),
+            'flip': bool(it.get('flip')), 'flipY': bool(it.get('flipY')), 'rot': round(float(it.get('rot') or 0), 1),
             'front': bool(it.get('front')), 'hide': it.get('hide') if it.get('hide') in ('m', 'd') else '',
         })
     return out

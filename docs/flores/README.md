@@ -11,7 +11,7 @@ Pablo wants 19th-century botanical engravings (public domain) as **colour** deco
 - `assets/flores/*.png` + `flores.json` — 11 colour cut-outs, 640 px high, quantised (836 KB total). `flores.json` lists them for the editor and says which sides of each plate were cut when it was cropped (`cut`).
 - CSS block "Botanical plates" at the end of `css/styles.css`: `.has-flores` (clip + own stacking context), `.flor` (`z-index: -1`, behind the text), `.flor--front`, `.flor--no-m` / `--no-d`.
 
-Model of one item: `{id, sec, img, w, x:{a:'l'|'r', v}, y:{a:'t'|'b', v}, flip, rot, front, hide:''|'m'|'d'}`. Offsets are px from the **nearest edge** of the section, so a flower flush with an edge stays flush when the section resizes. `sec` is a section id (`intro countdown locations timeline rsvp gifts playlist social`) or `footer`. The hero is not editable (sticky veil).
+Model of one item: `{id, sec, img, w, x:{a:'l'|'r', v}, y:{a:'t'|'b', v}, flip, flipY, rot, front, hide:''|'m'|'d'}` (rotation and flips are CSS transforms around the plate's centre: `rotate(rot) scaleX scaleY`). Offsets are px from the **nearest edge** of the section, so a flower flush with an edge stays flush when the section resizes. `sec` is a section id (`intro countdown locations timeline rsvp gifts playlist social`) or `footer`. The hero is not editable (sticky veil).
 
 ## Design decisions (all agreed with Pablo)
 
@@ -31,7 +31,7 @@ Model of one item: `{id, sec, img, w, x:{a:'l'|'r', v}, y:{a:'t'|'b', v}, flip, 
 
 ## Not done yet / next steps
 
-- Pablo has not tried the editor by hand yet: ask what feels wrong.
+- Pablo has not tried the editor by hand yet: ask what feels wrong. Rotation (handle, Shift = 15° steps) and both flips were added last and tested with Playwright only (`tools/test_editor.mjs` covers add/drag/save; the rotate test was a throwaway script).
 - Choose flowers and place them (Pablo), save, commit `js/flores-layout.js`.
 - Desktop: only checked that it loads. Flowers keep their px size, so on wide screens they look small and far from the text: maybe a second layout for desktop, or width in `vw`.
 - Add the flowers from the first dossier (almond, mimosa, lilies, tulip, primrose, paniculata, chrysanthemum; images are inside `Decoracion-floral-boda.pdf`, only as line drawings there) and clean the cherry.

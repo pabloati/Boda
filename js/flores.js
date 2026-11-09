@@ -22,6 +22,7 @@
     const t = [];
     if (it.rot) t.push('rotate(' + it.rot + 'deg)');
     if (it.flip) t.push('scaleX(-1)');
+    if (it.flipY) t.push('scaleY(-1)');
     img.style.transform = t.join(' ');
     img.classList.toggle('flor--front', !!it.front);
     img.classList.toggle('flor--no-m', it.hide === 'm');

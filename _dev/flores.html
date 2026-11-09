@@ -130,6 +130,8 @@
     .ed-h { position: absolute; width: 11px; height: 11px; background: #fff; border: 1.5px solid #c83c78; border-radius: 2px; pointer-events: auto; z-index: 61; }
     .ed-h[data-c=nw] { left: -6px; top: -6px; cursor: nwse-resize; } .ed-h[data-c=ne] { right: -6px; top: -6px; cursor: nesw-resize; }
     .ed-h[data-c=sw] { left: -6px; bottom: -6px; cursor: nesw-resize; } .ed-h[data-c=se] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+    .ed-rot { position: absolute; left: 50%; top: -30px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: #fff; border: 1.5px solid #c83c78; cursor: grab; pointer-events: auto; z-index: 61; }
+    .ed-rot::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1.5px; height: 15px; margin-left: -.75px; background: #c83c78; }
     .ed-g { position: absolute; background: #e8358a; z-index: 65; pointer-events: none; }
     .ed-g.v { width: 1px; top: 0; bottom: 0; } .ed-g.h { height: 1px; left: 0; right: 0; }
   `;
@@ -145,6 +147,7 @@
     const g = geom(it), box = doc.createElement('div');
     box.id = 'ed-box';
     box.style.cssText = `left:${g.left}px;top:${g.top}px;width:${g.w}px;height:${g.h}px;transform:rotate(${it.rot || 0}deg)`;
+    const rh = doc.createElement('div'); rh.className = 'ed-rot'; rh.title = 'Girar (Mayús: de 15 en 15°)'; box.appendChild(rh);
     ['nw', 'ne', 'sw', 'se'].forEach(c => { const h = doc.createElement('div'); h.className = 'ed-h'; h.dataset.c = c; box.appendChild(h); });
     secEl(it.sec).appendChild(box);
   }
@@ -178,8 +181,10 @@
   function hit(px, py) {
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i], el = secEl(it.sec); if (!el) continue;
-      const p = docPos(el), g = geom(it);
-      if (px >= p.x + g.left && px <= p.x + g.left + g.w && py >= p.y + g.top && py <= p.y + g.top + g.h) return it;
+      const p = docPos(el), g = geom(it), a = -(it.rot || 0) * Math.PI / 180;
+      const dx = px - (p.x + g.left + g.w / 2), dy = py - (p.y + g.top + g.h / 2);
+      const lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
+      if (Math.abs(lx) <= g.w / 2 && Math.abs(ly) <= g.h / 2) return it;
     }
     return null;
   }
@@ -212,19 +217,35 @@
   function autoScroll(ev) { const m = 40, y = ev.clientY; if (y < m) win.scrollBy(0, -14); else if (y > win.innerHeight - m) win.scrollBy(0, 14); }
 
   function startResize(e, it, corner) {
-    const g0 = geom(it), sp = docPos(secEl(it.sec)), ratio = g0.h / g0.w;
+    const g0 = geom(it), sp = docPos(secEl(it.sec)), ratio = g0.h / g0.w, rotated = !!it.rot;
+    const cx = sp.x + g0.left + g0.w / 2, cy = sp.y + g0.top + g0.h / 2, d0 = Math.hypot(e.pageX - cx, e.pageY - cy) || 1;
     const fx = corner.includes('w') ? g0.left + g0.w : g0.left, fy = corner.includes('n') ? g0.top + g0.h : g0.top;
-    let first = true, w = g0.w;
+    let first = true;
     const move = ev => {
       if (first) { first = false; snapshot(); }
-      const x = ev.pageX - sp.x;
-      w = Math.max(24, Math.abs(x - fx));
-      const h = w * ratio, left = corner.includes('w') ? fx - w : fx, top = corner.includes('n') ? fy - h : fy;
-      it.w = r1(w);
-      it.x = { a: 'l', v: left }; it.y = { a: 't', v: top };
+      let w, left, top;
+      if (rotated) { w = Math.max(24, g0.w * Math.hypot(ev.pageX - cx, ev.pageY - cy) / d0); left = g0.left + g0.w / 2 - w / 2; top = g0.top + g0.h / 2 - w * ratio / 2; }
+      else { w = Math.max(24, Math.abs(ev.pageX - sp.x - fx)); left = corner.includes('w') ? fx - w : fx; top = corner.includes('n') ? fy - w * ratio : fy; }
+      it.w = r1(w); it.x = { a: 'l', v: left }; it.y = { a: 't', v: top };
       renderAll();
     };
     const up = () => { doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); setPos(it, it.x.v, it.y.v); changed(); };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+
+  // Rotate around the plate's centre; Shift snaps to 15°.
+  function startRotate(e, it) {
+    const g = geom(it), sp = docPos(secEl(it.sec)), cx = sp.x + g.left + g.w / 2, cy = sp.y + g.top + g.h / 2;
+    const ang = ev => Math.atan2(ev.pageY - cy, ev.pageX - cx) * 180 / Math.PI, a0 = ang(e), r0 = it.rot || 0;
+    let first = true;
+    const move = ev => {
+      if (first) { first = false; snapshot(); }
+      let r = r0 + ang(ev) - a0;
+      if (ev.shiftKey) r = Math.round(r / 15) * 15;
+      it.rot = Math.round((((r + 540) % 360) - 180) * 10) / 10;
+      renderAll();
+    };
+    const up = () => { doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); changed(); };
     doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
   }
 
@@ -238,7 +259,7 @@
     const s = mostVisibleSection(); if (!s) return;
     const l = lib(libId), sw = s.el.offsetWidth, w = Math.round(Math.min(170, sw * 0.4)), h = w * l.h / l.w, p = docPos(s.el);
     const vTop = Math.max(win.scrollY, p.y), vBot = Math.min(win.scrollY + win.innerHeight, p.y + s.el.offsetHeight);
-    const it = { id: 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1), sec: s.key, img: libId, w, x: { a: 'l', v: 0 }, y: { a: 't', v: 0 }, flip: false, rot: 0, front: false, hide: '' };
+    const it = { id: 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1), sec: s.key, img: libId, w, x: { a: 'l', v: 0 }, y: { a: 't', v: 0 }, flip: false, flipY: false, rot: 0, front: false, hide: '' };
     snapshot(); items.push(it); sel = it.id;
     setPos(it, sw / 2 - w / 2, Math.min(Math.max(0, (vTop + vBot) / 2 - p.y - h / 2), s.el.offsetHeight - h));
     changed();
@@ -263,6 +284,7 @@
     if (it.rot) return [];
     const l = lib(it.img), g = geom(it), w = [], T = 2, cut = { ...l.cut };
     if (it.flip) { const t = cut.left; cut.left = cut.right; cut.right = t; }
+    if (it.flipY) { const t = cut.top; cut.top = cut.bottom; cut.bottom = t; }
     if (cut.left && Math.abs(g.left) > T) w.push('izquierdo');
     if (cut.right && Math.abs(g.sw - g.left - g.w) > T) w.push('derecho');
     if (cut.top && Math.abs(g.top) > T) w.push('superior');
@@ -272,7 +294,7 @@
   function drawProps() {
     const p = $('props'), it = get(sel);
     if (!it) {
-      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.</p><p>${items.length} flor${items.length === 1 ? '' : 'es'} en la web.</p></div>`;
+      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.</p><p>${items.length} flor${items.length === 1 ? '' : 'es'} en la web.</p></div>`;
       return;
     }
     const l = lib(it.img), w = warnings(it);
@@ -284,7 +306,9 @@
       <div class="row"><label>Ocultar en</label><select id="pHide"><option value=""${it.hide ? '' : ' selected'}>Ningún sitio</option><option value="m"${it.hide === 'm' ? ' selected' : ''}>Móvil</option><option value="d"${it.hide === 'd' ? ' selected' : ''}>Escritorio</option></select></div>
       <h2 style="margin-top:14px">Pegar a</h2>
       <div class="btns"><button data-f="l">Izquierda</button><button data-f="r">Derecha</button><button data-f="t">Arriba</button><button data-f="b">Abajo</button><button data-f="c">Centrar</button></div>
-      <div class="btns"><button id="pFlip">Voltear</button><button id="pDup">Duplicar</button><button id="pDel" class="danger">Eliminar</button></div>
+      <h2 style="margin-top:14px">Girar</h2>
+      <div class="btns"><button id="pFlip" title="Espejo izquierda-derecha">Voltear ↔</button><button id="pFlipY" title="Espejo arriba-abajo">Voltear ↕</button><button id="pR90">+90°</button><button id="pR0">Sin giro</button></div>
+      <div class="btns"><button id="pDup">Duplicar</button><button id="pDel" class="danger">Eliminar</button></div>
       ${w.length ? `<div class="note">El lado ${w.join(' y ')} de esta lámina salió cortado y se ve recto, sin tocar el borde. Pégalo a un borde si no quieres que se note el corte.</div>` : ''}`;
     $('pSec').onchange = e => { snapshot(); const g = geom(it); it.sec = e.target.value; setPos(it, Math.max(0, g.left), 0); changed(); };
     $('pW').onchange = e => { snapshot(); const g = geom(it); it.w = Math.max(24, +e.target.value || it.w); setPos(it, g.left, g.top); changed(); };
@@ -293,6 +317,9 @@
     $('pHide').onchange = e => { snapshot(); it.hide = e.target.value; changed(); };
     p.querySelectorAll('[data-f]').forEach(b => b.onclick = () => flush(it, b.dataset.f));
     $('pFlip').onclick = () => { snapshot(); it.flip = !it.flip; changed(); };
+    $('pFlipY').onclick = () => { snapshot(); it.flipY = !it.flipY; changed(); };
+    $('pR90').onclick = () => { snapshot(); it.rot = (((it.rot || 0) + 90 + 540) % 360) - 180; changed(); };
+    $('pR0').onclick = () => { snapshot(); it.rot = 0; changed(); };
     $('pDup').onclick = () => dup(it); $('pDel').onclick = () => del(it);
   }
 
@@ -321,8 +348,9 @@
       }
     }
     doc.addEventListener('pointerdown', e => {
-      const h = e.target.closest('.ed-h'), t = hit(e.pageX, e.pageY);
-      if (h) { e.preventDefault(); startResize(e, get(sel), h.dataset.c); }
+      const h = e.target.closest('.ed-h'), rh = e.target.closest('.ed-rot'), t = hit(e.pageX, e.pageY);
+      if (rh) { e.preventDefault(); startRotate(e, get(sel)); }
+      else if (h) { e.preventDefault(); startResize(e, get(sel), h.dataset.c); }
       else if (t) { e.preventDefault(); select(t.id); startDrag(e, t); }
       else select(null);
     });
