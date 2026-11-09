@@ -12,6 +12,7 @@ Routes
                        branches no worktree has checked out ("/" in a branch
                        name is written "~": origin~redesign).
   /_dev/sources.json   the list of worktrees and branches the phone page shows.
+  POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
 """
@@ -20,6 +21,7 @@ import json
 import mimetypes
 import os
 import posixpath
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -73,6 +75,26 @@ def sources():
     }
 
 
+def clean_flores(items):
+    """Keeps only the fields the page reads, with the types it expects."""
+    if not isinstance(items, list) or len(items) > 300:
+        raise ValueError
+    out = []
+    for it in items:
+        if not (re.fullmatch(r'[a-z0-9-]+', it['img']) and re.fullmatch(r'[a-z0-9-]+', it['sec'])):
+            raise ValueError
+        ax, ay = it['x'], it['y']
+        if ax['a'] not in ('l', 'r') or ay['a'] not in ('t', 'b'):
+            raise ValueError
+        out.append({
+            'id': str(it['id'])[:12], 'sec': it['sec'], 'img': it['img'], 'w': round(float(it['w']), 1),
+            'x': {'a': ax['a'], 'v': round(float(ax['v']), 1)}, 'y': {'a': ay['a'], 'v': round(float(ay['v']), 1)},
+            'flip': bool(it.get('flip')), 'rot': round(float(it.get('rot') or 0), 1),
+            'front': bool(it.get('front')), 'hide': it.get('hide') if it.get('hide') in ('m', 'd') else '',
+        })
+    return out
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=HERE, **k)
@@ -106,6 +128,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_HEAD(self):
         self.route(body=False)
+
+    def do_POST(self):
+        """Only one write is allowed: the flower layout, from this page's own origin."""
+        if urllib.parse.urlsplit(self.path).path != '/_dev/save-flores':
+            return self.send_error(404)
+        host = self.headers.get('Host', '').rsplit(':', 1)[0]
+        if host not in ('localhost', '127.0.0.1') or self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+            return self.send_error(403)
+        n = int(self.headers.get('Content-Length') or 0)
+        if n > 200000:
+            return self.send_error(413)
+        try:
+            items = clean_flores(json.loads(self.rfile.read(n))['items'])
+        except (ValueError, KeyError, TypeError):
+            return self.send_error(400, 'Bad layout')
+        lines = ',\n'.join('  ' + json.dumps(i, ensure_ascii=False, separators=(', ', ': ')) for i in items)
+        with open(os.path.join(HERE, 'js', 'flores-layout.js'), 'w') as f:
+            f.write('// Where the botanical plates sit on the page. Written by _dev/flores.html (the flower editor):\n'
+                    '// edit it there, not by hand. Each item is anchored to the nearest edge of its section.\n'
+                    'window.FLORES_LAYOUT = {"items": [\n%s\n]};\n' % lines)
+        self.send_bytes(json.dumps({'ok': True, 'items': len(items)}).encode(), 'application/json', True)
 
     def route(self, body):
         p = urllib.parse.urlsplit(self.path).path
@@ -152,7 +195,8 @@ def main():
         sys.exit('Port %d is busy: stop the other server (Ctrl+C in its terminal) or run: '
                  'python3 _dev/serve.py %d' % (port, port + 1))
     print('Site:          http://localhost:%d/' % port)
-    print('Phone preview: http://localhost:%d/_dev/phones.html   (Ctrl+C to stop)' % port)
+    print('Phone preview: http://localhost:%d/_dev/phones.html' % port)
+    print('Flower editor: http://localhost:%d/_dev/flores.html   (Ctrl+C to stop)' % port)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

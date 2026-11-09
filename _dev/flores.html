@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Editor de flores</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Flower editor: place, move and resize the botanical plates on the real page.
+  Run `python3 _dev/serve.py` and open http://localhost:8000/_dev/flores.html
+  The page below is index.html itself, so what you see is what guests see.
+  "Guardar" writes js/flores-layout.js through the dev server; assets come from assets/flores/.
+  Not published: GitHub Pages skips _dev/.
+-->
+<style>
+  :root { --ink:#26261f; --soft:#6c6c60; --line:#d9d6cc; --bg:#eeece6; --panel:#fbfaf7; --acc:#c83c78; --accd:#a32a5e; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 46px 1fr; grid-template-columns: 220px 1fr 250px; grid-template-areas: "bar bar bar" "lib stage props"; }
+  #bar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  #bar h1 { font-size: 14px; margin: 0 8px 0 0; }
+  #bar .sp { flex: 1; }
+  button, select, input[type=number] { font: inherit; color: inherit; }
+  button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button:hover { border-color: #b9b5a8; } button:disabled { opacity: .4; cursor: default; }
+  button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  button.primary { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 600; } button.primary:hover { background: var(--accd); }
+  button.danger { color: #a22; }
+  .grp { display: flex; gap: 0; } .grp button { border-radius: 0; margin-left: -1px; } .grp button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .grp button:last-child { border-radius: 0 6px 6px 0; }
+  #status { color: var(--soft); min-width: 170px; text-align: right; } #status.dirty { color: var(--accd); font-weight: 600; }
+  aside { background: var(--panel); overflow: auto; padding: 12px; }
+  #lib { grid-area: lib; border-right: 1px solid var(--line); }
+  #props { grid-area: props; border-left: 1px solid var(--line); }
+  aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
+  #libGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .th { border: 1px solid var(--line); border-radius: 6px; background: #f3eee3; padding: 4px; cursor: pointer; text-align: center; }
+  .th:hover { border-color: var(--acc); }
+  .th .im { height: 84px; display: flex; align-items: flex-end; justify-content: center; } .th img { max-width: 100%; max-height: 100%; }
+  .th span { display: block; font-size: 11px; margin-top: 3px; }
+  #stage { grid-area: stage; overflow: auto; padding: 14px; display: flex; justify-content: center; align-items: flex-start; }
+  #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; }
+  #f { border: 0; display: block; transform-origin: 0 0; background: #fff; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 78px; color: var(--soft); flex: none; }
+  .row input[type=number], .row select { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .note { background: #fff4d6; border: 1px solid #ecd48a; border-radius: 6px; padding: 7px 9px; margin: 8px 0; }
+  .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
+  #banner { display: none; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 9; gap: 10px; align-items: center; }
+  #banner.show { display: flex; } #banner button { padding: 3px 9px; }
+</style>
+</head>
+<body>
+<header id="bar">
+  <h1>Editor de flores</h1>
+  <div class="grp"><button id="devM" class="on">Móvil</button><button id="devD">Escritorio</button></div>
+  <select id="goto" title="Ir a una sección"></select>
+  <label><input type="checkbox" id="guides" checked> Ver secciones</label>
+  <div class="grp"><button id="undo" title="Ctrl+Z">Deshacer</button><button id="redo" title="Ctrl+Mayús+Z">Rehacer</button></div>
+  <button id="reload" title="Vuelve a cargar la web, conserva las flores">Recargar web</button>
+  <span class="sp"></span>
+  <span id="status">Sin cambios</span>
+  <button id="save" class="primary" title="Ctrl+S">Guardar</button>
+</header>
+<aside id="lib"><h2>Flores</h2><div id="libGrid"></div>
+  <p class="hint" style="margin-top:12px">Haz clic en una flor para añadirla a la sección que estás viendo.</p></aside>
+<main id="stage"><div id="wrap"><iframe id="f" src="/index.html" title="Web"></iframe></div></main>
+<aside id="props"></aside>
+<div id="banner"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
+  const DRAFT = 'flores-draft', SNAP = 6;
+  const frame = $('f');
+  let LIB = [], items = [], sel = null, win = null, doc = null, dev = 'm', saved = '[]';
+  let undoSt = [], redoSt = [];
+
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const lib = id => LIB.find(l => l.id === id);
+  const get = id => items.find(i => i.id === id);
+  const r1 = v => Math.round(v * 2) / 2;
+
+  // ---------- model ↔ geometry ----------
+  const secEl = key => win.Flores.host(doc, key);
+  function geom(it) {
+    const el = secEl(it.sec), l = lib(it.img), w = it.w, h = w * l.h / l.w;
+    const sw = el.offsetWidth, sh = el.offsetHeight;
+    return { w, h, sw, sh,
+      left: it.x.a === 'l' ? it.x.v : sw - it.x.v - w,
+      top: it.y.a === 't' ? it.y.v : sh - it.y.v - h };
+  }
+  // Anchors to the nearest edge, so a plate flush with an edge stays flush at any width.
+  function setPos(it, left, top) {
+    const g = geom(it);
+    it.x = (left + g.w / 2) < g.sw / 2 ? { a: 'l', v: r1(left) } : { a: 'r', v: r1(g.sw - left - g.w) };
+    it.y = (top + g.h / 2) < g.sh / 2 ? { a: 't', v: r1(top) } : { a: 'b', v: r1(g.sh - top - g.h) };
+  }
+
+  // ---------- history / persistence ----------
+  function snapshot() { undoSt.push(JSON.stringify(items)); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
+  function changed() {
+    try { localStorage.setItem(DRAFT, JSON.stringify(items)); } catch (e) {}
+    const dirty = JSON.stringify(items) !== saved;
+    $('status').textContent = dirty ? 'Cambios sin guardar' : 'Sin cambios';
+    $('status').classList.toggle('dirty', dirty);
+    $('undo').disabled = !undoSt.length; $('redo').disabled = !redoSt.length;
+    renderAll();
+  }
+  function undo() { if (!undoSt.length) return; redoSt.push(JSON.stringify(items)); items = JSON.parse(undoSt.pop()); if (!get(sel)) sel = null; changed(); }
+  function redo() { if (!redoSt.length) return; undoSt.push(JSON.stringify(items)); items = JSON.parse(redoSt.pop()); if (!get(sel)) sel = null; changed(); }
+  async function save() {
+    try {
+      const r = await fetch('/_dev/save-flores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
+      if (!r.ok) throw new Error(r.status);
+      saved = JSON.stringify(items);
+      $('status').textContent = 'Guardado ' + new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+      $('status').classList.remove('dirty');
+    } catch (e) { $('status').textContent = 'No se pudo guardar (' + e.message + ')'; $('status').classList.add('dirty'); }
+  }
+
+  // ---------- rendering inside the page ----------
+  const EDIT_CSS = `
+    #envelope-overlay { display: none !important; }
+    .ed-sec { position: relative; overflow: hidden; isolation: isolate; }
+    .ed-guides .ed-sec { outline: 1px dashed rgba(200,60,120,.6); outline-offset: -1px; }
+    .ed-label { position: absolute; top: 3px; right: 4px; z-index: 70; font: 10px monospace; background: rgba(200,60,120,.88); color: #fff; padding: 1px 6px; border-radius: 3px; pointer-events: none; display: none; }
+    .ed-guides .ed-label { display: block; }
+    #ed-box { position: absolute; border: 1.5px solid #c83c78; z-index: 60; pointer-events: none; }
+    .ed-h { position: absolute; width: 11px; height: 11px; background: #fff; border: 1.5px solid #c83c78; border-radius: 2px; pointer-events: auto; z-index: 61; }
+    .ed-h[data-c=nw] { left: -6px; top: -6px; cursor: nwse-resize; } .ed-h[data-c=ne] { right: -6px; top: -6px; cursor: nesw-resize; }
+    .ed-h[data-c=sw] { left: -6px; bottom: -6px; cursor: nesw-resize; } .ed-h[data-c=se] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+    .ed-g { position: absolute; background: #e8358a; z-index: 65; pointer-events: none; }
+    .ed-g.v { width: 1px; top: 0; bottom: 0; } .ed-g.h { height: 1px; left: 0; right: 0; }
+  `;
+  function renderAll() {
+    if (!win || !win.Flores) return;
+    win.Flores.render(doc, items);
+    doc.querySelectorAll('.flor').forEach(img => { const it = get(img.dataset.id); if (it) img.style.height = (geom(it).h) + 'px'; });
+    drawSel(); drawProps();
+  }
+  function drawSel() {
+    doc.querySelectorAll('#ed-box').forEach(b => b.remove());
+    const it = get(sel); if (!it) return;
+    const g = geom(it), box = doc.createElement('div');
+    box.id = 'ed-box';
+    box.style.cssText = `left:${g.left}px;top:${g.top}px;width:${g.w}px;height:${g.h}px;transform:rotate(${it.rot || 0}deg)`;
+    ['nw', 'ne', 'sw', 'se'].forEach(c => { const h = doc.createElement('div'); h.className = 'ed-h'; h.dataset.c = c; box.appendChild(h); });
+    secEl(it.sec).appendChild(box);
+  }
+  function select(id) { sel = id; drawSel(); drawProps(); }
+
+  // ---------- pointer: move and resize ----------
+  const docPos = el => { const r = el.getBoundingClientRect(); return { x: r.left + win.scrollX, y: r.top + win.scrollY }; };
+  const sections = () => SECS.map(k => ({ key: k, el: secEl(k) })).filter(s => s.el);
+  function sectionAt(px, py) {
+    return sections().find(s => { const p = docPos(s.el); return px >= p.x && px <= p.x + s.el.offsetWidth && py >= p.y && py <= p.y + s.el.offsetHeight; });
+  }
+  // Smart guides: the plate's edges and centre against the section's edges and centre and the other plates'.
+  function snap(box, sec, skipId, off) {
+    const sw = sec.el.offsetWidth, sh = sec.el.offsetHeight, xs = [0, sw / 2, sw], ys = [0, sh / 2, sh];
+    items.filter(o => o.sec === sec.key && o.id !== skipId).forEach(o => {
+      const g = geom(o); xs.push(g.left, g.left + g.w / 2, g.left + g.w); ys.push(g.top, g.top + g.h / 2, g.top + g.h);
+    });
+    const best = (mine, cands) => { let b = null; mine.forEach(m => cands.forEach(c => { const d = c - m; if (Math.abs(d) <= SNAP && (!b || Math.abs(d) < Math.abs(b.d))) b = { d, at: c }; })); return b; };
+    const bx = off ? null : best([box.left, box.left + box.w / 2, box.left + box.w], xs);
+    const by = off ? null : best([box.top, box.top + box.h / 2, box.top + box.h], ys);
+    return { dx: bx ? bx.d : 0, dy: by ? by.d : 0, gx: bx && bx.at, gy: by && by.at };
+  }
+  function showGuides(sec, gx, gy) {
+    doc.querySelectorAll('.ed-g').forEach(g => g.remove());
+    if (!sec) return;
+    if (gx != null) { const g = doc.createElement('div'); g.className = 'ed-g v'; g.style.left = gx + 'px'; sec.el.appendChild(g); }
+    if (gy != null) { const g = doc.createElement('div'); g.className = 'ed-g h'; g.style.top = gy + 'px'; sec.el.appendChild(g); }
+  }
+
+  // Plates sit behind the text, so the browser would hand the click to the text: find the plate by position.
+  function hit(px, py) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i], el = secEl(it.sec); if (!el) continue;
+      const p = docPos(el), g = geom(it);
+      if (px >= p.x + g.left && px <= p.x + g.left + g.w && py >= p.y + g.top && py <= p.y + g.top + g.h) return it;
+    }
+    return null;
+  }
+
+  function startDrag(e, it) {
+    const g0 = geom(it), sp = docPos(secEl(it.sec)), st = { px: e.pageX, py: e.pageY, ax: sp.x + g0.left, ay: sp.y + g0.top };
+    let moved = false, tgt = { key: it.sec, el: secEl(it.sec) }, left = g0.left, top = g0.top;
+    const img = doc.querySelector('.flor[data-id="' + it.id + '"]');
+    const move = ev => {
+      if (!moved && Math.abs(ev.pageX - st.px) + Math.abs(ev.pageY - st.py) < 3) return;
+      if (!moved) { moved = true; snapshot(); }
+      const ax = st.ax + ev.pageX - st.px, ay = st.ay + ev.pageY - st.py;
+      tgt = sectionAt(ev.pageX, ev.pageY) || tgt;
+      const tp = docPos(tgt.el);
+      left = ax - tp.x; top = ay - tp.y;
+      const s = snap({ left, top, w: g0.w, h: g0.h }, tgt, it.id, ev.altKey);
+      left += s.dx; top += s.dy;
+      if (img.parentNode !== tgt.el) { tgt.el.appendChild(img); drawSelHide(); }
+      img.style.left = left + 'px'; img.style.top = top + 'px'; img.style.right = 'auto'; img.style.bottom = 'auto';
+      showGuides(tgt, s.gx, s.gy);
+      autoScroll(ev);
+    };
+    const up = () => {
+      doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); showGuides(null);
+      if (moved) { it.sec = tgt.key; setPos(it, left, top); changed(); }
+    };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+  const drawSelHide = () => doc.querySelectorAll('#ed-box').forEach(b => b.remove());
+  function autoScroll(ev) { const m = 40, y = ev.clientY; if (y < m) win.scrollBy(0, -14); else if (y > win.innerHeight - m) win.scrollBy(0, 14); }
+
+  function startResize(e, it, corner) {
+    const g0 = geom(it), sp = docPos(secEl(it.sec)), ratio = g0.h / g0.w;
+    const fx = corner.includes('w') ? g0.left + g0.w : g0.left, fy = corner.includes('n') ? g0.top + g0.h : g0.top;
+    let first = true, w = g0.w;
+    const move = ev => {
+      if (first) { first = false; snapshot(); }
+      const x = ev.pageX - sp.x;
+      w = Math.max(24, Math.abs(x - fx));
+      const h = w * ratio, left = corner.includes('w') ? fx - w : fx, top = corner.includes('n') ? fy - h : fy;
+      it.w = r1(w);
+      it.x = { a: 'l', v: left }; it.y = { a: 't', v: top };
+      renderAll();
+    };
+    const up = () => { doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); setPos(it, it.x.v, it.y.v); changed(); };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+
+  // ---------- editing actions ----------
+  function mostVisibleSection() {
+    let best = null, bv = -1; const top = win.scrollY, bot = top + win.innerHeight;
+    sections().forEach(s => { const p = docPos(s.el), v = Math.min(bot, p.y + s.el.offsetHeight) - Math.max(top, p.y); if (v > bv) { bv = v; best = s; } });
+    return best;
+  }
+  function add(libId) {
+    const s = mostVisibleSection(); if (!s) return;
+    const l = lib(libId), sw = s.el.offsetWidth, w = Math.round(Math.min(170, sw * 0.4)), h = w * l.h / l.w, p = docPos(s.el);
+    const vTop = Math.max(win.scrollY, p.y), vBot = Math.min(win.scrollY + win.innerHeight, p.y + s.el.offsetHeight);
+    const it = { id: 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1), sec: s.key, img: libId, w, x: { a: 'l', v: 0 }, y: { a: 't', v: 0 }, flip: false, rot: 0, front: false, hide: '' };
+    snapshot(); items.push(it); sel = it.id;
+    setPos(it, sw / 2 - w / 2, Math.min(Math.max(0, (vTop + vBot) / 2 - p.y - h / 2), s.el.offsetHeight - h));
+    changed();
+  }
+  const dup = it => { snapshot(); const c = clone(it); c.id = 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1); const g = geom(it); items.push(c); sel = c.id; setPos(c, g.left + 14, g.top + 14); changed(); };
+  const del = it => { snapshot(); items = items.filter(o => o !== it); sel = null; changed(); };
+  function flush(it, side) {
+    snapshot(); const g = geom(it);
+    let { left, top } = g;
+    if (side === 'l') left = 0; if (side === 'r') left = g.sw - g.w; if (side === 't') top = 0; if (side === 'b') top = g.sh - g.h; if (side === 'c') left = (g.sw - g.w) / 2;
+    setPos(it, left, top); changed();
+  }
+  function nudge(it, dx, dy) { snapshot(); const g = geom(it); setPos(it, g.left + dx, g.top + dy); changed(); }
+
+  // ---------- panels ----------
+  function buildLib() {
+    $('libGrid').innerHTML = LIB.map(l => `<div class="th" data-id="${l.id}" title="Añadir ${l.label}"><div class="im"><img src="/assets/flores/${l.id}.png" alt=""></div><span>${l.label}</span></div>`).join('');
+    $('libGrid').addEventListener('click', e => { const t = e.target.closest('.th'); if (t) add(t.dataset.id); });
+    $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECS.map(k => `<option>${k}</option>`).join('');
+  }
+  function warnings(it) {
+    if (it.rot) return [];
+    const l = lib(it.img), g = geom(it), w = [], T = 2, cut = { ...l.cut };
+    if (it.flip) { const t = cut.left; cut.left = cut.right; cut.right = t; }
+    if (cut.left && Math.abs(g.left) > T) w.push('izquierdo');
+    if (cut.right && Math.abs(g.sw - g.left - g.w) > T) w.push('derecho');
+    if (cut.top && Math.abs(g.top) > T) w.push('superior');
+    if (cut.bottom && Math.abs(g.sh - g.top - g.h) > T) w.push('inferior');
+    return w;
+  }
+  function drawProps() {
+    const p = $('props'), it = get(sel);
+    if (!it) {
+      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.</p><p>${items.length} flor${items.length === 1 ? '' : 'es'} en la web.</p></div>`;
+      return;
+    }
+    const l = lib(it.img), w = warnings(it);
+    p.innerHTML = `<h2>${l.label}</h2>
+      <div class="row"><label>Sección</label><select id="pSec">${SECS.filter(k => secEl(k)).map(k => `<option${k === it.sec ? ' selected' : ''}>${k}</option>`).join('')}</select></div>
+      <div class="row"><label>Ancho (px)</label><input type="number" id="pW" min="24" max="1400" step="1" value="${Math.round(it.w)}"></div>
+      <div class="row"><label>Giro (°)</label><input type="number" id="pRot" min="-180" max="180" step="1" value="${it.rot || 0}"></div>
+      <div class="row"><label>Capa</label><select id="pFront"><option value="0"${it.front ? '' : ' selected'}>Detrás del texto</option><option value="1"${it.front ? ' selected' : ''}>Delante del texto</option></select></div>
+      <div class="row"><label>Ocultar en</label><select id="pHide"><option value=""${it.hide ? '' : ' selected'}>Ningún sitio</option><option value="m"${it.hide === 'm' ? ' selected' : ''}>Móvil</option><option value="d"${it.hide === 'd' ? ' selected' : ''}>Escritorio</option></select></div>
+      <h2 style="margin-top:14px">Pegar a</h2>
+      <div class="btns"><button data-f="l">Izquierda</button><button data-f="r">Derecha</button><button data-f="t">Arriba</button><button data-f="b">Abajo</button><button data-f="c">Centrar</button></div>
+      <div class="btns"><button id="pFlip">Voltear</button><button id="pDup">Duplicar</button><button id="pDel" class="danger">Eliminar</button></div>
+      ${w.length ? `<div class="note">El lado ${w.join(' y ')} de esta lámina salió cortado y se ve recto, sin tocar el borde. Pégalo a un borde si no quieres que se note el corte.</div>` : ''}`;
+    $('pSec').onchange = e => { snapshot(); const g = geom(it); it.sec = e.target.value; setPos(it, Math.max(0, g.left), 0); changed(); };
+    $('pW').onchange = e => { snapshot(); const g = geom(it); it.w = Math.max(24, +e.target.value || it.w); setPos(it, g.left, g.top); changed(); };
+    $('pRot').onchange = e => { snapshot(); it.rot = +e.target.value || 0; changed(); };
+    $('pFront').onchange = e => { snapshot(); it.front = e.target.value === '1'; changed(); };
+    $('pHide').onchange = e => { snapshot(); it.hide = e.target.value; changed(); };
+    p.querySelectorAll('[data-f]').forEach(b => b.onclick = () => flush(it, b.dataset.f));
+    $('pFlip').onclick = () => { snapshot(); it.flip = !it.flip; changed(); };
+    $('pDup').onclick = () => dup(it); $('pDel').onclick = () => del(it);
+  }
+
+  // ---------- frame ----------
+  function fit() {
+    const st = $('stage'), vw = dev === 'm' ? 390 : 1200, avail = st.clientWidth - 28, sc = Math.min(1, avail / vw), h = (st.clientHeight - 28) / sc;
+    frame.style.width = vw + 'px'; frame.style.height = h + 'px'; frame.style.transform = 'scale(' + sc + ')';
+    $('wrap').style.width = vw * sc + 'px'; $('wrap').style.height = h * sc + 'px';
+    setTimeout(renderAll, 60);
+  }
+  function setDev(d) { dev = d; $('devM').classList.toggle('on', d === 'm'); $('devD').classList.toggle('on', d === 'd'); fit(); }
+
+  function onLoad() {
+    win = frame.contentWindow; doc = frame.contentDocument;
+    if (!win.Flores) { $('status').textContent = 'La web no carga js/flores.js'; return; }
+    const st = doc.createElement('style'); st.textContent = EDIT_CSS; doc.head.appendChild(st);
+    doc.documentElement.classList.add('ed-guides');
+    sections().forEach(s => { s.el.classList.add('ed-sec', 'has-flores'); const lb = doc.createElement('div'); lb.className = 'ed-label'; lb.textContent = s.key; s.el.appendChild(lb); });
+    if (!items.length && !load.done) {
+      items = clone((win.FLORES_LAYOUT && win.FLORES_LAYOUT.items) || []); saved = JSON.stringify(items); load.done = true;
+      let draft = null; try { draft = localStorage.getItem(DRAFT); } catch (e) {}
+      if (draft && draft !== saved && draft !== '[]') {
+        $('banner').classList.add('show');
+        $('bRestore').onclick = () => { items = JSON.parse(draft); $('banner').classList.remove('show'); changed(); };
+        $('bDrop').onclick = () => { $('banner').classList.remove('show'); try { localStorage.removeItem(DRAFT); } catch (e) {} };
+      }
+    }
+    doc.addEventListener('pointerdown', e => {
+      const h = e.target.closest('.ed-h'), t = hit(e.pageX, e.pageY);
+      if (h) { e.preventDefault(); startResize(e, get(sel), h.dataset.c); }
+      else if (t) { e.preventDefault(); select(t.id); startDrag(e, t); }
+      else select(null);
+    });
+    doc.addEventListener('pointermove', e => { if (!e.buttons) doc.documentElement.style.cursor = hit(e.pageX, e.pageY) ? 'move' : ''; });
+    doc.addEventListener('click', e => { if (e.target.closest('a, button, label')) e.preventDefault(); }, true);
+    doc.addEventListener('keydown', onKey);
+    renderAll(); changed();
+  }
+  const load = {};
+
+  function onKey(e) {
+    if (e.target.closest && e.target.closest('input, select, textarea')) return;
+    const mod = e.ctrlKey || e.metaKey, it = get(sel);
+    if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+    else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    else if (!it) return;
+    else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); dup(it); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); del(it); }
+    else if (e.key === 'Escape') select(null);
+    else if (e.key.startsWith('Arrow')) { e.preventDefault(); const s = e.shiftKey ? 10 : 1; nudge(it, e.key === 'ArrowLeft' ? -s : e.key === 'ArrowRight' ? s : 0, e.key === 'ArrowUp' ? -s : e.key === 'ArrowDown' ? s : 0); }
+  }
+
+  // ---------- boot ----------
+  $('devM').onclick = () => setDev('m'); $('devD').onclick = () => setDev('d');
+  $('undo').onclick = undo; $('redo').onclick = redo; $('save').onclick = save;
+  $('reload').onclick = () => frame.contentWindow.location.reload();
+  $('guides').onchange = e => doc && doc.documentElement.classList.toggle('ed-guides', e.target.checked);
+  $('goto').onchange = e => { const s = e.target.value && secEl(e.target.value); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); e.target.value = ''; };
+  window.addEventListener('resize', fit);
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('beforeunload', e => { if (JSON.stringify(items) !== saved) { e.preventDefault(); e.returnValue = ''; } });
+  frame.addEventListener('load', onLoad);
+  fetch('/assets/flores/flores.json', { cache: 'no-store' }).then(r => r.json()).then(l => { LIB = l; buildLib(); fit(); drawProps(); });
+})();
+</script>
+</body>
+</html>
