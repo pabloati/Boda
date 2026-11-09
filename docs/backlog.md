@@ -17,6 +17,7 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 - [ ] English versions of the texts in A1 (same commit, `js/i18n.js`).
 - [x] Open Graph image (`assets/og.jpg`, envelope + names) and `og:image` tags (2026-10-07). Optionally redo with a photo of the couple once A2 arrives.
 - [ ] Seed the playlist with A5.
+- [ ] **Bus information block**: a short disclaimer under the Buses stop in the Hoja de ruta, or a small section right after it (couple decides which, 2026-11-09). Waits for A4 (places and times, outward and return). Both languages in `js/i18n.js`, bump the `?v=` cache-buster.
 
 ## C. Pending in the other working session (RSVP)
 
