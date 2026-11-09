@@ -1,0 +1,13 @@
+import { chromium } from '/home/pabloati/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.mjs';
+const D = '/home/pabloati/personal/wedding/docs/flores';
+const OUT = process.argv[2] || D;
+const b = await chromium.launch({ executablePath: '/home/pabloati/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome' });
+const p = await b.newPage({ viewport: { width: 794, height: 1123 }, deviceScaleFactor: 1.5 });
+await p.goto('file://' + D + '/' + (process.argv[3] || 'dossier.html'), { waitUntil: 'networkidle' });
+await p.evaluate(() => document.fonts.ready);
+await p.waitForTimeout(800);
+await p.pdf({ path: D + '/' + (process.argv[4] || 'flores-y-cuaderno.pdf') + '', format: 'A4', printBackground: true, preferCSSPageSize: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+const pages = await p.$$('.page');
+for (let i = 0; i < pages.length; i++) await pages[i].screenshot({ path: `${OUT}/${process.argv[5] || 'f'}${i+1}.png` });
+console.log('pages', pages.length);
+await b.close();

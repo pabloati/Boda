@@ -1,0 +1,188 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Flores a color</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&family=Special+Elite&display=block" rel="stylesheet"><style>
+  :root {
+    --paper:#f3eee3; --paper-deep:#e9e2d1; --paper-line:#d9d0ba;
+    --olive:#8e9166; --olive-deep:#6c6f48; --olive-soft:#c8c9ab;
+    --terracotta:#b3613f; --terracotta-deep:#8f4a2f;
+    --ink:#3a3a2e; --ink-soft:#6a6a58; --cream:#f6f2e8;
+    --serif:'Cormorant Garamond',serif; --script:'Allison',cursive; --hand:'Homemade Apple',cursive; --mono:'Special Elite','Courier New',monospace;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#ddd; font-family:var(--serif); color:var(--ink); }
+  .page { width:794px; height:1123px; background:var(--paper); margin:0 auto 20px; padding:46px 52px; position:relative; overflow:hidden; page-break-after:always; }
+  h1 { font-family:var(--script); font-weight:400; font-size:54px; margin:0 0 6px; color:var(--ink); }
+  h2 { font-family:var(--script); font-weight:400; font-size:40px; margin:0 0 4px; }
+  h3 { font-family:var(--serif); font-weight:600; font-size:18px; margin:0 0 2px; }
+  p { font-size:15.5px; line-height:1.45; margin:0 0 10px; }
+  .lead { font-size:17px; color:var(--ink-soft); max-width:640px; }
+  .mono { font-family:var(--mono); font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--olive-deep); }
+  .small { font-size:12.5px; color:var(--ink-soft); line-height:1.35; }
+
+  /* catalogue */
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:18px 16px; margin-top:16px; }
+  .grid4 figure { margin:0; }
+  .grid4 .im { height:150px; background:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--paper-line); }
+  .grid4 .im.line { background:var(--paper-deep); border:0; }
+  .grid4 img { max-width:100%; max-height:100%; }
+  .grid4 figcaption { margin-top:6px; }
+  .grid4 figcaption b { font-size:15.5px; display:block; }
+  .grid4 figcaption i { font-size:13.5px; color:var(--ink-soft); display:block; }
+  .grid4 figcaption span { font-size:11.5px; color:var(--ink-soft); display:block; line-height:1.25; margin-top:2px; }
+  .tag { display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:1px; padding:1px 6px; border-radius:8px; margin-top:3px; text-transform:uppercase; }
+  .ok { background:#dfe3c7; color:var(--olive-deep); } .late { background:#f0d9cb; color:var(--terracotta-deep); }
+
+  /* season table */
+  table.season { border-collapse:collapse; width:100%; margin-top:14px; font-size:14px; }
+  table.season th, table.season td { border-bottom:1px solid var(--paper-line); padding:6px 6px; text-align:center; }
+  table.season th:first-child, table.season td:first-child { text-align:left; }
+  table.season th { font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--olive-deep); font-weight:400; }
+  table.season td.on { background:#dfe3c7; } table.season td.peak { background:var(--olive); color:#fff; } table.season td.day { box-shadow: inset 3px 0 0 var(--terracotta); }
+
+  /* concepts */
+  .concept { display:grid; grid-template-columns:1fr 300px; gap:34px; margin-top:14px; }
+  .bullets { padding-left:18px; margin:6px 0 0; } .bullets li { font-size:15px; line-height:1.4; margin-bottom:7px; }
+  .pros { margin-top:12px; padding:10px 14px; background:var(--paper-deep); border-radius:6px; font-size:14px; line-height:1.4; }
+  .pair { display:flex; gap:16px; }
+
+  /* phone */
+  .phone { width:300px; height:620px; border:7px solid #1d1d19; border-radius:34px; overflow:hidden; background:var(--paper); position:relative; flex:none; }
+  .scr { position:absolute; inset:0; overflow:hidden; }
+  .fl { position:absolute; pointer-events:none; }
+  .band-olive { background:var(--olive); color:var(--cream); }
+  .band-hero { background:#4f6347; color:var(--cream); }
+  .sec { position:relative; padding:18px 20px; text-align:center; }
+  .script { font-family:var(--script); font-size:32px; line-height:1; }
+  .cap { font-family:var(--mono); font-size:8.5px; letter-spacing:1.6px; text-transform:uppercase; }
+  .btn { display:inline-block; background:var(--terracotta); color:#fff; padding:7px 22px; border-radius:20px; font-size:13px; }
+  .postmark { position:absolute; width:78px; height:78px; border:2px solid; border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center; font-family:var(--mono); font-size:7.5px; letter-spacing:1px; line-height:1.25; transform:rotate(-9deg); }
+  .postmark::before { content:""; position:absolute; inset:7px; border:1.2px solid; border-radius:50%; }
+  .stamp { position:absolute; background:var(--paper-deep); padding:7px; width:66px; text-align:center; -webkit-mask: radial-gradient(circle 3px at 50% 0, transparent 98%, #000) top/9px 100% repeat-x; box-shadow:0 0 0 1px var(--paper-line); outline:1px solid var(--olive); outline-offset:-4px; }
+  .stamp .d { font-family:var(--mono); font-size:6.5px; letter-spacing:1px; color:var(--olive-deep); }
+  .pass { background:var(--paper-deep); border:1px solid var(--paper-line); border-radius:9px; position:relative; text-align:left; overflow:hidden; }
+  .pass .h { padding:9px 12px 7px; border-bottom:1.4px dashed var(--olive-soft); display:flex; justify-content:space-between; }
+  .pass .b { padding:8px 12px 10px; font-size:12px; }
+  .route { position:absolute; left:34px; top:0; bottom:0; border-left:2px dotted var(--olive-soft); }
+  .stop { position:relative; padding:0 0 0 62px; min-height:104px; text-align:left; }
+  .pin { position:absolute; left:23px; top:6px; width:22px; height:22px; border-radius:50%; background:var(--paper); border:1.5px solid var(--olive); overflow:hidden; }
+  .pin img { width:100%; height:100%; object-fit:cover; opacity:.9; }
+  .tl-time { font-family:var(--mono); font-size:10px; color:var(--olive-deep); letter-spacing:1.4px; }
+  .lam { font-family:var(--mono); font-size:8.5px; letter-spacing:1.4px; color:var(--olive-deep); text-transform:uppercase; }
+  .latin { font-style:italic; font-size:13px; color:var(--ink-soft); }
+  .note { position:absolute; bottom:8px; right:12px; }
+
+.row3 { display:grid; grid-template-columns:repeat(3,216px); gap:20px 21px; margin-top:12px; justify-content:space-between; }
+.ph-wrap { width:216px; height:446px; } .ph-wrap .phone { transform:scale(.72); transform-origin:top left; }
+.swr { display:flex; gap:7px; align-items:center; } .sw { width:26px; height:14px; border-radius:7px; border:1px solid rgba(0,0,0,.12); display:inline-block; } .sw.big { width:56px; height:34px; border-radius:6px; }
+.bases { display:flex; gap:16px; margin-top:8px; } .bs { flex:1; } .bs .big { display:block; margin-bottom:5px; }
+table.acc td { text-align:left; vertical-align:middle; } .im2 { display:flex; gap:8px; align-items:flex-end; }
+.cp { --paper:#f3eee3; --paper-deep:#e9e2d1; --olive:#8e9166; --olive-deep:#6c6f48; --ink:#3b382f; --cream:#f6f2e8; }
+.sec { overflow:hidden; }
+.stopband { position:relative; height:94px; padding:12px 0 0 62px; text-align:left; overflow:hidden; border-bottom:1px solid var(--paper-line); }
+.stopband .pin { top:14px; z-index:1; }
+.route { z-index:0; }
+</style></head><body><section class="page"><h1>Cómo se organizan las paletas</h1>
+<p class="lead">Dos capas. La base es la misma de la web en todas las páginas y no cambia con la flor. Cada paleta añade solo un acento, sacado del color de la flor, y la flor misma ya aporta el resto del color.</p>
+<h3 style="margin-top:20px">1 · Base neutra, igual en las cinco</h3>
+<p class="small">Son los colores que ya tiene la web en <span class="mono" style="font-size:9px">css/styles.css</span>. El fondo de las secciones es el papel, el cuerpo del RSVP es el oliva de siempre y la cabecera usa el oliva oscuro. Nada se tiñe de flor.</p>
+<div class="bases"><div class="bs"><span class="sw big" style="background:#f3eee3"></span><div class="mono" style="font-size:8.5px">paper</div><div class="small">#f3eee3</div></div><div class="bs"><span class="sw big" style="background:#e9e2d1"></span><div class="mono" style="font-size:8.5px">paper deep</div><div class="small">#e9e2d1</div></div><div class="bs"><span class="sw big" style="background:#8e9166"></span><div class="mono" style="font-size:8.5px">olive</div><div class="small">#8e9166</div></div><div class="bs"><span class="sw big" style="background:#6c6f48"></span><div class="mono" style="font-size:8.5px">olive deep</div><div class="small">#6c6f48</div></div><div class="bs"><span class="sw big" style="background:#3b382f"></span><div class="mono" style="font-size:8.5px">ink</div><div class="small">#3b382f</div></div></div>
+<h3 style="margin-top:22px">2 · Un acento por paleta</h3>
+<p class="small">Se usa en tres sitios: el botón, las horas del itinerario y los enlaces. Es el color de la flor oscurecido hasta que el texto blanco del botón se lee bien (el mínimo recomendado es 4,5 : 1).</p>
+<table class="season acc"><tr><th>Paleta</th><th>Flores</th><th>Acento</th><th>Contraste del botón</th></tr><tr><td>Jonquilla y muscari</td><td class="im2"><img src="img/color/narcissus-bessa.png" style="height:64px;width:auto"><img src="img/color/hyacinth-botryoides-batava.png" style="height:64px;width:auto"></td><td><span class="sw" style="background:#8f620a"></span><span class="mono" style="font-size:9px"> #8f620a</span></td><td class="small">5.4 : 1</td></tr><tr><td>Jacinto y anémona de bosque</td><td class="im2"><img src="img/color/hyacinth-curtis.png" style="height:64px;width:auto"><img src="img/color/anemone-nemorosa-batava.png" style="height:64px;width:auto"></td><td><span class="sw" style="background:#a24b72"></span><span class="mono" style="font-size:9px"> #a24b72</span></td><td class="small">5.5 : 1</td></tr><tr><td>Anémona azul y azafrán</td><td class="im2"><img src="img/color/anemone-apennina-batava.png" style="height:64px;width:auto"><img src="img/color/crocus-batava.png" style="height:64px;width:auto"></td><td><span class="sw" style="background:#3f6a93"></span><span class="mono" style="font-size:9px"> #3f6a93</span></td><td class="small">5.7 : 1</td></tr><tr><td>Glicinia y narciso de los poetas</td><td class="im2"><img src="img/color/wisteria-witte.png" style="height:64px;width:auto"><img src="img/color/narcissus-poeticus-batava.png" style="height:64px;width:auto"></td><td><span class="sw" style="background:#6a4f8f"></span><span class="mono" style="font-size:9px"> #6a4f8f</span></td><td class="small">6.7 : 1</td></tr><tr><td>Manzano y muguete</td><td class="im2"><img src="img/color/malus-kohler.png" style="height:64px;width:auto"><img src="img/color/convallaria-kohler.png" style="height:64px;width:auto"></td><td><span class="sw" style="background:#b5553e"></span><span class="mono" style="font-size:9px"> #b5553e</span></td><td class="small">4.8 : 1</td></tr></table>
+<h3 style="margin-top:22px">Por qué así</h3>
+<ul class="bullets"><li>El color grande de cada página es el de las flores, así que no compite con un fondo teñido.</li>
+<li>Cambiar de paleta es cambiar dos imágenes y un valor de color. Nada más.</li>
+<li>La base es la misma, así que las cinco páginas se parecen entre sí y a la web actual.</li></ul></section><section class="page"><h1>Cómo se colocan las flores</h1>
+<p class="lead">Dos fallos que no quiero en la web: plantas que flotan en medio de una sección y bordes rectos cortados que no coinciden con ningún cambio de sección.</p>
+<div class="pair" style="margin-top:12px;gap:34px"><div><div class="cap" style="color:var(--terracotta-deep);margin-bottom:6px">Mal</div><div class="ph-wrap" style="width:216px;height:300px"><div class="phone cp" style="--acc:#3f6a93;height:416px;width:300px;transform:scale(.72);transform-origin:top left"><div class="scr">
+  <div class="sec" style="background:var(--paper);height:300px;padding-top:16px"><div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink)">Hoja de ruta</div>
+  <img class="fl" src="img/color/anemone-apennina-batava.png" style="height:150px;left:38px;top:120px"></div>
+  <div class="sec" style="background:var(--olive);height:116px"></div></div></div></div><p class="small" style="margin-top:6px">La flor flota y su borde izquierdo, cortado en la lámina, queda recto en el aire.</p></div>
+<div><div class="cap" style="color:var(--olive-deep);margin-bottom:6px">Bien</div><div class="ph-wrap" style="width:216px;height:300px"><div class="phone cp" style="--acc:#3f6a93;height:416px;width:300px;transform:scale(.72);transform-origin:top left"><div class="scr">
+  <div class="sec" style="background:var(--paper);height:300px;padding-top:16px"><div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink)">Hoja de ruta</div>
+  <img class="fl" src="img/color/anemone-apennina-batava.png" style="height:150px;left:0;bottom:0"></div>
+  <div class="sec" style="background:var(--olive);height:116px"></div></div></div></div><p class="small" style="margin-top:6px">El lado cortado va pegado al borde de la pantalla y la base se apoya en el cambio de sección.</p></div></div>
+<h3 style="margin-top:24px">Reglas</h3>
+<ul class="bullets">
+<li><b>Toda flor toca un borde.</b> Se apoya en el cambio de sección que tiene debajo, o cuelga del que tiene encima (la glicinia). Ninguna queda a media altura.</li>
+<li><b>Un lado cortado va pegado a un borde.</b> Si la lámina estaba cortada por la izquierda, la flor va al borde izquierdo de la pantalla. Si estaba cortada por abajo, se apoya en el cambio de sección.</li>
+<li><b>Cada sección recorta lo suyo.</b> Una flor nunca cruza de una sección a otra, así que ningún corte recto cae dentro de un fondo.</li>
+<li><b>Sin marcas de agua flotantes.</b> Quito la flor grande y tenue de detrás del RSVP de la versión anterior.</li></ul></section><section class="page"><h1>Cinco paletas (1 de 2)</h1><p class="lead">Misma base, distinta flor y distinto acento. Fíjate en que el papel, el oliva y la cabecera no cambian.</p><div class="row3"><div><div class="cap" style="color:var(--olive-deep)">Jonquilla y muscari</div><div class="swr" style="margin:6px 0 8px"><span class="sw" style="background:#8f620a"></span><span class="small">acento #8f620a</span></div><div class="ph-wrap"><div class="phone cp" style="--acc:#8f620a"><div class="scr">
+      <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:170px;padding-top:42px">
+        <div class="cap">Nos casamos</div><div class="script" style="font-size:34px;margin-top:8px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div></div>
+      <div class="sec" style="background:var(--paper);height:236px;padding-top:16px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink);margin-top:2px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:6px;line-height:1.65"><span class="tl-time" style="color:var(--acc)">12:30</span> Ceremonia<br><span class="tl-time" style="color:var(--acc)">14:30</span> Convite<br><span class="tl-time" style="color:var(--acc)">19:00</span> Fiesta</div>
+        <img class="fl" src="img/color/narcissus-bessa.png" style="height:138px;bottom:0;left:0"><img class="fl" src="img/color/hyacinth-botryoides-batava.png" style="height:122px;bottom:0;right:10px">
+      </div>
+      <div class="sec" style="background:var(--olive);color:var(--cream);height:118px;padding-top:16px">
+        <div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:12px;background:var(--acc)">Confirmar</div></div>
+      <div class="sec" style="background:var(--paper);height:82px;padding-top:12px"><div class="script" style="color:var(--ink);font-size:28px">Fotos</div><div style="font-size:11px">#BodaMariAngelesYPablo</div>
+        <img class="fl" src="img/color/hyacinth-botryoides-batava.png" style="height:66px;bottom:0;left:10px"><img class="fl" src="img/color/narcissus-bessa.png" style="height:70px;bottom:0;left:0"></div>
+    </div></div></div></div><div><div class="cap" style="color:var(--olive-deep)">Jacinto y anémona de bosque</div><div class="swr" style="margin:6px 0 8px"><span class="sw" style="background:#a24b72"></span><span class="small">acento #a24b72</span></div><div class="ph-wrap"><div class="phone cp" style="--acc:#a24b72"><div class="scr">
+      <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:170px;padding-top:42px">
+        <div class="cap">Nos casamos</div><div class="script" style="font-size:34px;margin-top:8px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div></div>
+      <div class="sec" style="background:var(--paper);height:236px;padding-top:16px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink);margin-top:2px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:6px;line-height:1.65"><span class="tl-time" style="color:var(--acc)">12:30</span> Ceremonia<br><span class="tl-time" style="color:var(--acc)">14:30</span> Convite<br><span class="tl-time" style="color:var(--acc)">19:00</span> Fiesta</div>
+        <img class="fl" src="img/color/hyacinth-curtis.png" style="height:138px;bottom:0;left:10px"><img class="fl" src="img/color/anemone-nemorosa-batava.png" style="height:122px;bottom:0;right:10px">
+      </div>
+      <div class="sec" style="background:var(--olive);color:var(--cream);height:118px;padding-top:16px">
+        <div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:12px;background:var(--acc)">Confirmar</div></div>
+      <div class="sec" style="background:var(--paper);height:82px;padding-top:12px"><div class="script" style="color:var(--ink);font-size:28px">Fotos</div><div style="font-size:11px">#BodaMariAngelesYPablo</div>
+        <img class="fl" src="img/color/anemone-nemorosa-batava.png" style="height:66px;bottom:0;left:10px"><img class="fl" src="img/color/hyacinth-curtis.png" style="height:70px;bottom:0;right:10px"></div>
+    </div></div></div></div><div><div class="cap" style="color:var(--olive-deep)">Anémona azul y azafrán</div><div class="swr" style="margin:6px 0 8px"><span class="sw" style="background:#3f6a93"></span><span class="small">acento #3f6a93</span></div><div class="ph-wrap"><div class="phone cp" style="--acc:#3f6a93"><div class="scr">
+      <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:170px;padding-top:42px">
+        <div class="cap">Nos casamos</div><div class="script" style="font-size:34px;margin-top:8px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div></div>
+      <div class="sec" style="background:var(--paper);height:236px;padding-top:16px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink);margin-top:2px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:6px;line-height:1.65"><span class="tl-time" style="color:var(--acc)">12:30</span> Ceremonia<br><span class="tl-time" style="color:var(--acc)">14:30</span> Convite<br><span class="tl-time" style="color:var(--acc)">19:00</span> Fiesta</div>
+        <img class="fl" src="img/color/anemone-apennina-batava.png" style="height:138px;bottom:0;left:0"><img class="fl" src="img/color/crocus-batava.png" style="height:122px;bottom:0;right:10px">
+      </div>
+      <div class="sec" style="background:var(--olive);color:var(--cream);height:118px;padding-top:16px">
+        <div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:12px;background:var(--acc)">Confirmar</div></div>
+      <div class="sec" style="background:var(--paper);height:82px;padding-top:12px"><div class="script" style="color:var(--ink);font-size:28px">Fotos</div><div style="font-size:11px">#BodaMariAngelesYPablo</div>
+        <img class="fl" src="img/color/crocus-batava.png" style="height:66px;bottom:0;left:10px"><img class="fl" src="img/color/anemone-apennina-batava.png" style="height:70px;bottom:0;left:0"></div>
+    </div></div></div></div></div></section><section class="page"><h1>Cinco paletas (2 de 2)</h1><p class="lead">Misma base, distinta flor y distinto acento. Fíjate en que el papel, el oliva y la cabecera no cambian.</p><div class="row3"><div><div class="cap" style="color:var(--olive-deep)">Glicinia y narciso de los poetas</div><div class="swr" style="margin:6px 0 8px"><span class="sw" style="background:#6a4f8f"></span><span class="small">acento #6a4f8f</span></div><div class="ph-wrap"><div class="phone cp" style="--acc:#6a4f8f"><div class="scr">
+      <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:170px;padding-top:42px">
+        <div class="cap">Nos casamos</div><div class="script" style="font-size:34px;margin-top:8px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div></div>
+      <div class="sec" style="background:var(--paper);height:236px;padding-top:16px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink);margin-top:2px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:6px;line-height:1.65"><span class="tl-time" style="color:var(--acc)">12:30</span> Ceremonia<br><span class="tl-time" style="color:var(--acc)">14:30</span> Convite<br><span class="tl-time" style="color:var(--acc)">19:00</span> Fiesta</div>
+        <img class="fl" src="img/color/wisteria-witte.png" style="height:108px;top:0;left:10px"><img class="fl" src="img/color/narcissus-poeticus-batava.png" style="height:122px;bottom:0;right:10px">
+      </div>
+      <div class="sec" style="background:var(--olive);color:var(--cream);height:118px;padding-top:16px">
+        <div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:12px;background:var(--acc)">Confirmar</div></div>
+      <div class="sec" style="background:var(--paper);height:82px;padding-top:12px"><div class="script" style="color:var(--ink);font-size:28px">Fotos</div><div style="font-size:11px">#BodaMariAngelesYPablo</div>
+        <img class="fl" src="img/color/narcissus-poeticus-batava.png" style="height:66px;bottom:0;left:10px"><img class="fl" src="img/color/wisteria-witte.png" style="height:70px;top:0;right:10px"></div>
+    </div></div></div></div><div><div class="cap" style="color:var(--olive-deep)">Manzano y muguete</div><div class="swr" style="margin:6px 0 8px"><span class="sw" style="background:#b5553e"></span><span class="small">acento #b5553e</span></div><div class="ph-wrap"><div class="phone cp" style="--acc:#b5553e"><div class="scr">
+      <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:170px;padding-top:42px">
+        <div class="cap">Nos casamos</div><div class="script" style="font-size:34px;margin-top:8px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div></div>
+      <div class="sec" style="background:var(--paper);height:236px;padding-top:16px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink);margin-top:2px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:6px;line-height:1.65"><span class="tl-time" style="color:var(--acc)">12:30</span> Ceremonia<br><span class="tl-time" style="color:var(--acc)">14:30</span> Convite<br><span class="tl-time" style="color:var(--acc)">19:00</span> Fiesta</div>
+        <img class="fl" src="img/color/malus-kohler.png" style="height:138px;bottom:0;left:10px"><img class="fl" src="img/color/convallaria-kohler.png" style="height:122px;bottom:0;right:0">
+      </div>
+      <div class="sec" style="background:var(--olive);color:var(--cream);height:118px;padding-top:16px">
+        <div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:12px;background:var(--acc)">Confirmar</div></div>
+      <div class="sec" style="background:var(--paper);height:82px;padding-top:12px"><div class="script" style="color:var(--ink);font-size:28px">Fotos</div><div style="font-size:11px">#BodaMariAngelesYPablo</div>
+        <img class="fl" src="img/color/convallaria-kohler.png" style="height:66px;bottom:0;right:0"><img class="fl" src="img/color/malus-kohler.png" style="height:40px;bottom:0;right:10px"></div>
+    </div></div></div></div></div></section><section class="page"><h1>Mezcla con el cuaderno de viaje</h1>
+<p class="lead">Las ideas B (ruta florida) y A (sello y tarjeta) con las láminas a color y las mismas reglas de colocación. En la ruta cada parada es una banda propia, y así cada flor se apoya en el borde de su banda.</p>
+<div class="pair" style="margin-top:12px"><div><div class="cap" style="color:var(--olive-deep);margin-bottom:6px">B · La ruta florida</div><div class="ph-wrap" style="width:300px;height:620px"><div class="phone cp" style="--acc:#8f620a"><div class="scr">
+  <div class="sec" style="background:var(--paper);padding-top:20px;height:92px"><div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink)">Hoja de ruta</div></div>
+  <div style="position:relative"><div class="stopband" style="background:var(--paper)"><div class="pin"><img src="img/color/hyacinth-curtis.png" style="object-fit:contain"></div><div class="tl-time" style="color:var(--acc)">12:30</div><div style="font-size:15px">Ceremonia</div><img class="fl" src="img/color/hyacinth-curtis.png" style="height:84px;bottom:0;right:10px"></div><div class="stopband" style="background:var(--paper-deep)"><div class="pin"><img src="img/color/redoute-narcissus.png" style="object-fit:contain"></div><div class="tl-time" style="color:var(--acc)">14:30</div><div style="font-size:15px">Convite</div><img class="fl" src="img/color/redoute-narcissus.png" style="height:84px;bottom:0;right:10px"></div><div class="stopband" style="background:var(--paper)"><div class="pin"><img src="img/color/anemone-nemorosa-batava.png" style="object-fit:contain"></div><div class="tl-time" style="color:var(--acc)">19:00</div><div style="font-size:15px">Fiesta</div><img class="fl" src="img/color/anemone-nemorosa-batava.png" style="height:84px;bottom:0;right:10px"></div><div class="stopband" style="background:var(--paper-deep)"><div class="pin"><img src="img/color/crocus-batava.png" style="object-fit:contain"></div><div class="tl-time" style="color:var(--acc)">23:00</div><div style="font-size:15px">Buses</div><img class="fl" src="img/color/crocus-batava.png" style="height:84px;bottom:0;right:10px"></div><div class="route" style="top:0;bottom:0;z-index:0"></div></div>
+  <div class="sec" style="background:var(--olive);color:var(--cream);height:130px;padding-top:20px"><div class="script">¿Nos acompañas?</div><div class="btn" style="margin-top:10px;background:var(--acc)">Embarcar</div></div>
+</div></div></div></div><div><div class="cap" style="color:var(--olive-deep);margin-bottom:6px">A · Sello y tarjeta</div><div class="ph-wrap" style="width:300px;height:620px"><div class="phone cp" style="--acc:#3f6a93"><div class="scr">
+  <div class="sec" style="background:var(--olive-deep);color:var(--cream);height:230px;padding-top:96px"><div class="cap">Nos casamos</div><div class="script" style="font-size:36px;margin-top:8px">Mª Ángeles &amp; Pablo</div><div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div>
+    <div class="stamp" style="right:16px;top:14px;width:70px"><img src="img/color/narcissus-bessa.png" style="width:48px;height:60px;object-fit:cover;object-position:left"><div class="d">13·III·2027</div></div></div>
+  <div class="sec" style="background:var(--olive);height:390px;padding-top:16px"><div class="script" style="color:var(--cream)">¿Nos acompañas?</div>
+    <div class="pass" style="color:var(--ink);margin-top:12px"><div class="h"><div><div class="mono" style="font-size:7px">Pasajero</div>Tu nombre</div><div><div class="mono" style="font-size:7px">Embarque</div>13 MAR</div></div>
+      <div class="b" style="height:130px;position:relative;overflow:hidden">Asistencia · Menú · Bus<img class="fl" src="img/color/crocus-batava.png" style="height:118px;bottom:0;right:10px"></div></div>
+    <div class="btn" style="margin-top:14px;background:var(--acc)">Embarcar</div></div>
+</div></div></div></div></div>
+<p class="small" style="margin-top:12px">En la tarjeta de embarque la flor queda pegada a la esquina de la tarjeta y la recorta su borde redondeado. El sello lleva solo el ramillete, recortado al marco del sello.</p></section></body></html>
