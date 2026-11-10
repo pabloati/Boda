@@ -40,3 +40,6 @@ assets/*.svg
 
 # Phone screenshots the couple drops in for debugging
 docs/issues/
+
+# Python bytecode from _dev/ tools
+__pycache__/

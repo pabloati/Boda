@@ -17,9 +17,19 @@ Routes
                        (writes into that branch's worktree and commits; see _dev/editor_api.py).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
+
+Shared mode (to edit from another computer through a tunnel, see _dev/compartir.md):
+  BODA_EDITOR_PASSWORD=... python3 _dev/serve.py [port]
+  (or BODA_EDITOR_PASSWORD_FILE=path). Then every page, the editor and the API need a login at
+  /_dev/login; a session lasts 30 days; 8 wrong passwords from one address lock it for 10 minutes.
 """
+import hashlib
+import hmac
 import http.server
 import json
+import secrets
+import threading
+import time
 import mimetypes
 import os
 import posixpath
@@ -116,6 +126,36 @@ def clean_flores(items):
     return out
 
 
+# ---------- shared mode: password login ----------
+def _password():
+    pw = os.environ.get('BODA_EDITOR_PASSWORD', '')
+    f = os.environ.get('BODA_EDITOR_PASSWORD_FILE', '')
+    if not pw and f:
+        with open(os.path.expanduser(f)) as fh:
+            pw = fh.read().strip()
+    return pw
+
+
+PASSWORD = _password()
+SESSIONS = {}                     # token -> expiry
+FAILS = {}                        # address -> [timestamps of wrong passwords]
+LOCK = threading.Lock()
+SESSION_DAYS = 30
+
+LOGIN_PAGE = '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de la boda</title><style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3eee3;font:16px/1.4 system-ui,sans-serif;color:#3b382f}
+form{background:#fffdf8;padding:28px 26px;border-radius:12px;box-shadow:0 10px 30px -12px rgba(0,0,0,.25);width:min(340px,90vw);display:grid;gap:12px}
+h1{font-size:20px;margin:0}p{margin:0;color:#6f6a5c;font-size:14px}input{font:inherit;padding:10px;border:1px solid #d9d0ba;border-radius:8px}
+button{font:inherit;padding:10px;border:0;border-radius:8px;background:#6c6f48;color:#fff;font-weight:600;cursor:pointer}.err{color:#a22}
+</style></head><body><form method="post" action="/_dev/login"><h1>Editor de la boda</h1><p>Escribe la contraseña para entrar.</p>
+%s<input type="password" name="password" autocomplete="current-password" autofocus required><button>Entrar</button></form></body></html>'''
+
+
+def check_password(given):
+    return bool(PASSWORD) and hmac.compare_digest(hashlib.sha256(given.encode()).digest(), hashlib.sha256(PASSWORD.encode()).digest())
+
+
 def layout_js(items):
     lines = ',\n'.join('  ' + json.dumps(i, ensure_ascii=False, separators=(', ', ': ')) for i in items)
     return ('// Where the botanical plates sit on the page. Written by _dev/flores.html (the flower editor):\n'
@@ -166,15 +206,88 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return super().translate_path(path)
 
     def do_GET(self):
+        if PASSWORD and self.gate():
+            return
         self.route(body=True)
 
     def do_HEAD(self):
+        if PASSWORD and self.gate():
+            return
         self.route(body=False)
 
+    def client(self):
+        """The visitor's address: the tunnel passes it in a header."""
+        return self.headers.get('CF-Connecting-IP') or self.headers.get('X-Forwarded-For', '').split(',')[0].strip() or self.client_address[0]
+
+    def session_ok(self):
+        if not PASSWORD:
+            return True
+        for part in self.headers.get('Cookie', '').split(';'):
+            k, _, v = part.strip().partition('=')
+            if k == 'boda_ed':
+                with LOCK:
+                    exp = SESSIONS.get(v)
+                    if exp and exp > time.time():
+                        return True
+        return False
+
     def allowed(self):
-        """Writes only from this machine, as JSON."""
-        host = self.headers.get('Host', '').rsplit(':', 1)[0]
-        return host in ('localhost', '127.0.0.1') and self.headers.get('Content-Type', '').split(';')[0] == 'application/json'
+        """Writes: JSON only; from this machine, or (shared mode) with a session and from this same site."""
+        if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+            return False
+        host = self.headers.get('Host', '')
+        if not PASSWORD:
+            return host.rsplit(':', 1)[0] in ('localhost', '127.0.0.1')
+        origin = self.headers.get('Origin', '')
+        return self.session_ok() and (not origin or urllib.parse.urlsplit(origin).netloc == host)
+
+    def login(self):
+        """GET shows the form; POST checks the password and starts a session."""
+        if self.command == 'GET':
+            return self.send_html(LOGIN_PAGE % '')
+        ip, now = self.client(), time.time()
+        with LOCK:
+            recent = [t for t in FAILS.get(ip, []) if now - t < 600]
+            FAILS[ip] = recent
+        if len(recent) >= 8:
+            return self.send_html(LOGIN_PAGE % '<p class="err">Demasiados intentos. Espera 10 minutos.</p>', 429)
+        n = min(int(self.headers.get('Content-Length') or 0), 2000)
+        form = urllib.parse.parse_qs(self.rfile.read(n).decode('utf-8', 'replace'))
+        if not check_password((form.get('password') or [''])[0]):
+            with LOCK:
+                FAILS.setdefault(ip, []).append(now)
+            time.sleep(1)
+            return self.send_html(LOGIN_PAGE % '<p class="err">Contraseña incorrecta.</p>', 401)
+        token = secrets.token_urlsafe(32)
+        with LOCK:
+            SESSIONS[token] = now + SESSION_DAYS * 86400
+        secure = '; Secure' if self.headers.get('X-Forwarded-Proto', '') == 'https' or self.headers.get('CF-Visitor', '').find('https') >= 0 else ''
+        self.send_response(303)
+        self.send_header('Set-Cookie', 'boda_ed=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Strict%s' % (token, SESSION_DAYS * 86400, secure))
+        self.send_header('Location', '/_dev/flores.html')
+        self.end_headers()
+
+    def send_html(self, text, status=200):
+        data = text.encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def gate(self):
+        """Shared mode: everything except the login page needs a session. Returns True if handled."""
+        p = urllib.parse.urlsplit(self.path).path
+        if p == '/_dev/login':
+            self.login()
+            return True
+        if not self.session_ok():
+            if self.command == 'GET' and not p.startswith('/_dev/api/'):
+                self.send_response(303); self.send_header('Location', '/_dev/login'); self.end_headers()
+            else:
+                self.send_error(401)
+            return True
+        return False
 
     def send_json(self, obj, status=200):
         data = json.dumps(obj, ensure_ascii=False).encode()
@@ -220,6 +333,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         """Writes: the flower layout (old route) and the site editor's API, from this machine only."""
         p = urllib.parse.urlsplit(self.path).path
+        if PASSWORD and self.gate():
+            return
         if not self.allowed():
             return self.send_error(403)
         if p.startswith('/_dev/api/'):
@@ -285,7 +400,9 @@ def main():
                  'python3 _dev/serve.py %d' % (port, port + 1))
     print('Site:          http://localhost:%d/' % port)
     print('Phone preview: http://localhost:%d/_dev/phones.html' % port)
-    print('Flower editor: http://localhost:%d/_dev/flores.html   (Ctrl+C to stop)' % port)
+    print('Site editor:   http://localhost:%d/_dev/flores.html   (Ctrl+C to stop)' % port)
+    if PASSWORD:
+        print('Shared mode: password required (/_dev/login).')
     try:
         server.serve_forever()
     except KeyboardInterrupt:
