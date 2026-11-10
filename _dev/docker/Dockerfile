@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-cer
 
 USER boda
 WORKDIR /home/boda
-COPY --chown=boda:boda entrypoint.sh /home/boda/entrypoint.sh
-RUN chmod +x /home/boda/entrypoint.sh
+COPY --chown=boda:boda entrypoint.sh /usr/local/bin/boda-entrypoint.sh
+RUN chmod +x /usr/local/bin/boda-entrypoint.sh
 
 ENV BODA_REPO=git@github.com:pabloati/Boda.git BODA_BRANCH=editor BODA_PORT=8090
 EXPOSE 8090
-ENTRYPOINT ["/bin/bash", "/home/boda/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/boda-entrypoint.sh"]
