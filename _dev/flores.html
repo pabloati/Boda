@@ -15,10 +15,20 @@
   :root { --ink:#26261f; --soft:#6c6c60; --line:#d9d6cc; --bg:#eeece6; --panel:#fbfaf7; --acc:#c83c78; --accd:#a32a5e; }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body { font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 46px 1fr; grid-template-columns: 220px 1fr 250px; grid-template-areas: "bar bar bar" "lib stage props"; }
+  /* Side panels resize like VS Code's: drag the gutters, double-click to reset, drag to the edge to close. */
+  body { --libW: 220px; --propW: 250px; font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 46px 1fr; grid-template-columns: var(--libW) 5px 1fr 5px var(--propW); grid-template-areas: "bar bar bar bar bar" "lib gl stage gr props"; }
+  .gutter { background: var(--line); cursor: col-resize; position: relative; z-index: 3; touch-action: none; }
+  .gutter::after { content: ''; position: absolute; inset: 0 -4px; }   /* wider grab area */
+  .gutter:hover, .gutter.drag { background: var(--acc); }
+  #gl { grid-area: gl; } #gr { grid-area: gr; }
+  body.resizing, body.resizing * { cursor: col-resize !important; user-select: none; }
+  body.resizing #f { pointer-events: none; }   /* the iframe would swallow the pointer while dragging */
+  .closed { display: none; }
+  button.panel-t.on { background: #fff; color: var(--ink); border-color: var(--line); } button.panel-t:not(.on) { color: var(--soft); background: transparent; text-decoration: line-through; }
   #bar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
   #bar h1 { font-size: 14px; margin: 0 8px 0 0; }
   #bar .sp { flex: 1; }
+  #bar .grp.panels { margin-left: 4px; }
   button, select, input[type=number] { font: inherit; color: inherit; }
   button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
   button:hover { border-color: #b9b5a8; } button:disabled { opacity: .4; cursor: default; }
@@ -27,19 +37,21 @@
   button.danger { color: #a22; }
   .grp { display: flex; gap: 0; } .grp button { border-radius: 0; margin-left: -1px; } .grp button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .grp button:last-child { border-radius: 0 6px 6px 0; }
   #status { color: var(--soft); min-width: 170px; text-align: right; } #status.dirty { color: var(--accd); font-weight: 600; }
-  aside { background: var(--panel); overflow: auto; padding: 12px; }
+  /* panel contents scale with the panel: text a little, thumbnails and columns a lot */
+  aside { background: var(--panel); overflow: auto; padding: 12px; container-type: inline-size; }
+  aside > * { font-size: clamp(12.5px, 5.2cqw, 16px); }   /* cqw = the panel's width (a container cannot size itself) */
   #lib { grid-area: lib; border-right: 1px solid var(--line); }
   #props { grid-area: props; border-left: 1px solid var(--line); }
-  aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
-  #libGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  aside h2 { font-size: clamp(10.5px, 4cqw, 13px); text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
+  #libGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(max(92px, 29cqw), 1fr)); gap: 8px; }   /* thumbnails grow with the panel, columns come and go */
   .th { border: 1px solid var(--line); border-radius: 6px; background: #f3eee3; padding: 4px; cursor: pointer; text-align: center; }
   .th:hover { border-color: var(--acc); }
-  .th .im { height: 84px; display: flex; align-items: flex-end; justify-content: center; } .th img { max-width: 100%; max-height: 100%; }
-  .th span { display: block; font-size: 11px; margin-top: 3px; }
+  .th .im { aspect-ratio: 1 / 0.95; display: flex; align-items: flex-end; justify-content: center; } .th img { max-width: 100%; max-height: 100%; }
+  .th span { display: block; font-size: .85em; margin-top: 3px; }
   #stage { grid-area: stage; overflow: auto; padding: 14px; display: flex; justify-content: center; align-items: flex-start; }
   #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; }
   #f { border: 0; display: block; transform-origin: 0 0; background: #fff; }
-  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 78px; color: var(--soft); flex: none; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 6.2em; color: var(--soft); flex: none; }
   .row input[type=number], .row select { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
   .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .placed { display: grid; gap: 3px; max-height: 260px; overflow-y: auto; }
@@ -65,13 +77,16 @@
   <label><input type="checkbox" id="guides" checked> Ver secciones</label>
   <div class="grp"><button id="undo" title="Ctrl+Z">Deshacer</button><button id="redo" title="Ctrl+Mayús+Z">Rehacer</button></div>
   <button id="reload" title="Vuelve a cargar la web, conserva las flores">Recargar web</button>
+  <div class="grp panels"><button id="tLib" class="panel-t on" title="Mostrar u ocultar la biblioteca">Flores</button><button id="tProps" class="panel-t on" title="Mostrar u ocultar las propiedades">Propiedades</button></div>
   <span class="sp"></span>
   <span id="status">Sin cambios</span>
   <button id="save" class="primary" title="Ctrl+S">Guardar</button>
 </header>
+<div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib"><h2>Flores</h2><div id="libGrid"></div>
   <p class="hint" style="margin-top:12px">Haz clic en una flor para añadirla a la sección que estás viendo.</p></aside>
 <main id="stage"><div id="wrap"><iframe id="f" src="/index.html" title="Web"></iframe></div></main>
+<div class="gutter" id="gr" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="props"></aside>
 <div id="banner"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
 
@@ -589,6 +604,40 @@
   $('guides').onchange = e => doc && doc.documentElement.classList.toggle('ed-guides', e.target.checked);
   $('goto').onchange = e => { const s = e.target.value && secEl(e.target.value); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); e.target.value = ''; };
   window.addEventListener('resize', fit);
+
+  // ---------- resizable side panels ----------
+  const PANELS = { lib: { v: '--libW', def: 220, g: 'gl', t: 'tLib', side: 'l' }, props: { v: '--propW', def: 250, g: 'gr', t: 'tProps', side: 'r' } };
+  const MIN = 160, CLOSE = 90;
+  let widths = { lib: 220, props: 250, libOpen: true, propsOpen: true };
+  try { Object.assign(widths, JSON.parse(localStorage.getItem('flores-panels') || '{}')); } catch (e) {}
+  let refit = 0;
+  function applyPanels() {
+    Object.entries(PANELS).forEach(([k, P]) => {
+      const open = widths[k + 'Open'];
+      document.body.style.setProperty(P.v, open ? widths[k] + 'px' : '0px');
+      $(k).classList.toggle('closed', !open); $(P.t).classList.toggle('on', open);
+    });
+    try { localStorage.setItem('flores-panels', JSON.stringify(widths)); } catch (e) {}
+    cancelAnimationFrame(refit); refit = requestAnimationFrame(fit);
+  }
+  Object.entries(PANELS).forEach(([k, P]) => {
+    const g = $(P.g);
+    g.addEventListener('pointerdown', e => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add('drag'); document.body.classList.add('resizing');
+      const startW = widths[k + 'Open'] ? widths[k] : P.def;   // closing keeps this width for when it reopens
+      const move = ev => {
+        const w = P.side === 'l' ? ev.clientX : window.innerWidth - ev.clientX, max = Math.round(window.innerWidth * 0.45);
+        if (w < CLOSE) { widths[k + 'Open'] = false; widths[k] = startW; }
+        else { widths[k + 'Open'] = true; widths[k] = Math.min(max, Math.max(MIN, Math.round(w))); }
+        applyPanels();
+      };
+      const up = () => { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.classList.remove('drag'); document.body.classList.remove('resizing'); fit(); };
+      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up);
+    });
+    g.addEventListener('dblclick', () => { widths[k] = P.def; widths[k + 'Open'] = true; applyPanels(); });
+    $(P.t).onclick = () => { widths[k + 'Open'] = !widths[k + 'Open']; applyPanels(); };
+  });
+  applyPanels();
   window.addEventListener('keydown', onKey);
   window.addEventListener('beforeunload', e => { if (JSON.stringify(items) !== saved) { e.preventDefault(); e.returnValue = ''; } });
   frame.addEventListener('load', onLoad);
