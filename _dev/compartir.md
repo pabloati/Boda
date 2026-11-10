@@ -48,6 +48,11 @@ bash _dev/docker/run.sh logs     # follow the log
 bash _dev/docker/run.sh stop
 ```
 
+Snap-installed Docker (as on clab) has three quirks the scripts already work around: it cannot
+read files under `~/.config` (so secrets go in with `-e`, not mounts or `--env-file`),
+`--security-opt no-new-privileges` makes every exec fail, and a named volume seeded from the
+image shadows later changes to anything inside it (so the entrypoint lives in `/usr/local/bin`).
+
 The container clones `editor` from GitHub on first start and pulls on every restart, so updating
 the editor code is: push to `editor`, then `run.sh` again. The link changes on every restart.
 Check first that the machine's owner (lab, institution) allows a public tunnel.
