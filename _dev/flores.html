@@ -31,7 +31,8 @@
   .t-item { display: block; width: 100%; text-align: left; margin-bottom: 3px; font-size: .92em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-item.on { border-color: var(--acc); color: var(--accd); background: #fff4f8; } .t-item.mod::before { content: '● '; color: var(--acc); }
   .search { width: 100%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; margin-bottom: 8px; }
-  .sw-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .sw-row input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
+  .sw-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .sw-row .hex { width: 5.6em; font: 11px monospace; padding: 3px 4px; border: 1px solid var(--line); border-radius: 4px; } .sw-row .hex.bad { border-color: #c33; color: #c33; }
+  .pal-row { display: flex; gap: 3px; align-items: stretch; } .pal-row .preset { flex: 1; min-width: 0; } .pal-row .preset b { width: 9px; } .pal-row > button:not(.preset) { padding: 0 5px; margin-bottom: 5px; font-size: 12px; } .sw-row input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
   .preset { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 5px; text-align: left; } .preset i { display: flex; gap: 2px; } .preset b { width: 12px; height: 18px; border-radius: 2px; }
   .preset.on { border-color: var(--acc); }
   .ph-slot { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 12px; background: #fff; }
@@ -130,6 +131,8 @@
   let undoSt = [], redoSt = [];
   let clip = null, fmt = null;   // Ctrl+C copies a plate; Ctrl+Mayús+C copies its size and turn
   let multi = new Set();         // Mayús+clic: several plates selected; sel is the last one clicked
+  let tpos = {}, tsel = null;    // moved texts: key → { x, y, z, d? } (saved by the site module in the look); the selected text's key
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const clone = o => JSON.parse(JSON.stringify(o));
   const lib = id => LIB.find(l => l.id === id);
@@ -162,15 +165,17 @@
   }
 
   // ---------- history / persistence ----------
-  function snapshot() { undoSt.push(JSON.stringify(items)); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
+  const state = () => JSON.stringify({ i: items, t: tpos });
+  function restore(js) { const o = JSON.parse(js); items = o.i; tpos = o.t || {}; if (!get(sel)) sel = null; }
+  function snapshot() { undoSt.push(state()); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
   function changed() {
     try { localStorage.setItem(DRAFT, JSON.stringify(items)); } catch (e) {}
-    if (window.SITE) window.SITE.status();
+    if (window.SITE) { window.SITE.textChanged(); window.SITE.status(); }
     $('undo').disabled = !undoSt.length; $('redo').disabled = !redoSt.length;
     renderAll();
   }
-  function undo() { if (!undoSt.length) return; redoSt.push(JSON.stringify(items)); items = JSON.parse(undoSt.pop()); if (!get(sel)) sel = null; changed(); }
-  function redo() { if (!redoSt.length) return; undoSt.push(JSON.stringify(items)); items = JSON.parse(redoSt.pop()); if (!get(sel)) sel = null; changed(); }
+  function undo() { if (!undoSt.length) return; redoSt.push(state()); restore(undoSt.pop()); changed(); }
+  function redo() { if (!redoSt.length) return; undoSt.push(state()); restore(redoSt.pop()); changed(); }
   function save() { if (window.SITE) window.SITE.save(); }
   // after a successful save of everything
   function markSaved() { saved = JSON.stringify(items); try { localStorage.removeItem(DRAFT); } catch (e) {} changed(); }
@@ -189,6 +194,8 @@
     .ed-rot { position: absolute; left: 50%; top: -30px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: #fff; border: 1.5px solid #c83c78; cursor: grab; pointer-events: auto; z-index: 61; }
     .ed-rot::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1.5px; height: 15px; margin-left: -.75px; background: #c83c78; }
     #ed-box.many { border-style: dashed; }
+    #ed-box.text { border-color: #3a7bd5; }
+    .ed-mode-flores .ed-tmove:hover { outline: 1px dashed rgba(58,123,213,.65); outline-offset: 2px; cursor: move; }
     #ed-box.locked { border-style: dotted; border-color: #8a8577; }
     .ed-lock { position: absolute; left: 0; top: -17px; font: 10px monospace; background: #8a8577; color: #fff; padding: 1px 5px; border-radius: 3px; }
     .ed-g { position: absolute; background: #e8358a; z-index: 65; pointer-events: none; }
@@ -215,8 +222,77 @@
       if (it.lock) { const lk = doc.createElement('div'); lk.className = 'ed-lock'; lk.textContent = 'bloqueada'; box.appendChild(lk); }
       secEl(it.sec).appendChild(box);
     });
+    if (tsel) {
+      const el = textEl(tsel); if (!el) { tsel = null; return; }
+      const g = tgeom(el), box = doc.createElement('div');
+      box.id = 'ed-box'; box.classList.add('text');
+      box.style.cssText = `left:${g.left}px;top:${g.top}px;width:${g.w}px;height:${g.h}px`;
+      g.sec.appendChild(box);
+    }
   }
-  function select(id) { sel = id; multi = new Set(id ? [id] : []); drawSel(); drawProps(); }
+  function select(id) { sel = id; tsel = null; multi = new Set(id ? [id] : []); drawSel(); drawProps(); }
+  function selectText(k) { sel = null; multi = new Set(); tsel = k; drawSel(); drawProps(); }
+
+  // ---------- texts: headings and paragraphs can be moved and layered like plates ----------
+  // The text keeps its place in the flow (nothing else moves); the offset is a CSS transform
+  // written by the site module into css/editor.css. Keys: the data-i18n key, or #id.
+  const TEXT_SEL = 'h1, h2, h3, h4, h5, h6, p, blockquote, #countdown-clock';
+  const textKey = el => el.dataset.i18n || (el.id ? '#' + el.id : null);
+  const secKeyOf = el => { const s = el.closest('main > *'); return s && (s.id || (s.classList.contains('footer-section') ? 'footer' : '')); };
+  function textAt(target) {
+    const el = target && target.closest && target.closest(TEXT_SEL);
+    if (!el || !textKey(el) || el.closest('form, label, details, #envelope-overlay, .rsvp-modal')) return null;
+    const k = secKeyOf(el); return k && SECS.includes(k) && secEl(k) ? el : null;
+  }
+  const textEl = k => { const el = doc.querySelector(k.startsWith('#') ? 'main ' + k : `main [data-i18n="${k}"]`); return el && textAt(el) === el ? el : null; };
+  const tview = t => DESK() && t.d ? t.d : t;
+  const tget = k => tpos[k] || { x: 0, y: 0, z: '' };
+  function ted(k) { const t = tpos[k] = tpos[k] || { x: 0, y: 0, z: '' }; if (!DESK()) return t; if (!t.d) t.d = { x: t.x, y: t.y, z: t.z }; return t.d; }
+  const atRest = v => !v.x && !v.y && !v.z;
+  function tclean(k) { const t = tpos[k]; if (!t) return; if (t.d && atRest(t.d) && atRest(t)) delete t.d; if (atRest(t) && !t.d) delete tpos[k]; }
+  function tgeom(el) { const sec = el.closest('main > *'), r = el.getBoundingClientRect(), p = sec.getBoundingClientRect(); return { left: r.left - p.left, top: r.top - p.top, w: r.width, h: r.height, sec }; }
+  const tlabel = el => (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48);
+  function startTextDrag(e, el) {
+    const k = textKey(el), st = { px: e.pageX, py: e.pageY }, v0 = tview(tget(k));
+    let moved = false, x = v0.x || 0, y = v0.y || 0;
+    const move = ev => {
+      if (!moved && Math.abs(ev.pageX - st.px) + Math.abs(ev.pageY - st.py) < 3) return;
+      if (!moved) { moved = true; snapshot(); drawSelHide(); }
+      x = Math.round((v0.x || 0) + ev.pageX - st.px); y = Math.round((v0.y || 0) + ev.pageY - st.py);
+      if (ev.shiftKey) { if (Math.abs(x - (v0.x || 0)) > Math.abs(y - (v0.y || 0))) y = v0.y || 0; else x = v0.x || 0; }
+      el.style.transform = `translate(${x}px, ${y}px)`; autoScroll(ev);
+    };
+    const up = () => {
+      doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); el.style.transform = '';
+      if (moved) { const t = ted(k); t.x = x; t.y = y; tclean(k); changed(); } else drawSel();
+    };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+  function tnudge(k, dx, dy) { snapshot(); const t = ted(k); t.x = (t.x || 0) + dx; t.y = (t.y || 0) + dy; tclean(k); changed(); }
+  function tset(k, patch) { snapshot(); Object.assign(ted(k), patch); tclean(k); changed(); }
+  function treset(k) { snapshot(); if (DESK() && tpos[k]) { tpos[k].d = { x: 0, y: 0, z: '' }; tclean(k); } else delete tpos[k]; changed(); }
+  function goToText(k) { const el = textEl(k); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); selectText(k); }
+  function drawTextProps(p, k) {
+    const el = textEl(k); if (!el) { tsel = null; return drawProps(); }
+    const t = tget(k), v = tview(t);
+    const deskNote = DESK() ? `<div class="note${t.d ? ' own' : ''}">${t.d ? 'En escritorio tiene su <b>propio desplazamiento y capa</b>.' : 'En escritorio usa <b>lo mismo que en el móvil</b>. Si lo mueves aquí, tendrá lo suyo.'}${t.d ? ' <button id="tUseM">Usar lo del móvil</button>' : ''}</div>` : '';
+    p.innerHTML = `<h2>Texto</h2><p class="hint" style="font-style:italic">«${esc(tlabel(el))}»</p>${deskNote}
+      <p class="hint">Arrastra el texto para moverlo (<kbd>Mayús</kbd>: solo en una dirección). <kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px). El texto sigue ocupando su hueco: lo que cambia es dónde se pinta.</p>
+      <div class="row"><label>Horizontal</label><input type="number" id="tX" step="1" value="${v.x || 0}"></div>
+      <div class="row"><label>Vertical</label><input type="number" id="tY" step="1" value="${v.y || 0}"></div>
+      <h2 style="margin-top:14px">Capa</h2>
+      <div class="grp2"><button data-tz="back" class="${v.z === 'back' ? 'on' : ''}">Bajo las flores</button><button data-tz="" class="${!v.z ? 'on' : ''}">Normal</button><button data-tz="front" class="${v.z === 'front' ? 'on' : ''}">Sobre las flores</button></div>
+      <p class="hint" style="margin:-4px 0 10px">Normal: entre las flores de detrás y las de delante.</p>
+      <div class="btns"><button id="tReset" title="Supr"${atRest(v) ? ' disabled' : ''}>Dejar en su sitio</button></div>
+      <p class="hint">Para cambiar lo que dice, usa la pestaña Textos.</p>
+      ${placedList()}`;
+    wirePlaced(p);
+    $('tX').onchange = e => tset(k, { x: Math.round(+e.target.value || 0) });
+    $('tY').onchange = e => tset(k, { y: Math.round(+e.target.value || 0) });
+    p.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => tset(k, { z: b.dataset.tz }));
+    $('tReset').onclick = () => treset(k);
+    if ($('tUseM')) $('tUseM').onclick = () => { snapshot(); delete tpos[k].d; tclean(k); changed(); };
+  }
   function toggleSel(id) {
     if (multi.has(id)) { multi.delete(id); sel = [...multi].pop() || null; }
     else { if (sel && !multi.size) multi.add(sel); multi.add(id); sel = id; }
@@ -453,14 +529,19 @@
   function sameHeight(lead) { const h = geom(lead).h; const list = selected().filter(o => o !== lead && !o.lock); if (!list.length) return; snapshot(); list.forEach(o => { const g = geom(o), l = lib(o.img); ed(o).w = r1(h * l.w / l.h); const g2 = geom(o); setPos(o, g.left + g.w / 2 - g2.w / 2, g.top + g.h / 2 - g2.h / 2); }); changed(); }
   // Placed plates by section, top layer first, as they stack: front of the text, then behind it.
   function placedList() {
-    if (!items.length) return '';
+    if (!items.length) return movedTexts();
     const row = i => `<button class="pl${multi.has(i.id) || i.id === sel ? ' on' : ''}" data-go="${i.id}">${lib(i.img).label}${i.lock ? ' <em>bloq.</em>' : ''}${i.op && i.op < 1 ? ' <em>' + Math.round(i.op * 100) + '%</em>' : ''}${DESK() && i.d ? ' <em>esc.</em>' : ''} <span>${Math.round(geom(i).h)} px</span></button>`;
     return `<h2 style="margin-top:14px">En la web (${items.length})</h2><div class="placed">` + SECS.filter(k => items.some(i => i.sec === k)).map(k => {
       const sec = items.filter(i => i.sec === k), fr = sec.filter(i => i.front).reverse(), bk = sec.filter(i => !i.front).reverse();
       return `<div class="pl-sec">${k}</div>` + (fr.length ? '<div class="pl-lay">delante del texto</div>' + fr.map(row).join('') : '') + (bk.length ? '<div class="pl-lay">detrás del texto</div>' + bk.map(row).join('') : '');
-    }).join('') + '</div><p class="hint" style="margin-top:6px">Clic: ir a la flor · Mayús+clic: añadir a la selección.</p>';
+    }).join('') + '</div><p class="hint" style="margin-top:6px">Clic: ir a la flor · Mayús+clic: añadir a la selección.</p>' + movedTexts();
   }
-  const wirePlaced = p => p.querySelectorAll('[data-go]').forEach(b => b.onclick = ev => goTo(get(b.dataset.go), ev.shiftKey));
+  function movedTexts() {
+    const ks = Object.keys(tpos).filter(textEl); if (!ks.length) return '';
+    const Z = { back: 'bajo', front: 'sobre' };
+    return `<h2 style="margin-top:14px">Textos movidos (${ks.length})</h2><div class="placed">` + ks.map(k => { const v = tview(tget(k)); return `<button class="pl${k === tsel ? ' on' : ''}" data-gt="${esc(k)}">${esc(tlabel(textEl(k)))} <span>${v.x || 0}, ${v.y || 0}${Z[v.z] ? ' · ' + Z[v.z] : ''}</span></button>`; }).join('') + '</div>';
+  }
+  const wirePlaced = p => { p.querySelectorAll('[data-go]').forEach(b => b.onclick = ev => goTo(get(b.dataset.go), ev.shiftKey)); p.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => goToText(b.dataset.gt)); };
 
   // ---------- panels ----------
   function buildLib() {
@@ -505,9 +586,10 @@
   function drawProps() {
     if (MODE !== 'flores') { if (window.SITE) window.SITE.drawProps($('props')); return; }
     const p = $('props'), it = get(sel), list = selected();
+    if (tsel && !it) return drawTextProps(p, tsel);
     if (list.length > 1) return drawMulti(p, list, it);
     if (!it) {
-      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.<br><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y pegar una flor (se pega en la sección que ves).<br><kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y aplicar el tamaño (alto), giro y volteo.<br><kbd>Mayús</kbd>+clic: seleccionar varias.<br><kbd>Ctrl</kbd>+<kbd>]</kbd> / <kbd>[</kbd>: subir / bajar capa (con <kbd>Mayús</kbd>: al frente / al fondo).<br><kbd>Ctrl</kbd>+<kbd>L</kbd>: bloquear.</p>${DESK() ? '<p><b>Vista escritorio.</b> Lo que muevas, escales o gires aquí solo cambia en pantallas anchas; el móvil se queda como está.</p>' : ''}${clip ? `<p><button id="pPaste">Pegar ${lib(clip.img).label}</button></p>` : ''}</div>${placedList()}`;
+      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.<br><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y pegar una flor (se pega en la sección que ves).<br><kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y aplicar el tamaño (alto), giro y volteo.<br><kbd>Mayús</kbd>+clic: seleccionar varias.<br><kbd>Ctrl</kbd>+<kbd>]</kbd> / <kbd>[</kbd>: subir / bajar capa (con <kbd>Mayús</kbd>: al frente / al fondo).<br><kbd>Ctrl</kbd>+<kbd>L</kbd>: bloquear.</p><p><b>Textos</b>: los títulos y párrafos también se arrastran, y se pueden poner bajo o sobre las flores.</p>${DESK() ? '<p><b>Vista escritorio.</b> Lo que muevas, escales o gires aquí solo cambia en pantallas anchas; el móvil se queda como está.</p>' : ''}${clip ? `<p><button id="pPaste">Pegar ${lib(clip.img).label}</button></p>` : ''}</div>${placedList()}`;
       if ($('pPaste')) $('pPaste').onclick = paste;
       wirePlaced(p);
       return;
@@ -581,6 +663,8 @@
     const st = doc.createElement('style'); st.textContent = EDIT_CSS; doc.head.appendChild(st);
     doc.documentElement.classList.add('ed-guides');
     sections().forEach(s => { s.el.classList.add('ed-sec', 'has-flores'); const lb = doc.createElement('div'); lb.className = 'ed-label'; lb.textContent = s.key; s.el.appendChild(lb); });
+    doc.querySelectorAll(TEXT_SEL).forEach(el => { if (textAt(el) === el) el.classList.add('ed-tmove'); });
+    doc.documentElement.classList.toggle('ed-mode-flores', MODE === 'flores');
     if (!items.length && !load.done) {
       items = clone((win.FLORES_LAYOUT && win.FLORES_LAYOUT.items) || []); saved = JSON.stringify(items); load.done = true;
       let draft = null; try { draft = localStorage.getItem(DRAFT); } catch (e) {}
@@ -593,14 +677,16 @@
     doc.addEventListener('pointerdown', e => {
       if (MODE !== 'flores') { if (window.SITE) window.SITE.onPointer(e); return; }
       const h = e.target.closest('.ed-h'), rh = e.target.closest('.ed-rot'), t = hit(e.pageX, e.pageY);
+      const te = textAt(e.target), useText = te && !e.shiftKey && !(t && t.front);   // a plate in front of the text wins; the text wins over one behind it
       if (rh) { e.preventDefault(); startRotate(e, get(sel)); }
       else if (h) { e.preventDefault(); startResize(e, get(sel), h.dataset.c); }
+      else if (useText) { e.preventDefault(); selectText(textKey(te)); startTextDrag(e, te); }
       else if (t && e.shiftKey) { e.preventDefault(); toggleSel(t.id); }
       else if (t && multi.size > 1 && multi.has(t.id)) { e.preventDefault(); sel = t.id; drawProps(); startGroupDrag(e, t); }
       else if (t) { e.preventDefault(); select(t.id); startDrag(e, t); }
       else select(null);
     });
-    doc.addEventListener('pointermove', e => { if (MODE === 'flores' && !e.buttons) { const t = hit(e.pageX, e.pageY); doc.documentElement.style.cursor = t ? (t.lock ? 'default' : 'move') : ''; } });
+    doc.addEventListener('pointermove', e => { if (MODE === 'flores' && !e.buttons) { const t = hit(e.pageX, e.pageY), te = textAt(e.target); doc.documentElement.style.cursor = t ? (t.lock && !te ? 'default' : 'move') : ''; } });
     renderAll(); changed();
   }
   const load = {};
@@ -612,6 +698,11 @@
     else if (mod && e.key.toLowerCase() === 'y' && MODE === 'flores') { e.preventDefault(); redo(); }
     else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     else if (mod && !e.shiftKey && e.key.toLowerCase() === 'v' && MODE === 'flores') { e.preventDefault(); paste(); }
+    else if (tsel && !it && MODE === 'flores') {
+      if (e.key === 'Escape') select(null);
+      else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); treset(tsel); }
+      else if (e.key.startsWith('Arrow')) { e.preventDefault(); const s = e.shiftKey ? 10 : 1; tnudge(tsel, e.key === 'ArrowLeft' ? -s : e.key === 'ArrowRight' ? s : 0, e.key === 'ArrowUp' ? -s : e.key === 'ArrowDown' ? s : 0); }
+    }
     else if (!it || MODE !== 'flores') return;
     else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); if (e.shiftKey) { copyFmt(it); drawProps(); } else copy(it); }
     else if (mod && e.shiftKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteFmt(it); }
@@ -672,13 +763,16 @@
   window.ED = {
     // load a branch: BASE is the URL of its worktree; flower state starts from its layout
     open(base, branch) {
-      BASE = base; DRAFT = 'flores-draft:' + branch; items = []; saved = '[]'; sel = null; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
+      BASE = base; DRAFT = 'flores-draft:' + branch; items = []; saved = '[]'; sel = null; tsel = null; tpos = {}; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
       LIB = []; $('libGrid').innerHTML = '';
       fetch(BASE + 'assets/flores/flores.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(l => { LIB = l; if (LIB.length) buildLib(); drawProps(); }).catch(() => {});
       frame.src = BASE + 'index.html';
     },
     reloadFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); },
-    setMode(m) { MODE = m; sel = null; multi = new Set(); if (doc) { drawSel(); doc.documentElement.classList.toggle('ed-guides', m === 'flores' && $('guides').checked); } drawProps(); },
+    setMode(m) { MODE = m; sel = null; tsel = null; multi = new Set(); if (doc) { drawSel(); doc.documentElement.classList.toggle('ed-guides', m === 'flores' && $('guides').checked); doc.documentElement.classList.toggle('ed-mode-flores', m === 'flores'); } drawProps(); },
+    // moved texts: the site module keeps them in the look (saved into css/editor.css) and hands them over when a branch opens
+    textPos: () => clone(tpos),
+    setTextPos(t) { tpos = clone(t || {}); tsel = null; },
     floresDirty: () => FLORES_OK && JSON.stringify(items) !== saved,
     floresItems: () => clone(items),
     markSaved, fit, renderAll,

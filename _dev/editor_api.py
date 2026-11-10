@@ -247,15 +247,67 @@ def _pct(v, default):
         return default
 
 
+TEXT_Z = {'back': -2, 'front': 3}   # against .flor (z -1) and .flor--front (z 2) in styles.css
+TEXT_KEY = re.compile(r'^(#[\w-]+|[\w.-]+)$')
+
+
+def _tplace(v):
+    """One text placement {x, y, z} in px; None if it is not one."""
+    if not isinstance(v, dict):
+        return None
+    try:
+        x, y = (max(-2000, min(2000, int(round(float(v.get(k) or 0))))) for k in ('x', 'y'))
+    except (TypeError, ValueError):
+        return None
+    return {'x': x, 'y': y, 'z': v.get('z') if v.get('z') in TEXT_Z else ''}
+
+
+def _tsel(k):
+    return 'main %s' % k if k.startswith('#') else 'main [data-i18n="%s"]' % k
+
+
+def _tdecl(p, reset):
+    """The declarations for one placement; reset=True (the wide-screen rule) undoes the phone one."""
+    d = []
+    if p['x'] or p['y']:
+        d.append('transform: translate(%dpx, %dpx)' % (p['x'], p['y']))
+    elif reset:
+        d.append('transform: none')
+    if p['z']:
+        d += ['position: relative', 'z-index: %d' % TEXT_Z[p['z']]]
+    elif reset:
+        d.append('z-index: auto')
+    return '; '.join(d)
+
+
 def write_look(wt, look):
-    """look: {tokens: {name: color}, frame: {slot: [x, y]}, order: [ids], hidden: [ids]}."""
+    """look: {tokens: {name: color}, frame: {slot: [x, y]}, order: [ids], hidden: [ids],
+    text: {key: {x, y, z, d?: {x, y, z}}}, palettes: [{name, tokens}]}."""
     tokens = {k: v.strip() for k, v in (look.get('tokens') or {}).items() if k in TOKENS and COLOR.match(str(v).strip())}
     frame = {k: [_pct(v[0], 50), _pct(v[1], 50)] for k, v in (look.get('frame') or {}).items() if k in PHOTOS and isinstance(v, list) and len(v) == 2}
     order = [s for s in (look.get('order') or []) if s in SECTIONS]
     if order:   # a partial order would leave the rest at order 0, before it: complete it in page order
         order += [s for s in SECTIONS if s not in order]
     hidden = [s for s in (look.get('hidden') or []) if s in SECTIONS]
-    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden}
+    text = {}   # moved texts: the data-i18n key (or #id) of a heading or paragraph
+    for k, v in (look.get('text') or {}).items():
+        p = _tplace(v) if TEXT_KEY.match(str(k)) else None
+        if not p:
+            continue
+        d = _tplace(v.get('d'))
+        if d:
+            p['d'] = d
+        if p['x'] or p['y'] or p['z'] or d:
+            text[k] = p
+    palettes = []   # the couple's own palettes, so every computer that opens the branch sees them
+    for pal in (look.get('palettes') or [])[:20]:
+        if not isinstance(pal, dict):
+            continue
+        toks = {k: str(v).strip() for k, v in (pal.get('tokens') or {}).items() if k in TOKENS and COLOR.match(str(v).strip())}
+        name = re.sub(r'[^\w áéíóúñÁÉÍÓÚÑüÜ,.()/+-]', '', str(pal.get('name') or '')).strip()[:40]
+        if toks and name:
+            palettes.append({'name': name, 'tokens': toks})
+    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes}
     sel = lambda s: '.footer-section' if s == 'footer' else '#' + s
     css = ['/* Written by the site editor (_dev/flores.html): edit it there, not by hand.',
            '   Loaded after styles.css. Delete this file to go back to styles.css alone. */',
@@ -276,6 +328,10 @@ def write_look(wt, look):
         css.extend('%s { order: %d; }' % (sel(s), i + 1) for i, s in enumerate(order))
     if hidden:
         css.append('%s { display: none !important; }' % ', '.join(sel(s) for s in hidden))
+    for k, p in text.items():
+        css.append('%s { %s; }' % (_tsel(k), _tdecl(p, False)))
+        if p.get('d'):
+            css.append('@media (min-width: 769px) {\n  %s { %s; }\n}' % (_tsel(k), _tdecl(p['d'], True)))
     os.makedirs(os.path.join(wt, 'css'), exist_ok=True)
     open(os.path.join(wt, 'css', 'editor.css'), 'w', encoding='utf-8').write('\n'.join(css) + '\n')
     # make sure the page loads it, right after styles.css

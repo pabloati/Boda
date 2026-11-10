@@ -39,9 +39,10 @@
 
   // ---------- state ----------
   let branch = null, texts = {}, textEdits = {}, look = blankLook(), savedLook = '', photos = {}, selText = null, tab = 'flores', saving = false;
-  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [] }; }
+  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [] }; }
+  let palEdit = null;   // the palette being built in the Colores tab: { idx, name, before }
   const lookDirty = () => JSON.stringify(look) !== savedLook;
-  const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones', Object.keys(photos).length && 'fotos'].filter(Boolean);
+  const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
 
   function status(msg, bad) {
     const parts = dirtyParts(), el = $('status');
@@ -50,6 +51,16 @@
   }
 
   // ---------- live preview: the same CSS the server writes into css/editor.css ----------
+  // A moved text keeps its place in the flow; only where it is painted changes (transform), and a
+  // layer puts it under or over the plates (z-index against .flor -1 and .flor--front 2).
+  const TEXT_Z = { back: -2, front: 3 };
+  const tsel = k => k.startsWith('#') ? 'main ' + k : `main [data-i18n="${k}"]`;
+  function tdecl(p, reset) {
+    const d = [];
+    if (p.x || p.y) d.push(`transform: translate(${p.x || 0}px, ${p.y || 0}px)`); else if (reset) d.push('transform: none');
+    if (TEXT_Z[p.z] != null) d.push('position: relative', 'z-index: ' + TEXT_Z[p.z]); else if (reset) d.push('z-index: auto');
+    return d.join('; ');
+  }
   function lookCSS(l) {
     const sel = s => s === 'footer' ? '.footer-section' : '#' + s, css = [];
     const t = Object.entries(l.tokens);
@@ -60,6 +71,10 @@
     if (f['foto-envio']) css.push(`.rsvp-modal-photo img { object-position: ${f['foto-envio'][0]}% ${f['foto-envio'][1]}%; }`);
     if (l.order.length) { css.push('#main-content { display: flex; flex-direction: column; } #hero { order: -1; }'); l.order.forEach((s, i) => css.push(`${sel(s)} { order: ${i + 1}; }`)); }
     if (l.hidden.length) css.push(l.hidden.map(sel).join(', ') + ' { display: none !important; }');
+    Object.entries(l.text || {}).forEach(([k, p]) => {
+      css.push(`${tsel(k)} { ${tdecl(p, false)}; }`);
+      if (p.d) css.push(`@media (min-width: 769px) { ${tsel(k)} { ${tdecl(p.d, true)}; } }`);
+    });
     return css.join('\n');
   }
   function applyLook() {
@@ -102,7 +117,8 @@
     branch = b; try { localStorage.setItem('ed-branch', b); } catch (e) {}
     texts = st.texts || {}; textEdits = {}; photos = {}; selText = null;
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
-    ED.open(st.url, b);
+    ED.open(st.url, b); ED.setTextPos(look.text);
+    palEdit = null;
     renderTab(); status();
   }
   function newBranchForm(p) {
@@ -175,21 +191,78 @@
   }
 
   // ---------- colours ----------
-  function renderColours() {
-    const box = $('tab-colores'), cs = ED.doc ? ED.win.getComputedStyle(ED.doc.documentElement) : null;
-    const val = k => (look.tokens[k] || (cs && cs.getPropertyValue('--' + k).trim()) || '#000000');
-    const active = PRESETS.findIndex(pr => JSON.stringify(pr.tokens) === JSON.stringify(look.tokens));
-    box.innerHTML = `<h2>Paletas</h2>` + PRESETS.map((pr, i) => {
-      const sw = ['paper', 'paper-deep', 'olive', 'olive-deep', 'terracotta', 'ink'].map(k => `<b style="background:${pr.tokens[k] || (cs ? cs.getPropertyValue('--' + k) : '#ccc')}"></b>`).join('');
-      return `<button class="preset${i === active ? ' on' : ''}" data-p="${i}"><i>${sw}</i>${esc(pr.name)}</button>`;
-    }).join('') + `<h2 style="margin-top:14px">Cada color</h2>` + TOKENS.map(([k, label]) =>
-      `<div class="sw-row"><input type="color" data-t="${k}" value="${/^#[0-9a-f]{6}$/i.test(val(k)) ? val(k) : '#000000'}"><span style="flex:1">${label}</span>${look.tokens[k] ? `<button data-r="${k}" title="Volver al de la web">↺</button>` : ''}</div>`).join('');
-    box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { look.tokens = Object.assign({}, PRESETS[+b.dataset.p].tokens); applyLook(); renderColours(); });
+  const normHex = v => { let h = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{3}$/i.test(h)) h = h.split('').map(c => c + c).join(''); return /^[0-9a-f]{6}$/i.test(h) ? '#' + h.toLowerCase() : null; };
+  const siteVal = k => { const cs = ED.doc ? ED.win.getComputedStyle(ED.doc.documentElement) : null; return normHex(cs && cs.getPropertyValue('--' + k)) || '#000000'; };
+  const tokVal = k => normHex(look.tokens[k]) || siteVal(k);
+  // colour picker + hex box for one token
+  const colourRow = (k, label, v, extra) => `<div class="sw-row"><input type="color" data-t="${k}" value="${v}"><input type="text" class="hex" data-h="${k}" value="${v}" maxlength="7" spellcheck="false" title="Código hex, p. ej. #a8853f"><span style="flex:1">${label}</span>${extra || ''}</div>`;
+  // set(k, hex, live): live = while dragging the picker
+  function wireColourRows(box, set) {
     box.querySelectorAll('[data-t]').forEach(inp => {
-      inp.oninput = () => { look.tokens[inp.dataset.t] = inp.value; applyLook(); };
-      inp.onchange = () => renderColours();
+      const hx = box.querySelector(`[data-h="${inp.dataset.t}"]`);
+      inp.oninput = () => { hx.value = inp.value; set(inp.dataset.t, inp.value, true); };
+      inp.onchange = () => set(inp.dataset.t, inp.value, false);
     });
+    box.querySelectorAll('[data-h]').forEach(hx => {
+      const inp = box.querySelector(`[data-t="${hx.dataset.h}"]`);
+      hx.oninput = () => { const h = normHex(hx.value); hx.classList.toggle('bad', !h); if (h) { inp.value = h; set(hx.dataset.h, h, true); } };
+      hx.onchange = () => { const h = normHex(hx.value); if (h) { hx.value = h; hx.classList.remove('bad'); set(hx.dataset.h, h, false); } else { hx.value = inp.value; hx.classList.remove('bad'); } };
+    });
+  }
+  const allPalettes = () => [...PRESETS, ...(look.palettes || []).map(p => Object.assign({ own: true }, p))];
+  function renderColours() {
+    const box = $('tab-colores');
+    const active = allPalettes().findIndex(pr => JSON.stringify(pr.tokens) === JSON.stringify(look.tokens));
+    const btn = (pr, i) => {
+      const sw = ['paper', 'paper-deep', 'olive', 'olive-deep', 'terracotta', 'ink'].map(k => `<b style="background:${normHex(pr.tokens[k]) || siteVal(k)}"></b>`).join('');
+      return `<div class="pal-row"><button class="preset${i === active ? ' on' : ''}" data-p="${i}"><i>${sw}</i>${esc(pr.name)}</button>${pr.own ? `<button data-pe="${i - PRESETS.length}" title="Editar">✎</button><button data-px="${i - PRESETS.length}" title="Borrar" class="danger">✕</button>` : ''}</div>`;
+    };
+    const all = allPalettes();
+    box.innerHTML = `<h2>Paletas</h2>` + all.slice(0, PRESETS.length).map(btn).join('') +
+      `<h2 style="margin-top:14px">Mis paletas</h2>` + (look.palettes.length ? all.slice(PRESETS.length).map((pr, i) => btn(pr, i + PRESETS.length)).join('') : '<p class="hint">Ninguna todavía.</p>') +
+      `<div class="btns"><button id="palNew"${palEdit ? ' disabled' : ''}>+ Nueva paleta…</button></div>` +
+      `<h2 style="margin-top:14px">Cada color</h2><p class="hint">Elige con el selector o escribe el código (#rrggbb).</p>` + TOKENS.map(([k, label]) =>
+      colourRow(k, label, tokVal(k), look.tokens[k] ? `<button data-r="${k}" title="Volver al de la web">↺</button>` : '')).join('');
+    box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { if (palEdit) return; look.tokens = Object.assign({}, all[+b.dataset.p].tokens); applyLook(); renderColours(); });
+    box.querySelectorAll('[data-pe]').forEach(b => b.onclick = () => startPalette(+b.dataset.pe));
+    box.querySelectorAll('[data-px]').forEach(b => b.onclick = () => { const i = +b.dataset.px; if (!confirm('¿Borrar la paleta «' + look.palettes[i].name + '»?')) return; look.palettes.splice(i, 1); applyLook(); renderColours(); });
+    $('palNew').onclick = () => startPalette(-1);
+    wireColourRows(box, (k, h, live) => { look.tokens[k] = h; applyLook(); if (!live) renderColours(); });
     box.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { delete look.tokens[b.dataset.r]; applyLook(); renderColours(); });
+  }
+  // A palette of your own: six base colours, the rest derived (then any of them can be tuned).
+  // While the form is open, the page shows the palette being built; Cancelar puts the colours back.
+  const BASE = [['paper', 'Papel (fondo)'], ['paper-deep', 'Secciones alternas'], ['olive', 'Verde'], ['olive-deep', 'Verde oscuro'], ['terracotta', 'Color principal (botón y enlaces)'], ['ink', 'Tinta (texto)']];
+  function startPalette(idx) {
+    palEdit = { idx, name: idx >= 0 ? look.palettes[idx].name : '', before: Object.assign({}, look.tokens) };
+    if (idx >= 0) look.tokens = Object.assign({}, look.palettes[idx].tokens);
+    else TOKENS.forEach(([k]) => { look.tokens[k] = tokVal(k); });
+    applyLook(); renderColours(); drawProps($('props'));
+  }
+  const derive = t => fromFlower({ paper: t.paper, alt: t['paper-deep'], green: t.olive, deep: t['olive-deep'], lead: t.terracotta, ink: t.ink });
+  function paletteForm(p) {
+    const isNew = palEdit.idx < 0;
+    p.innerHTML = `<h2>${isNew ? 'Nueva paleta' : 'Editar paleta'}</h2>
+      <div class="row"><label>Nombre</label><input type="text" id="palName" value="${esc(palEdit.name)}" placeholder="p. ej. Lavanda y oliva" style="flex:1;min-width:0;padding:4px 6px;border:1px solid var(--line);border-radius:5px"></div>
+      <h2 style="margin-top:12px">Colores base</h2>
+      <p class="hint">Elige estos seis y pulsa «Derivar el resto»: el editor calcula líneas, texto secundario, verde suave y el botón al pasar. Después puedes afinar cualquiera abajo. La web cambia al momento.</p>
+      <div id="palBase">${BASE.map(([k, l]) => colourRow(k, l, tokVal(k))).join('')}</div>
+      <div class="btns"><button id="palDerive">Derivar el resto</button></div>
+      <h2 style="margin-top:12px">Todos los colores</h2>
+      <div id="palAll">${TOKENS.filter(([k]) => !BASE.some(b => b[0] === k)).map(([k, l]) => colourRow(k, l, tokVal(k))).join('')}</div>
+      <div class="btns" style="margin-top:8px"><button id="palSave" class="primary">${isNew ? 'Guardar paleta' : 'Guardar cambios'}</button><button id="palCancel">Cancelar</button></div>
+      <p class="hint">La paleta se guarda con la rama al pulsar «Guardar» arriba; la ven todos los que abran esta rama.</p>`;
+    const set = (k, h) => { look.tokens[k] = h; applyLook(); };
+    wireColourRows(p, set);
+    $('palName').oninput = () => { palEdit.name = $('palName').value; };
+    $('palDerive').onclick = () => { Object.assign(look.tokens, derive(look.tokens)); applyLook(); paletteForm(p); };
+    $('palCancel').onclick = () => { look.tokens = palEdit.before; palEdit = null; applyLook(); renderColours(); drawProps($('props')); };
+    $('palSave').onclick = () => {
+      const name = palEdit.name.trim() || ('Paleta ' + (look.palettes.length + 1));
+      const pal = { name, tokens: Object.assign({}, look.tokens) };
+      if (palEdit.idx >= 0) look.palettes[palEdit.idx] = pal; else look.palettes.push(pal);
+      palEdit = null; applyLook(); renderColours(); drawProps($('props'));
+    };
   }
 
   // ---------- photos ----------
@@ -270,7 +343,8 @@
   function drawProps(p) {
     if ($('branch').value === '__new') return newBranchForm(p);
     if (tab === 'textos') return textProps(p);
-    const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
+    if (tab === 'colores' && palEdit) return paletteForm(p);
+    const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
     p.innerHTML = `<h2>${{ colores: 'Colores', fotos: 'Fotos', secciones: 'Secciones' }[tab] || ''}</h2><p class="hint">${help}</p>` + changesList();
   }
   function renderTab() {
@@ -332,7 +406,9 @@
   }
 
   // ---------- boot ----------
-  window.SITE = { save, status, onFrame, onPointer, drawProps, dirty: () => dirtyParts().length > 0 };
+  // the flower editor moved a text (or undid a move): mirror it in the look and repaint
+  function textChanged() { look.text = ED.textPos(); applyLook(); }
+  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0 };
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
   $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
   $('branch').onchange = e => { if (e.target.value === '__new') drawProps($('props')); else openBranch(e.target.value); };

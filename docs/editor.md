@@ -8,9 +8,9 @@ Run `python3 _dev/serve.py [port]` from any worktree and open `http://localhost:
 
 | Tab | What | Saved to |
 | --- | --- | --- |
-| Flores | botanical plates on the sections (see `docs/flores/README.md`) | `js/flores-layout.js` |
+| Flores | botanical plates on the sections (see `docs/flores/README.md`); headings and paragraphs can be dragged too and put under or over the plates (`transform` + `z-index`, own desktop variant like the plates) | plates in `js/flores-layout.js`, moved texts in `css/editor.css` (`text`) |
 | Textos | every `data-i18n` text, Spanish and English; click a text on the page or pick it in the list | Spanish inside `index.html`, English in the `EN` map of `js/i18n.js` |
-| Colores | a palette (current, spring, the five flower palettes) or any single colour token | `css/editor.css` |
+| Colores | a palette (current, spring, the five flower palettes, or the couple's own: "Nueva paleta" takes six base colours and derives the rest), or any single colour token, by picker or hex code | `css/editor.css` (own palettes in its `palettes` state) |
 | Fotos | the two hero photos and the RSVP "Enviando…" photo (resized in the browser, JPEG), and their framing | `assets/*.jpg`, framing in `css/editor.css` |
 | Secciones | order and visibility (the hero always first) | `css/editor.css` |
 
