@@ -29,12 +29,28 @@ NAMES = {   # source file → (web name, label shown in the editor)
     'wisteria-witte': ('glicinia', 'Glicinia'),
     'convallaria-kohler': ('muguete', 'Muguete'),
     'malus-kohler': ('manzano', 'Flor de manzano'),
+    'gypsophila-batava': ('paniculata', 'Paniculata'),
+    'tulipa-mayrhofer': ('tulipan', 'Tulipán'),
+    'primula-acaulis-batava': ('primula-amarilla', 'Prímula amarilla'),
+    'primula-curtis': ('primula-rosa', 'Prímula rosa'),
+    'lilium-bulbiferum-curtis': ('lirio-naranja', 'Lirio naranja'),
+    'lilium-speciosum-burnett': ('lirio-rosa', 'Lirio rosa'),
+    'acacia-dealbata-hamilton': ('mimosa', 'Mimosa'),
+    'acacia-decurrens-minchen': ('mimosa-rama', 'Mimosa (rama)'),
+    'amygdalus-kohler': ('almendro', 'Flor de almendro'),
+    'chrysanthemum-roscoe': ('crisantemo', 'Crisantemo'),
 }
 
 os.makedirs(OUT, exist_ok=True)
+old = {f['id']: f for f in json.load(open(os.path.join(OUT, 'flores.json')))} if os.path.exists(os.path.join(OUT, 'flores.json')) else {}
 index = []
 for src, (name, label) in NAMES.items():
-    im = Image.open(os.path.join(SRC, src + '.png')).convert('RGBA')
+    path = os.path.join(SRC, src + '.png')
+    if not os.path.exists(path):   # cut-out not on this machine: keep the exported file and its entry as they are
+        if name in old:
+            index.append(old[name]); print(name, 'kept (no source here)')
+        continue
+    im = Image.open(path).convert('RGBA')
     if im.size[1] > MAX_H:
         im = im.resize((round(im.size[0] * MAX_H / im.size[1]), MAX_H), Image.LANCZOS)
     im.quantize(256, method=Image.FASTOCTREE).save(os.path.join(OUT, name + '.png'), optimize=True)

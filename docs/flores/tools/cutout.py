@@ -1,7 +1,7 @@
 import sys, os, json
 import numpy as np
 from PIL import Image, ImageFilter, ImageDraw
-def cutout(path, crop=None, mask=(), height=820, lo=22, hi=62, soft=0):
+def cutout(path, crop=None, mask=(), height=820, lo=22, hi=62, soft=0, keep_largest=False):
     im = Image.open(path).convert('RGB'); W0, H0 = im.size
     # paper colour = median of the outer ring of the (cropped) plate
     box = (int(crop[0]*W0), int(crop[1]*H0), int(crop[2]*W0), int(crop[3]*H0)) if crop else (0, 0, W0, H0)
@@ -19,6 +19,11 @@ def cutout(path, crop=None, mask=(), height=820, lo=22, hi=62, soft=0):
     h, w = al.shape; yy, xx = np.mgrid[0:h, 0:w]
     dd = np.minimum.reduce([xx, w-1-xx, yy, h-1-yy]).astype(np.float32)
     if soft: al *= np.clip(dd / soft, 0, 1)
+    if keep_largest:   # drop loose bits (dissections, stray petals): keep the biggest blob, petals joined to it by a 3 px gap
+        import cv2
+        m = cv2.dilate((al > 0.12).astype(np.uint8), np.ones((7, 7), np.uint8))
+        n, lab, st, _ = cv2.connectedComponentsWithStats(m, 8)
+        if n > 1: al = np.where(lab == 1 + np.argmax(st[1:, cv2.CC_STAT_AREA]), al, 0)
     out = np.dstack([a.astype(np.uint8), (al*255).astype(np.uint8)])
     im2 = Image.fromarray(out, 'RGBA'); bb = im2.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox()
     return im2.crop(bb) if bb else im2

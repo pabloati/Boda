@@ -130,5 +130,125 @@
    "left": false,
    "right": false
   }
+ },
+ {
+  "id": "paniculata",
+  "label": "Paniculata",
+  "w": 515,
+  "h": 640,
+  "cut": {
+   "top": true,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "tulipan",
+  "label": "Tulipán",
+  "w": 480,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "primula-amarilla",
+  "label": "Prímula amarilla",
+  "w": 851,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "primula-rosa",
+  "label": "Prímula rosa",
+  "w": 406,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "lirio-naranja",
+  "label": "Lirio naranja",
+  "w": 406,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "lirio-rosa",
+  "label": "Lirio rosa",
+  "w": 411,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "mimosa",
+  "label": "Mimosa",
+  "w": 494,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "mimosa-rama",
+  "label": "Mimosa (rama)",
+  "w": 456,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": true
+  }
+ },
+ {
+  "id": "almendro",
+  "label": "Flor de almendro",
+  "w": 270,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "crisantemo",
+  "label": "Crisantemo",
+  "w": 442,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
  }
 ]
