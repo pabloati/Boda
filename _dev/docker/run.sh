@@ -19,15 +19,19 @@ case "${1:-start}" in
     [ -s "$CFG/deploy_key" ] || { echo "Falta $CFG/deploy_key"; exit 1; }
     docker build -q -t $NAME "$HERE"
     docker rm -f $NAME 2>/dev/null || true
-    # no host mounts except the two secrets (read-only); the repo lives in a named volume
+    # no host mounts at all; the repo lives in a named volume
+    # the secrets go in as environment (the files on the host belong to this user, the box runs as
+    # another), read from a file so they never appear in the shell history or `ps`
+    { echo "BODA_EDITOR_PASSWORD=$(cat "$CFG/password")"; echo "BODA_DEPLOY_KEY_B64=$(base64 -w0 "$CFG/deploy_key")"; } > "$CFG/env"
+    chmod 600 "$CFG/env"
     docker run -d --name $NAME --restart unless-stopped \
       --read-only --tmpfs /tmp --tmpfs /run:mode=1777 \
       --cap-drop ALL \
       --memory 512m --pids-limit 256 \
+      --env-file "$CFG/env" \
       -v boda-editor-home:/home/boda \
-      -v "$CFG/password:/run/secrets/editor_password:ro" \
-      -v "$CFG/deploy_key:/run/secrets/deploy_key:ro" \
       $NAME >/dev/null
+    rm -f "$CFG/env"
     echo "Arrancando… (el enlace tarda unos 20 s)"; sleep 22
     docker exec $NAME cat /home/boda/link.txt 2>/dev/null || docker logs --tail 8 $NAME ;;
   *) echo "uso: run.sh [start|link|stop|logs]"; exit 1 ;;
