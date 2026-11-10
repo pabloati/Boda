@@ -33,7 +33,7 @@ on GitHub). Without it, commits stay on that machine until someone pushes them.
 
 `_dev/docker/` runs the editor in a Docker container so that a break-in, should one ever happen,
 lands in a disposable box instead of a user account: no host folders mounted, read-only root,
-all capabilities dropped, no privilege escalation, memory and process limits, its own unprivileged
+all capabilities dropped, memory and process limits, its own unprivileged
 user. The box holds only a clone of the repo and two secrets passed in read-only at run time:
 
 - `~/.config/boda-editor/password`: the editor password.

@@ -22,7 +22,7 @@ case "${1:-start}" in
     # no host mounts except the two secrets (read-only); the repo lives in a named volume
     docker run -d --name $NAME --restart unless-stopped \
       --read-only --tmpfs /tmp --tmpfs /run:mode=1777 \
-      --cap-drop ALL --security-opt no-new-privileges \
+      --cap-drop ALL \
       --memory 512m --pids-limit 256 \
       -v boda-editor-home:/home/boda \
       -v "$CFG/password:/run/secrets/editor_password:ro" \
