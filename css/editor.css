@@ -1,19 +1,17 @@
 /* Written by the site editor (_dev/flores.html): edit it there, not by hand.
    Loaded after styles.css. Delete this file to go back to styles.css alone. */
-/* editor-state {"tokens": {"paper": "#fbf7f2", "paper-deep": "#ede8f4", "paper-line": "#d6d1dc", "olive": "#7dc572", "olive-deep": "#476147", "olive-soft": "#bcc8b5", "terracotta": "#d13100", "terracotta-deep": "#a72700", "ink": "#2f2a2a", "ink-soft": "#767270", "ink-faint": "#9f9b98", "cream-text": "#fcf9f6"}, "frame": {"hero-mobile": [66.0, 50.0]}, "order": [], "hidden": []} */
+/* editor-state {"tokens": {"paper": "#fbf7f2", "olive": "#7dc572", "olive-deep": "#476147", "terracotta": "#d13100", "terracotta-deep": "#a72700", "ink": "#2f2a2a", "ink-soft": "#767270", "cream-text": "#fcf9f6", "olive-soft": "#a6d68a", "paper-deep": "#ffe4a8"}, "frame": {"hero-mobile": [66.0, 50.0]}, "order": [], "hidden": []} */
 :root {
   --paper: #fbf7f2;
-  --paper-deep: #ede8f4;
-  --paper-line: #d6d1dc;
   --olive: #7dc572;
   --olive-deep: #476147;
-  --olive-soft: #bcc8b5;
   --terracotta: #d13100;
   --terracotta-deep: #a72700;
   --ink: #2f2a2a;
   --ink-soft: #767270;
-  --ink-faint: #9f9b98;
   --cream-text: #fcf9f6;
+  --olive-soft: #a6d68a;
+  --paper-deep: #ffe4a8;
 }
 @media (max-width: 768px), (orientation: portrait) {
   .hero-photo img { object-position: 66.0% 50.0%; }
