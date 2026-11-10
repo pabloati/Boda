@@ -29,8 +29,25 @@ Saves are commits on the branch chosen in the editor, on the machine running the
 pushes the branch to GitHub, which needs that machine to have push access (an SSH key registered
 on GitHub). Without it, commits stay on that machine until someone pushes them.
 
-## Running it on an always-on machine
+## Running it on an always-on machine (container)
 
-Clone the repo, check out the `editor` branch, add a GitHub deploy key with write access (or the
-user's key) so pushes work, then keep `bash _dev/compartir.sh` running (tmux, or a systemd user
-service). Check first that the machine's owner (lab, institution) allows a public tunnel.
+`_dev/docker/` runs the editor in a Docker container so that a break-in, should one ever happen,
+lands in a disposable box instead of a user account: no host folders mounted, read-only root,
+all capabilities dropped, no privilege escalation, memory and process limits, its own unprivileged
+user. The box holds only a clone of the repo and two secrets passed in read-only at run time:
+
+- `~/.config/boda-editor/password`: the editor password.
+- `~/.config/boda-editor/deploy_key`: the private half of a **GitHub deploy key** for this one
+  repo with write access (Settings → Deploy keys → Add, tick "Allow write access"). It can push
+  this repo and nothing else, so even a compromised box cannot touch other repos or the account.
+
+```bash
+bash _dev/docker/run.sh          # build + start (restarts on reboot: --restart unless-stopped)
+bash _dev/docker/run.sh link     # the current public link
+bash _dev/docker/run.sh logs     # follow the log
+bash _dev/docker/run.sh stop
+```
+
+The container clones `editor` from GitHub on first start and pulls on every restart, so updating
+the editor code is: push to `editor`, then `run.sh` again. The link changes on every restart.
+Check first that the machine's owner (lab, institution) allows a public tunnel.
