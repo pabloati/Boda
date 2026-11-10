@@ -42,6 +42,11 @@
   .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 78px; color: var(--soft); flex: none; }
   .row input[type=number], .row select { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
   .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .placed { display: grid; gap: 3px; max-height: 260px; overflow-y: auto; }
+  .pl-sec { font: 600 10px monospace; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); margin-top: 6px; }
+  .pl { display: flex; justify-content: space-between; gap: 8px; text-align: left; }
+  .pl span { color: var(--soft); font-size: 11px; } .pl.on { border-color: #c83c78; color: #c83c78; }
+  button:disabled { opacity: .45; cursor: default; }
   .note { background: #fff4d6; border: 1px solid #ecd48a; border-radius: 6px; padding: 7px 9px; margin: 8px 0; }
   .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
   #banner { display: none; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 9; gap: 10px; align-items: center; }
@@ -75,6 +80,7 @@
   const frame = $('f');
   let LIB = [], items = [], sel = null, win = null, doc = null, dev = 'm', saved = '[]';
   let undoSt = [], redoSt = [];
+  let clip = null, fmt = null;   // Ctrl+C copies a plate; Ctrl+Mayús+C copies its size and turn
 
   const clone = o => JSON.parse(JSON.stringify(o));
   const lib = id => LIB.find(l => l.id === id);
@@ -264,7 +270,7 @@
     setPos(it, sw / 2 - w / 2, Math.min(Math.max(0, (vTop + vBot) / 2 - p.y - h / 2), s.el.offsetHeight - h));
     changed();
   }
-  const dup = it => { snapshot(); const c = clone(it); c.id = 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1); const g = geom(it); items.push(c); sel = c.id; setPos(c, g.left + 14, g.top + 14); changed(); };
+  const dup = it => { snapshot(); const c = clone(it); c.id = nextId(); const g = geom(it); items.push(c); sel = c.id; setPos(c, g.left + 14, g.top + 14); changed(); };
   const del = it => { snapshot(); items = items.filter(o => o !== it); sel = null; changed(); };
   function flush(it, side) {
     snapshot(); const g = geom(it);
@@ -273,6 +279,50 @@
     setPos(it, left, top); changed();
   }
   function nudge(it, dx, dy) { snapshot(); const g = geom(it); setPos(it, g.left + dx, g.top + dy); changed(); }
+  const nextId = () => 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1);
+  const toast = msg => { $('status').textContent = msg; $('status').classList.remove('dirty'); setTimeout(changed, 1600); };
+  // Copy / paste a whole plate. It lands in the section in view, at the same place (or 14 px off if
+  // that is where the original is), with the same size, turn and flips.
+  function copy(it) { clip = clone(it); toast('Copiada: ' + lib(it.img).label); }
+  function paste() {
+    if (!clip) return;
+    const s = mostVisibleSection(); if (!s) return;
+    const src = get(clip.id), g = src ? geom(src) : null;
+    const c = clone(clip); c.id = nextId(); c.sec = s.key;
+    snapshot(); items.push(c); sel = c.id;
+    const gc = geom(c), same = src && src.sec === s.key;
+    const left = g ? g.left + (same ? 14 : 0) : (gc.sw - gc.w) / 2, top = g ? g.top + (same ? 14 : 0) : 0;
+    setPos(c, Math.min(Math.max(-gc.w / 2, left), gc.sw - gc.w / 2), Math.min(Math.max(-gc.h / 2, top), gc.sh - gc.h / 2));
+    changed(); select(c.id);
+  }
+  // Size format: the plate's height (plates have different shapes, so the same height is what reads
+  // as "the same size"), turn and flips. Pasting keeps the target's centre.
+  function copyFmt(it) { const g = geom(it); fmt = { h: g.h, rot: it.rot || 0, flip: !!it.flip, flipY: !!it.flipY }; toast('Tamaño copiado: ' + Math.round(g.h) + ' px de alto'); }
+  function pasteFmt(it) {
+    if (!fmt) return;
+    snapshot(); const g = geom(it), cx = g.left + g.w / 2, cy = g.top + g.h / 2, l = lib(it.img);
+    it.w = r1(fmt.h * l.w / l.h); it.rot = fmt.rot; it.flip = fmt.flip; it.flipY = fmt.flipY;
+    const g2 = geom(it); setPos(it, cx - g2.w / 2, cy - g2.h / 2); changed();
+  }
+  // Swap the engraving, keeping height, centre, turn and flips.
+  function swap(it, libId) {
+    const g = geom(it), cx = g.left + g.w / 2, cy = g.top + g.h / 2, l = lib(libId);
+    snapshot(); it.img = libId; it.w = r1(g.h * l.w / l.h);
+    const g2 = geom(it); setPos(it, cx - g2.w / 2, cy - g2.h / 2); changed();
+  }
+  function setHeight(it, h) { const l = lib(it.img); snapshot(); const g = geom(it); it.w = Math.max(24, r1(h * l.w / l.h)); setPos(it, g.left, g.top); changed(); }
+  // Mirrored twin on the other side of the section, for symmetric corners.
+  function mirror(it) {
+    snapshot(); const g = geom(it), c = clone(it); c.id = nextId(); c.flip = !it.flip; c.rot = -(it.rot || 0);
+    items.push(c); sel = c.id; setPos(c, g.sw - g.left - g.w, g.top); changed();
+  }
+  function goTo(it) { const el = secEl(it.sec); if (!el) return; const g = geom(it), p = docPos(el); win.scrollTo({ top: p.y + g.top + g.h / 2 - win.innerHeight / 2, behavior: 'smooth' }); select(it.id); }
+  function placedList() {
+    if (!items.length) return '';
+    return `<h2 style="margin-top:14px">En la web (${items.length})</h2><div class="placed">` + SECS.filter(k => items.some(i => i.sec === k)).map(k =>
+      `<div class="pl-sec">${k}</div>` + items.filter(i => i.sec === k).map(i => `<button class="pl${i.id === sel ? ' on' : ''}" data-go="${i.id}">${lib(i.img).label} <span>${Math.round(geom(i).h)} px</span></button>`).join('')).join('') + '</div>';
+  }
+  const wirePlaced = p => p.querySelectorAll('[data-go]').forEach(b => b.onclick = () => goTo(get(b.dataset.go)));
 
   // ---------- panels ----------
   function buildLib() {
@@ -294,13 +344,17 @@
   function drawProps() {
     const p = $('props'), it = get(sel);
     if (!it) {
-      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.</p><p>${items.length} flor${items.length === 1 ? '' : 'es'} en la web.</p></div>`;
+      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.<br><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y pegar una flor (se pega en la sección que ves).<br><kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y aplicar el tamaño (alto), giro y volteo.</p>${clip ? `<p><button id="pPaste">Pegar ${lib(clip.img).label}</button></p>` : ''}</div>${placedList()}`;
+      if ($('pPaste')) $('pPaste').onclick = paste;
+      wirePlaced(p);
       return;
     }
     const l = lib(it.img), w = warnings(it);
     p.innerHTML = `<h2>${l.label}</h2>
       <div class="row"><label>Sección</label><select id="pSec">${SECS.filter(k => secEl(k)).map(k => `<option${k === it.sec ? ' selected' : ''}>${k}</option>`).join('')}</select></div>
+      <div class="row"><label>Grabado</label><select id="pImg">${LIB.map(o => `<option value="${o.id}"${o.id === it.img ? ' selected' : ''}>${o.label}</option>`).join('')}</select></div>
       <div class="row"><label>Ancho (px)</label><input type="number" id="pW" min="24" max="1400" step="1" value="${Math.round(it.w)}"></div>
+      <div class="row"><label>Alto (px)</label><input type="number" id="pH" min="24" max="2400" step="1" value="${Math.round(geom(it).h)}"></div>
       <div class="row"><label>Giro (°)</label><input type="number" id="pRot" min="-180" max="180" step="1" value="${it.rot || 0}"></div>
       <div class="row"><label>Capa</label><select id="pFront"><option value="0"${it.front ? '' : ' selected'}>Detrás del texto</option><option value="1"${it.front ? ' selected' : ''}>Delante del texto</option></select></div>
       <div class="row"><label>Ocultar en</label><select id="pHide"><option value=""${it.hide ? '' : ' selected'}>Ningún sitio</option><option value="m"${it.hide === 'm' ? ' selected' : ''}>Móvil</option><option value="d"${it.hide === 'd' ? ' selected' : ''}>Escritorio</option></select></div>
@@ -308,8 +362,17 @@
       <div class="btns"><button data-f="l">Izquierda</button><button data-f="r">Derecha</button><button data-f="t">Arriba</button><button data-f="b">Abajo</button><button data-f="c">Centrar</button></div>
       <h2 style="margin-top:14px">Girar</h2>
       <div class="btns"><button id="pFlip" title="Espejo izquierda-derecha">Voltear ↔</button><button id="pFlipY" title="Espejo arriba-abajo">Voltear ↕</button><button id="pR90">+90°</button><button id="pR0">Sin giro</button></div>
-      <div class="btns"><button id="pDup">Duplicar</button><button id="pDel" class="danger">Eliminar</button></div>
-      ${w.length ? `<div class="note">El lado ${w.join(' y ')} de esta lámina salió cortado y se ve recto, sin tocar el borde. Pégalo a un borde si no quieres que se note el corte.</div>` : ''}`;
+      <h2 style="margin-top:14px">Copiar</h2>
+      <div class="btns"><button id="pCopy" title="Ctrl+C">Copiar</button><button id="pPasteHere" title="Ctrl+V"${clip ? '' : ' disabled'}>Pegar</button><button id="pFmt" title="Ctrl+Mayús+C">Copiar tamaño</button><button id="pFmtApply" title="Ctrl+Mayús+V"${fmt ? '' : ' disabled'}>Aplicar tamaño${fmt ? ' (' + Math.round(fmt.h) + ' px)' : ''}</button></div>
+      <div class="btns"><button id="pDup">Duplicar</button><button id="pMirror" title="Copia volteada en el lado opuesto">Duplicar en espejo</button><button id="pDel" class="danger">Eliminar</button></div>
+      ${w.length ? `<div class="note">El lado ${w.join(' y ')} de esta lámina salió cortado y se ve recto, sin tocar el borde. Pégalo a un borde si no quieres que se note el corte.</div>` : ''}
+      ${placedList()}`;
+    wirePlaced(p);
+    $('pImg').onchange = e => swap(it, e.target.value);
+    $('pH').onchange = e => setHeight(it, +e.target.value || geom(it).h);
+    $('pCopy').onclick = () => copy(it); $('pPasteHere').onclick = paste;
+    $('pFmt').onclick = () => { copyFmt(it); drawProps(); }; $('pFmtApply').onclick = () => pasteFmt(it);
+    $('pMirror').onclick = () => mirror(it);
     $('pSec').onchange = e => { snapshot(); const g = geom(it); it.sec = e.target.value; setPos(it, Math.max(0, g.left), 0); changed(); };
     $('pW').onchange = e => { snapshot(); const g = geom(it); it.w = Math.max(24, +e.target.value || it.w); setPos(it, g.left, g.top); changed(); };
     $('pRot').onchange = e => { snapshot(); it.rot = +e.target.value || 0; changed(); };
@@ -367,7 +430,10 @@
     if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
     else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    else if (mod && !e.shiftKey && e.key.toLowerCase() === 'v') { e.preventDefault(); paste(); }
     else if (!it) return;
+    else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); if (e.shiftKey) { copyFmt(it); drawProps(); } else copy(it); }
+    else if (mod && e.shiftKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteFmt(it); }
     else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); dup(it); }
     else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); del(it); }
     else if (e.key === 'Escape') select(null);
