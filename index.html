@@ -28,10 +28,10 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261105b">
+  <link rel="stylesheet" href="css/styles.css?v=20261110v">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
-  <link rel="preload" as="image" href="assets/sobre.jpg?v=20261105b">
+  <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
   <link rel="preload" as="image" href="assets/sello.png">
 </head>
 <body>
@@ -214,7 +214,7 @@
         <div class="locations-grid">
           <article class="location">
             <!-- Drawing of the church: drop the file in assets/ with this name and it appears -->
-            <img class="location-art" src="assets/dibujo-iglesia.png" alt="" onerror="this.remove()">
+            <img class="location-art" src="assets/dibujo-iglesia.png?v=20261105b" alt="" onerror="this.remove()">
             <p class="hand-label" data-i18n="loc.ceremony">Ceremonia · 12:30</p>
             <h3 class="location-name">Parroquia de San José</h3>
             <p class="location-address">C. Alcalá, 43<br>Madrid</p>
@@ -222,7 +222,7 @@
           </article>
 
           <article class="location">
-            <img class="location-art location-art-cover" src="assets/dibujo-convite.png" alt="" onerror="this.remove()">
+            <img class="location-art location-art-cover" src="assets/dibujo-convite.png?v=20261105b" alt="" onerror="this.remove()">
             <p class="hand-label" data-i18n="loc.reception">Convite · 14:30</p>
             <h3 class="location-name">Complejo La Cigüeña</h3>
             <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
@@ -234,36 +234,52 @@
 
     <!-- TIMELINE -->
     <section class="section timeline-section" id="timeline">
-      <div class="container narrow">
+      <div class="container">
         <h2 class="h-script text-center" data-i18n="tl.title">Hoja de ruta</h2>
 
-        <ol class="timeline">
-          <li class="timeline-item">
-            <span class="timeline-time">12:30</span>
-            <div class="timeline-body">
-              <h3 class="timeline-title" data-i18n="tl.1.title">Ceremonia</h3>
-              <p class="timeline-desc" data-i18n="tl.1.desc">El inicio de nuestro matrimonio.</p>
+        <!-- The day as a little route: stops alternate sides, a dashed path with
+             an arrow runs from each drawing to the next. Drawings are
+             assets/ruta-<stop>.png in the style of the venue sketches; a stop
+             whose file is missing shows an empty frame (data-slot names it). -->
+        <ol class="ruta">
+          <li class="ruta-stop">
+            <div class="ruta-art" data-slot="ruta-ceremonia.png">
+              <img src="assets/ruta-ceremonia.png" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            </div>
+            <div class="ruta-text">
+              <span class="ruta-time">12:30</span>
+              <h3 class="ruta-title" data-i18n="tl.1.title">Ceremonia</h3>
+              <p class="ruta-desc" data-i18n="tl.1.desc">El inicio de nuestro matrimonio.</p>
             </div>
           </li>
-          <li class="timeline-item">
-            <span class="timeline-time">14:30</span>
-            <div class="timeline-body">
-              <h3 class="timeline-title" data-i18n="tl.2.title">Convite</h3>
-              <p class="timeline-desc" data-i18n="tl.2.desc">Un buen cóctel os espera.</p>
+          <li class="ruta-stop">
+            <div class="ruta-art" data-slot="ruta-convite.png">
+              <img src="assets/ruta-convite.png" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            </div>
+            <div class="ruta-text">
+              <span class="ruta-time">14:30</span>
+              <h3 class="ruta-title" data-i18n="tl.2.title">Convite</h3>
+              <p class="ruta-desc" data-i18n="tl.2.desc">Un buen cóctel os espera.</p>
             </div>
           </li>
-          <li class="timeline-item">
-            <span class="timeline-time">19:00</span>
-            <div class="timeline-body">
-              <h3 class="timeline-title" data-i18n="tl.3.title">Fiesta</h3>
-              <p class="timeline-desc" data-i18n="tl.3.desc">Empieza lo bueno.</p>
+          <li class="ruta-stop">
+            <div class="ruta-art" data-slot="ruta-fiesta.png">
+              <img src="assets/ruta-fiesta.png" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            </div>
+            <div class="ruta-text">
+              <span class="ruta-time">19:00</span>
+              <h3 class="ruta-title" data-i18n="tl.3.title">Fiesta</h3>
+              <p class="ruta-desc" data-i18n="tl.3.desc">Empieza lo bueno.</p>
             </div>
           </li>
-          <li class="timeline-item">
-            <span class="timeline-time">23:00</span>
-            <div class="timeline-body">
-              <h3 class="timeline-title" data-i18n="tl.4.title">Buses</h3>
-              <p class="timeline-desc" data-i18n="tl.4.desc">¡Que no pare la fiesta!</p>
+          <li class="ruta-stop">
+            <div class="ruta-art" data-slot="ruta-buses.png">
+              <img src="assets/ruta-buses.png" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            </div>
+            <div class="ruta-text">
+              <span class="ruta-time">23:00</span>
+              <h3 class="ruta-title" data-i18n="tl.4.title">Buses</h3>
+              <p class="ruta-desc" data-i18n="tl.4.desc">¡Que no pare la fiesta!</p>
             </div>
           </li>
         </ol>
@@ -463,10 +479,10 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261105b"></script>
-  <script src="js/rsvp-config.js?v=20261105b"></script>
-  <script src="js/script.js?v=20261105b"></script>
-  <script src="js/playlist-config.js?v=20261105b"></script>
-  <script src="js/playlist.js?v=20261105b"></script>
+  <script src="js/i18n.js?v=20261110v"></script>
+  <script src="js/rsvp-config.js?v=20261110v"></script>
+  <script src="js/script.js?v=20261110v"></script>
+  <script src="js/playlist-config.js?v=20261110v"></script>
+  <script src="js/playlist.js?v=20261110v"></script>
 </body>
 </html>
