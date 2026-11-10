@@ -11,6 +11,13 @@
     return key === 'footer' ? doc.querySelector('.footer-section') : doc.getElementById(key);
   }
 
+  // Wide screens can have their own placement (it.d: w, x, y, rot), set in the editor's
+  // "Escritorio" view. Without it, a plate sits the same as on the phone.
+  const wide = win => !!(win && win.matchMedia && win.matchMedia('(min-width: 769px)').matches);
+  function placement(it, win) {
+    return it.d && wide(win) ? Object.assign({}, it, it.d) : it;
+  }
+
   // Applies one item's placement to its <img>. Offsets are px from the nearest edge, so a plate
   // flush with a section edge stays flush when the section changes size.
   function place(img, it) {
@@ -27,6 +34,7 @@
     img.classList.toggle('flor--front', !!it.front);
     img.classList.toggle('flor--no-m', it.hide === 'm');
     img.classList.toggle('flor--no-d', it.hide === 'd');
+    img.style.opacity = it.op && it.op < 1 ? it.op : '';
   }
 
   function render(doc, items) {
@@ -42,13 +50,21 @@
       img.setAttribute('aria-hidden', 'true');
       img.decoding = 'async';
       img.dataset.id = it.id;
-      place(img, it);
+      place(img, placement(it, doc.defaultView));
       sec.appendChild(img);
     });
   }
 
-  window.Flores = { host: host, place: place, render: render, DIR: DIR };
+  window.Flores = { host: host, place: place, placement: placement, render: render, DIR: DIR };
 
   const layout = window.FLORES_LAYOUT;
-  if (layout && Array.isArray(layout.items) && layout.items.length) render(document, layout.items);
+  if (layout && Array.isArray(layout.items) && layout.items.length) {
+    render(document, layout.items);
+    // turning a tablet or resizing across 769 px switches between the phone and wide placements
+    if (layout.items.some(it => it.d) && window.matchMedia) {
+      const mq = window.matchMedia('(min-width: 769px)');
+      const again = () => render(document, layout.items);
+      if (mq.addEventListener) mq.addEventListener('change', again); else if (mq.addListener) mq.addListener(again);
+    }
+  }
 })();

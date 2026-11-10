@@ -75,6 +75,15 @@ def sources():
     }
 
 
+def clean_place(p):
+    """One placement: width, offsets from the nearest edges, turn."""
+    ax, ay = p['x'], p['y']
+    if ax['a'] not in ('l', 'r') or ay['a'] not in ('t', 'b'):
+        raise ValueError
+    return {'w': round(float(p['w']), 1), 'x': {'a': ax['a'], 'v': round(float(ax['v']), 1)},
+            'y': {'a': ay['a'], 'v': round(float(ay['v']), 1)}, 'rot': round(float(p.get('rot') or 0), 1)}
+
+
 def clean_flores(items):
     """Keeps only the fields the page reads, with the types it expects."""
     if not isinstance(items, list) or len(items) > 300:
@@ -92,6 +101,13 @@ def clean_flores(items):
             'flip': bool(it.get('flip')), 'flipY': bool(it.get('flipY')), 'rot': round(float(it.get('rot') or 0), 1),
             'front': bool(it.get('front')), 'hide': it.get('hide') if it.get('hide') in ('m', 'd') else '',
         })
+        op = round(float(it.get('op', 1) or 1), 2)
+        if op < 1:
+            out[-1]['op'] = max(0.1, op)            # opacity
+        if it.get('lock'):
+            out[-1]['lock'] = True                   # editor only: cannot be dragged by mistake
+        if it.get('d'):
+            out[-1]['d'] = clean_place(it['d'])      # own placement on wide screens
     return out
 
 
