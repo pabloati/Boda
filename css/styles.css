@@ -29,7 +29,6 @@
 
   /* Hero veil: milky paper over the photo, wavy bottom edge (same curve in
      --veil-wave and the .veil-line SVG, both stretched to the edge band) */
-  --veil: rgba(243, 238, 227, 0.9);
   --veil-h: 64%;
   --veil-edge: clamp(26px, 7vw, 84px);
   --veil-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V22C320 30 260 6 200 6C140 6 80 34 0 26Z'/%3E%3C/svg%3E");
@@ -734,8 +733,26 @@ button {
 
 #hero-veil { will-change: transform; }
 
-@media (min-width: 769px) {
-  :root { --veil-h: 70%; }
+/* Portrait tablets use the phone photo too (see the <source> in index.html) */
+@media (min-width: 769px) and (orientation: portrait) {
+  .hero-photo img { object-position: 53% 50%; }
+  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 53% 50%; }
+}
+
+/* Wide screens: the faces are in the middle of hero-desktop.jpg, so the
+   letters move to the left over the blurred hall, and the shade fades sideways */
+@media (min-width: 769px) and (orientation: landscape) {
+  :root { --veil-h: 100%; }
+  .hero-veil .veil-sheet {
+    justify-content: flex-start;
+    text-align: left;
+    padding-left: 6vw;
+    background: linear-gradient(90deg, rgba(28, 26, 20, 0.5) 0%, rgba(28, 26, 20, 0.32) 34%, rgba(28, 26, 20, 0) 62%);
+  }
+  .card-back .hero-veil .veil-sheet { padding-left: calc(6vw * var(--s)); }
+  .hero-veil .veil-sheet .hero-content { max-width: 46vw; }
+  .card-back .hero-veil .veil-sheet .hero-content { max-width: calc(46vw * var(--s)); }
+  .hero-veil .veil-sheet .hero-title { padding: 0; }
 }
 
 .veil-sheet {
@@ -746,17 +763,15 @@ button {
   justify-content: center;
   text-align: center;
   padding: 56px 20px var(--edge);
-  background: var(--veil);
-  color: var(--ink);
-  -webkit-mask:
-    linear-gradient(#000, #000) top / 100% calc(100% - var(--edge) + 1px) no-repeat,
-    var(--veil-wave) bottom / 100% var(--edge) no-repeat;
-  mask:
-    linear-gradient(#000, #000) top / 100% calc(100% - var(--edge) + 1px) no-repeat,
-    var(--veil-wave) bottom / 100% var(--edge) no-repeat;
+  /* no sheet any more: a soft shade that fades to nothing, only so the cream
+     letters keep their contrast over light parts of the photo */
+  background: linear-gradient(180deg, rgba(28, 26, 20, 0.42) 0%, rgba(28, 26, 20, 0.30) 55%, rgba(28, 26, 20, 0) 100%);
+  color: var(--cream-text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 16px rgba(0, 0, 0, 0.35);
 }
 
 .veil-line {
+  display: none;   /* the veil's gold edge went with the veil */
   position: absolute;
   left: 0;
   bottom: 0;
@@ -783,7 +798,7 @@ button {
   font-size: 0.95rem;
   letter-spacing: 6px;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--cream-text);
   margin-bottom: 6px;
 }
 
@@ -792,7 +807,7 @@ button {
   font-size: clamp(3.6rem, 14vw, 7.5rem);
   font-size: clamp(3.2rem, min(14vw, 11.5vh), 7.5rem);   /* short landscape screens: fit the veil */
   line-height: 1;
-  color: var(--ink);
+  color: var(--cream-text);
   margin-bottom: 18px;
   padding: 0 0.2em;
 }
@@ -805,14 +820,14 @@ button {
   font-size: 1.45rem;
   font-weight: 600;
   letter-spacing: 2px;
-  color: var(--ink);
+  color: #fff;
 }
 
 .hero-location {
   font-size: 1rem;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: rgba(246, 242, 232, 0.9);
   margin: 6px 0 44px;
 }
 
@@ -821,14 +836,14 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: var(--ink-soft);
+  color: rgba(246, 242, 232, 0.85);
   font-size: 0.8rem;
   letter-spacing: 3px;
   text-transform: uppercase;
 }
 
 .scroll-indicator:hover {
-  color: var(--terracotta);
+  color: #fff;
 }
 
 .chevron {

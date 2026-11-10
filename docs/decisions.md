@@ -2,8 +2,8 @@
 
 Short log of choices made for the wedding site. One line each, newest first.
 
+- 2026-11-10 — The hero veil is gone (Mª Ángeles did not like it): the photo shows in full with cream lettering over a soft fading shade; on wide landscape screens the lettering sits on the left so it clears the faces; portrait tablets use the phone photo. Merged from `ajustes-dibujos-velo`.
 - 2026-11-09 — Botanical plates (19th-century engravings, public domain) will decorate the section backgrounds in colour. They are laid out by hand with the local editor `_dev/flores.html`, saved in `js/flores-layout.js` and drawn by `js/flores.js`. The page tones stay the site's own neutrals (nothing tinted with a flower colour); a flower only adds one accent colour. Layout starts empty until the couple picks flowers and places them.
-
 - 2026-11-03 — Hoja de ruta drawings complete: Fiesta from the couple's party photo (background people removed), Buses from a friend's watercolour illustration, used with his permission (Arsenal crest painted out), both traced to the fine-line style.
 - 2026-11-03 — Hoja de ruta becomes an illustrated route (branch `hoja-ruta`): stops alternate sides, a dashed arrow path joins the drawings. Ceremonia and Convite use vignette crops of the venue sketches (church doorway, topiary swan); Fiesta and Buses wait for drawings in the same pencil style (`assets/ruta-fiesta.png`, `assets/ruta-buses.png`). Not wanted: skip-animation button, dress code, children section. Floral edge frames to come once the palette is chosen.
 - 2026-11-03 — On trial (branch `hero-veil`): veiled hero after weddingbook.framer.website. The photo is pinned while a milky paper veil with the names and a gold wavy edge (the seal's gold) slides up as you scroll. The envelope card back shows the same veiled view, so the opening still lands on the page unchanged.
