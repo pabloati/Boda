@@ -13,6 +13,8 @@ Routes
                        name is written "~": origin~redesign).
   /_dev/sources.json   the list of worktrees and branches the phone page shows.
   POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
+  /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save
+                       (writes into that branch's worktree and commits; see _dev/editor_api.py).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
 """
@@ -25,6 +27,9 @@ import re
 import subprocess
 import sys
 import urllib.parse
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import editor_api  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -111,6 +116,27 @@ def clean_flores(items):
     return out
 
 
+def layout_js(items):
+    lines = ',\n'.join('  ' + json.dumps(i, ensure_ascii=False, separators=(', ', ': ')) for i in items)
+    return ('// Where the botanical plates sit on the page. Written by _dev/flores.html (the flower editor):\n'
+            '// edit it there, not by hand. Each item is anchored to the nearest edge of its section.\n'
+            'window.FLORES_LAYOUT = {"items": [\n%s\n]};\n' % lines)
+
+
+def write_flores(wt, items):
+    with open(os.path.join(wt, 'js', 'flores-layout.js'), 'w') as f:
+        f.write(layout_js(clean_flores(items)))
+    return 'js/flores-layout.js'
+
+
+def wt_url(path):
+    """URL prefix this server uses for a worktree folder."""
+    if os.path.realpath(path) == os.path.realpath(HERE):
+        return '/'
+    root = editor_api.repo_root(HERE)
+    return '/wt/%s/' % ('repo' if os.path.realpath(path) == os.path.realpath(root) else os.path.basename(path))
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=HERE, **k)
@@ -145,13 +171,61 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_HEAD(self):
         self.route(body=False)
 
-    def do_POST(self):
-        """Only one write is allowed: the flower layout, from this page's own origin."""
-        if urllib.parse.urlsplit(self.path).path != '/_dev/save-flores':
-            return self.send_error(404)
+    def allowed(self):
+        """Writes only from this machine, as JSON."""
         host = self.headers.get('Host', '').rsplit(':', 1)[0]
-        if host not in ('localhost', '127.0.0.1') or self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+        return host in ('localhost', '127.0.0.1') and self.headers.get('Content-Type', '').split(';')[0] == 'application/json'
+
+    def send_json(self, obj, status=200):
+        data = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def api_post(self, p):
+        n = int(self.headers.get('Content-Length') or 0)
+        if n > 12_000_000:
+            return self.send_error(413)
+        try:
+            req = json.loads(self.rfile.read(n) or b'{}')
+            if p == '/_dev/api/open':
+                wt = editor_api.open_branch(HERE, req['branch'])
+                return self.send_json({'branch': req['branch'], 'url': wt_url(wt)})
+            if p == '/_dev/api/branch':
+                wt = editor_api.new_branch(HERE, req['name'], req['base'])
+                return self.send_json({'branch': req['name'], 'url': wt_url(wt)})
+            if p == '/_dev/api/save':
+                return self.send_json(editor_api.save(HERE, req['branch'], req, write_flores))
+        except editor_api.EditorError as e:
+            return self.send_json({'ok': False, 'error': str(e)}, 400)
+        except (ValueError, KeyError, TypeError) as e:
+            return self.send_json({'ok': False, 'error': 'Petición no válida: %s' % e}, 400)
+        return self.send_error(404)
+
+    def api_get(self, p, q):
+        try:
+            if p == '/_dev/api/branches':
+                return self.send_json(editor_api.branches(HERE))
+            if p == '/_dev/api/state':
+                wt = editor_api.open_branch(HERE, q['branch'][0])
+                return self.send_json({'url': wt_url(wt), 'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+        except editor_api.EditorError as e:
+            return self.send_json({'ok': False, 'error': str(e)}, 400)
+        except (KeyError, IndexError):
+            return self.send_json({'ok': False, 'error': 'Falta la rama'}, 400)
+        return self.send_error(404)
+
+    def do_POST(self):
+        """Writes: the flower layout (old route) and the site editor's API, from this machine only."""
+        p = urllib.parse.urlsplit(self.path).path
+        if not self.allowed():
             return self.send_error(403)
+        if p.startswith('/_dev/api/'):
+            return self.api_post(p)
+        if p != '/_dev/save-flores':
+            return self.send_error(404)
         n = int(self.headers.get('Content-Length') or 0)
         if n > 200000:
             return self.send_error(413)
@@ -159,15 +233,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             items = clean_flores(json.loads(self.rfile.read(n))['items'])
         except (ValueError, KeyError, TypeError):
             return self.send_error(400, 'Bad layout')
-        lines = ',\n'.join('  ' + json.dumps(i, ensure_ascii=False, separators=(', ', ': ')) for i in items)
         with open(os.path.join(HERE, 'js', 'flores-layout.js'), 'w') as f:
-            f.write('// Where the botanical plates sit on the page. Written by _dev/flores.html (the flower editor):\n'
-                    '// edit it there, not by hand. Each item is anchored to the nearest edge of its section.\n'
-                    'window.FLORES_LAYOUT = {"items": [\n%s\n]};\n' % lines)
+            f.write(layout_js(items))
         self.send_bytes(json.dumps({'ok': True, 'items': len(items)}).encode(), 'application/json', True)
 
     def route(self, body):
-        p = urllib.parse.urlsplit(self.path).path
+        u = urllib.parse.urlsplit(self.path); p = u.path
+        if p.startswith('/_dev/api/'):
+            return self.api_get(p, urllib.parse.parse_qs(u.query))
         if p == '/_dev/sources.json':
             return self.send_bytes(json.dumps(sources()).encode(), 'application/json', body)
         if p.startswith('/b/'):
