@@ -37,7 +37,7 @@
   .preset.on { border-color: var(--acc); }
   .font-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; width: 100%; margin-bottom: 4px; text-align: left; padding: 4px 9px; }
   .font-row span { font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .font-row em { font: normal 10px system-ui, sans-serif; color: var(--soft); flex: none; }
-  .font-row.on { border-color: var(--acc); background: #fff4f8; }
+  .font-row.on { border-color: var(--acc); background: #fff4f8; color: var(--accd); }
   .ph-slot { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 12px; background: #fff; }
   .ph-slot img { width: 100%; max-height: 160px; object-fit: contain; background: #eee; border-radius: 4px; display: block; margin-bottom: 6px; }
 .fake-btn { display: inline-block; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
@@ -278,7 +278,11 @@
   }
   function tnudge(k, dx, dy) { snapshot(); const t = ted(k); t.x = (t.x || 0) + dx; t.y = (t.y || 0) + dy; tclean(k); changed(); }
   // patch: a style key set to null goes back to the site's own
-  function tset(k, patch) { snapshot(); const t = ted(k); Object.entries(patch).forEach(([a, v]) => { if (TSTYLE.includes(a) && (v == null || v === '')) delete t[a]; else t[a] = v; }); tclean(k); changed(); }
+  // (a patch that changes nothing, like a second "change" from a box the panel just replaced, is no undo step)
+  function tset(k, patch) {
+    const cur = tview(tget(k)), norm = v => (v == null || v === '' ? null : v);
+    if (Object.entries(patch).every(([a, v]) => TSTYLE.includes(a) ? norm(cur[a]) === norm(v) : (cur[a] || (a === 'z' ? '' : 0)) === v)) return;
+    snapshot(); const t = ted(k); Object.entries(patch).forEach(([a, v]) => { if (TSTYLE.includes(a) && (v == null || v === '')) delete t[a]; else t[a] = v; }); tclean(k); changed(); }
   // "Dejar en su sitio" undoes the move and layer, "Quitar estilo" the style. On the phone view both
   // placements go back; on the desktop view, only the desktop one.
   function tback(k, fn) { snapshot(); const t = DESK() ? ted(k) : tpos[k]; if (t) { fn(t); if (!DESK() && t.d) fn(t.d); } tclean(k); changed(); }

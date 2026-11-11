@@ -93,8 +93,9 @@
     const t = Object.entries(l.tokens);
     if (t.length) css.push(':root {' + t.map(([k, v]) => `--${k}: ${v};`).join(' ') + '}');
     const f = l.frame;
-    if (f['hero-desktop']) css.push(`@media (min-width: 769px) and (orientation: landscape) { .hero-photo img { object-position: ${f['hero-desktop'][0]}% ${f['hero-desktop'][1]}%; } }`);
-    if (f['hero-mobile']) css.push(`@media (max-width: 768px), (orientation: portrait) { .hero-photo img { object-position: ${f['hero-mobile'][0]}% ${f['hero-mobile'][1]}%; } }`);
+    const hp = ([x, y]) => `.hero-photo img { object-position: ${x}% ${y}%; } .card-back { background-position: ${x}% ${y}%; }`;
+    if (f['hero-desktop']) css.push(`@media (min-width: 769px) and (orientation: landscape) { ${hp(f['hero-desktop'])} }`);
+    if (f['hero-mobile']) css.push(`@media (max-width: 768px), (orientation: portrait) { ${hp(f['hero-mobile'])} }`);
     if (f['foto-envio']) css.push(`.rsvp-modal-photo img { object-position: ${f['foto-envio'][0]}% ${f['foto-envio'][1]}%; }`);
     if (l.order.length) { css.push('#main-content { display: flex; flex-direction: column; } #hero { order: -1; }'); l.order.forEach((s, i) => css.push(`${sel(s)} { order: ${i + 1}; }`)); }
     if (l.hidden.length) css.push(l.hidden.map(sel).join(', ') + ' { display: none !important; }');
