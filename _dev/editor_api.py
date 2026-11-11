@@ -571,9 +571,10 @@ def branch_lock(branch):
 
 
 def _stamp(wt):
-    """A ?v= value none of the html files uses yet (minutes, plus -2, -3… within the same minute), so a
-    save or a go-back right after another one still gives every changed link a new URL."""
-    base = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    """A ?v= value no earlier save used: the minute plus the commit the new one goes on top of (each
+    save and each go-back has a different one), so a go-back made in the same minute as the save it
+    undoes still gives every link a new URL and visitors do not keep the undone files cached."""
+    base = datetime.datetime.now().strftime('%Y%m%d%H%M') + '-' + head(wt)
     used = set()
     for name in REPO_FILES:
         path = os.path.join(wt, name)

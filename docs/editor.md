@@ -64,8 +64,9 @@ then pushes the branch if "Subir" is ticked. A branch nobody has checked out get
 `.claude/worktrees/ed-<branch>`. "＋ Nueva rama…" creates a branch from the current one. Editing
 `main` publishes the site on push: use a branch and «Publicar» (or merge by hand).
 
-Saving bumps the `?v=` cache-busters of the css/js links and of any changed photo (`YYYYMMDDHHMM`,
-with `-2`, `-3`… when a save or a go-back lands in the same minute, so the URL always changes).
+Saving bumps the `?v=` cache-busters of the css/js links and of any changed photo (`YYYYMMDDHHMM-<sha>`,
+the minute plus the commit the save goes on top of, so the URL changes even for a go-back made in
+the same minute as the save it undoes).
 
 Server side: `_dev/editor_api.py` (validation: texts keep only a few inline tags and safe links;
 colours must be hex or rgb(a); branch names `[A-Za-z0-9._-]`; photos must be JPEG under 4 MB).
