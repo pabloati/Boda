@@ -14,7 +14,8 @@ Routes
   /_dev/sources.json   the list of worktrees and branches the phone page shows.
   POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
   /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save
-                       (writes into that branch's worktree and commits; see _dev/editor_api.py).
+                       (writes into that branch's worktree and commits; see _dev/editor_api.py),
+                       publish (GET: dry run, POST: merge the branch into main and push main).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
 
@@ -22,9 +23,11 @@ Shared mode (to edit from another computer through a tunnel, see _dev/compartir.
   BODA_EDITOR_PASSWORD=... python3 _dev/serve.py [port]
   (or BODA_EDITOR_PASSWORD_FILE=path). Then every page, the editor and the API need a login at
   /_dev/login; a session lasts 30 days; 8 wrong passwords from one address lock it for 10 minutes.
+  A page opened without a session (e.g. a branch preview from the editor's QR) goes back there after the login.
 """
 import hashlib
 import hmac
+import html
 import http.server
 import json
 import secrets
@@ -149,7 +152,15 @@ form{background:#fffdf8;padding:28px 26px;border-radius:12px;box-shadow:0 10px 3
 h1{font-size:20px;margin:0}p{margin:0;color:#6f6a5c;font-size:14px}input{font:inherit;padding:10px;border:1px solid #d9d0ba;border-radius:8px}
 button{font:inherit;padding:10px;border:0;border-radius:8px;background:#6c6f48;color:#fff;font-weight:600;cursor:pointer}.err{color:#a22}
 </style></head><body><form method="post" action="/_dev/login"><h1>Editor de la boda</h1><p>Escribe la contraseña para entrar.</p>
-%s<input type="password" name="password" autocomplete="current-password" autofocus required><button>Entrar</button></form></body></html>'''
+%s<input type="hidden" name="next" value="%s"><input type="password" name="password" autocomplete="current-password" autofocus required><button>Entrar</button></form></body></html>'''
+
+
+def safe_next(path):
+    """Where to go after logging in: a path on this site (e.g. a branch preview opened from the QR), else the editor."""
+    path = str(path or '')
+    if re.fullmatch(r'/(?![/\\])[!-\[\]-~]{0,500}', path) and not path.startswith('/_dev/login'):   # printable ASCII, no backslash
+        return path
+    return '/_dev/flores.html'
 
 
 def check_password(given):
@@ -244,27 +255,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def login(self):
         """GET shows the form; POST checks the password and starts a session."""
         if self.command == 'GET':
-            return self.send_html(LOGIN_PAGE % '')
+            nxt = (urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get('next') or [''])[0]
+            return self.send_html(LOGIN_PAGE % ('', html.escape(safe_next(nxt), quote=True)))
         ip, now = self.client(), time.time()
         with LOCK:
             recent = [t for t in FAILS.get(ip, []) if now - t < 600]
             FAILS[ip] = recent
-        if len(recent) >= 8:
-            return self.send_html(LOGIN_PAGE % '<p class="err">Demasiados intentos. Espera 10 minutos.</p>', 429)
         n = min(int(self.headers.get('Content-Length') or 0), 2000)
         form = urllib.parse.parse_qs(self.rfile.read(n).decode('utf-8', 'replace'))
+        nxt = safe_next((form.get('next') or [''])[0])
+        if len(recent) >= 8:
+            return self.send_html(LOGIN_PAGE % ('<p class="err">Demasiados intentos. Espera 10 minutos.</p>', html.escape(nxt, quote=True)), 429)
         if not check_password((form.get('password') or [''])[0]):
             with LOCK:
                 FAILS.setdefault(ip, []).append(now)
             time.sleep(1)
-            return self.send_html(LOGIN_PAGE % '<p class="err">Contraseña incorrecta.</p>', 401)
+            return self.send_html(LOGIN_PAGE % ('<p class="err">Contraseña incorrecta.</p>', html.escape(nxt, quote=True)), 401)
         token = secrets.token_urlsafe(32)
         with LOCK:
             SESSIONS[token] = now + SESSION_DAYS * 86400
         secure = '; Secure' if self.headers.get('X-Forwarded-Proto', '') == 'https' or self.headers.get('CF-Visitor', '').find('https') >= 0 else ''
         self.send_response(303)
         self.send_header('Set-Cookie', 'boda_ed=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Strict%s' % (token, SESSION_DAYS * 86400, secure))
-        self.send_header('Location', '/_dev/flores.html')
+        self.send_header('Location', nxt)
         self.end_headers()
 
     def send_html(self, text, status=200):
@@ -283,7 +296,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return True
         if not self.session_ok():
             if self.command == 'GET' and not p.startswith('/_dev/api/'):
-                self.send_response(303); self.send_header('Location', '/_dev/login'); self.end_headers()
+                self.send_response(303); self.send_header('Location', '/_dev/login?next=' + urllib.parse.quote(self.path, safe='/~')); self.end_headers()
             else:
                 self.send_error(401)
             return True
@@ -311,6 +324,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json({'branch': req['name'], 'url': wt_url(wt)})
             if p == '/_dev/api/save':
                 return self.send_json(editor_api.save(HERE, req['branch'], req, write_flores))
+            if p == '/_dev/api/publish':
+                return self.send_json(editor_api.publish(HERE, req['branch'], req))
         except editor_api.EditorError as e:
             return self.send_json({'ok': False, 'error': str(e)}, 400)
         except (ValueError, KeyError, TypeError) as e:
@@ -324,6 +339,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if p == '/_dev/api/state':
                 wt = editor_api.open_branch(HERE, q['branch'][0])
                 return self.send_json({'url': wt_url(wt), 'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+            if p == '/_dev/api/publish':   # dry run; the merge itself is a POST
+                plan = editor_api.publish_plan(HERE, q['branch'][0])
+                plan.pop('_ref', None)
+                return self.send_json(plan)
         except editor_api.EditorError as e:
             return self.send_json({'ok': False, 'error': str(e)}, 400)
         except (KeyError, IndexError):

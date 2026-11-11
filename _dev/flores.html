@@ -85,6 +85,17 @@
   .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
   #banner { display: none; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 9; gap: 10px; align-items: center; }
   #banner.show { display: flex; } #banner button { padding: 3px 9px; }
+  /* "Ver en mi móvil": link + QR popover under the bar; "Publicar": confirmation in the right panel */
+  #sharePop { position: fixed; z-index: 20; width: 300px; max-width: calc(100vw - 16px); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px; }
+  #sharePop h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
+  #sharePop .qr svg { display: block; width: 220px; height: 220px; margin: 0 auto 8px; }
+  #sharePop .hint { margin: 0 0 8px; } #sharePop .btns { margin-bottom: 8px; }
+  .share-url { font: 11px/1.4 monospace; word-break: break-all; background: #fff; border: 1px solid var(--line); border-radius: 5px; padding: 5px 7px; margin-bottom: 8px; }
+  .share-url a { color: var(--accd); }
+  .note.warn { background: #fde8ee; border-color: #eaa9bd; }
+  .pub-list { display: grid; gap: 4px; max-height: 45vh; overflow-y: auto; margin-bottom: 10px; }
+  .pub-c { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 5px 7px; font-size: .92em; }
+  .pub-c code { font: 11px monospace; color: var(--accd); } .pub-c span { color: var(--soft); } .pub-c div { margin-top: 2px; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -102,6 +113,8 @@
   <label class="bar-f" title="Después de guardar, sube la rama a GitHub"><input type="checkbox" id="push" checked> Subir</label>
   <span id="status">Sin cambios</span>
   <button id="save" class="primary" title="Ctrl+S">Guardar</button>
+  <button id="share" title="Enlace y código QR de esta rama, para abrirla en el móvil">Ver en mi móvil</button>
+  <button id="publish" title="Une esta rama a main: cambia la web que ven los invitados">Publicar</button>
 </header>
 <div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib">
@@ -584,6 +597,7 @@
     $('mLock').onclick = () => setLock(list, !anyLock); $('mDel').onclick = () => del(lead);
   }
   function drawProps() {
+    if (window.SITE && window.SITE.overlay && window.SITE.overlay($('props'))) return;   // e.g. the Publicar confirmation, in any tab
     if (MODE !== 'flores') { if (window.SITE) window.SITE.drawProps($('props')); return; }
     const p = $('props'), it = get(sel), list = selected();
     if (tsel && !it) return drawTextProps(p, tsel);
@@ -775,11 +789,13 @@
     setTextPos(t) { tpos = clone(t || {}); tsel = null; },
     floresDirty: () => FLORES_OK && JSON.stringify(items) !== saved,
     floresItems: () => clone(items),
-    markSaved, fit, renderAll,
+    markSaved, fit, renderAll, drawProps,
+    openProps() { if (!widths.propsOpen) { widths.propsOpen = true; applyPanels(); } },
     get doc() { return doc; }, get win() { return win; }, get dev() { return dev; }, get base() { return BASE; },
   };
 })();
 </script>
+<script src="/_dev/qr.js"></script>
 <script src="/_dev/editor-site.js"></script>
 </body>
 </html>

@@ -114,7 +114,7 @@
     status('Abriendo ' + b + '…');
     const r = await fetch('/_dev/api/state?branch=' + encodeURIComponent(b), { cache: 'no-store' }), st = await r.json();
     if (!r.ok) { status(st.error || 'No se pudo abrir la rama', true); $('branch').value = branch || ''; return; }
-    branch = b; try { localStorage.setItem('ed-branch', b); } catch (e) {}
+    branch = b; pub = null; closeShare(); try { localStorage.setItem('ed-branch', b); } catch (e) {}
     texts = st.texts || {}; textEdits = {}; photos = {}; selText = null;
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
     ED.open(st.url, b); ED.setTextPos(look.text);
@@ -341,6 +341,7 @@
     return parts.length ? `<h2 style="margin-top:14px">Sin guardar</h2><p class="hint">${parts.join(', ')}. «Guardar» lo sube todo a la rama <b>${esc(branch)}</b> en un solo cambio.</p>` : '';
   }
   function drawProps(p) {
+    if (publishPanel(p)) return;
     if ($('branch').value === '__new') return newBranchForm(p);
     if (tab === 'textos') return textProps(p);
     if (tab === 'colores' && palEdit) return paletteForm(p);
@@ -388,6 +389,124 @@
     saving = false;
   }
 
+  // ---------- "Ver en mi móvil": link and QR of this branch's last save ----------
+  // /b/<branch>/ is served by serve.py straight from git ("/" in a branch name is written "~").
+  // Through the tunnel location.origin is the public https address, so the phone can open it.
+  const previewURL = b => location.origin + '/b/' + b.split('/').map(encodeURIComponent).join('~') + '/index.html';
+  function closeShare() { const el = $('sharePop'); if (el) el.remove(); document.removeEventListener('pointerdown', shareOutside, true); }
+  function shareOutside(e) { if (!e.target.closest('#sharePop, #share')) closeShare(); }
+  async function copyText(s) {
+    try { await navigator.clipboard.writeText(s); return true; } catch (e) {}
+    const ta = document.createElement('textarea'); ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove(); return ok;
+  }
+  function openShare() {
+    if ($('sharePop')) { closeShare(); return; }
+    if (!branch) return;
+    const url = previewURL(branch), local = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+    let qr = '';
+    try { qr = window.QR ? window.QR.svg(url, 220, '#26261f') : ''; } catch (e) { qr = ''; }
+    const pop = document.createElement('div'); pop.id = 'sharePop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Ver en mi móvil');
+    pop.innerHTML = `<h2>Ver en mi móvil</h2>
+      <div class="qr">${qr || '<p class="note">No se pudo crear el código QR.</p>'}</div>
+      <p class="hint">Escanea el código con la cámara del móvil o copia el enlace.</p>
+      <div class="share-url"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
+      <div class="btns"><button id="shareCopy" class="primary">Copiar enlace</button><button id="shareClose">Cerrar</button></div>
+      <p class="hint">Muestra lo último guardado en esta rama (<b>${esc(branch)}</b>).${dirtyParts().length ? ' Lo que aún no has guardado no sale.' : ''} Si te pide contraseña, es la misma del editor.</p>
+      ${local ? '<p class="note">Has abierto el editor en este ordenador (localhost): el móvil no llega a este enlace. Ábrelo con la dirección compartida del editor para que funcione.</p>' : ''}`;
+    document.body.appendChild(pop);
+    const r = $('share').getBoundingClientRect(), w = pop.offsetWidth;
+    pop.style.top = (r.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + 'px';
+    $('shareClose').onclick = closeShare;
+    $('shareCopy').onclick = async () => { const ok = await copyText(url); $('shareCopy').textContent = ok ? 'Copiado' : 'No se pudo copiar'; };
+    setTimeout(() => document.addEventListener('pointerdown', shareOutside, true), 0);
+  }
+
+  // ---------- "Publicar": merge this branch into main and push main (the guests' site) ----------
+  // The confirmation lives in the right panel and stays there (in any tab) until Cancelar.
+  let pub = null;   // { step: 'check' | 'plan' | 'busy' | 'done' | 'error' | 'refused', plan, error, result }
+  const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+  const commitRow = c => `<div class="pub-c"><code>${esc(c.sha)}</code> <span>${esc(c.who)} · ${esc(when(c.when))}</span><div>${esc(c.subject)}</div></div>`;
+  function pubRefusal() {
+    if (!branch) return 'Todavía no hay ninguna rama abierta.';
+    if (branch === 'main') return 'Estás en main, que ya es la web publicada. Abre la rama con los cambios que quieres publicar.';
+    const parts = dirtyParts();
+    if (parts.length) return `Tienes cambios sin guardar (${parts.join(', ')}). Guárdalos o descártalos antes de publicar: solo se publica lo guardado.`;
+    return '';
+  }
+  function closePublish() { pub = null; if (ED.drawProps) ED.drawProps(); else drawProps($('props')); }
+  async function openPublish() {
+    closeShare();
+    if (pub && (pub.step === 'busy' || pub.step === 'check')) return;
+    if (ED.openProps) ED.openProps();
+    const why = pubRefusal();
+    pub = why ? { step: 'refused', error: why } : { step: 'check' };
+    showPublish();
+    if (why) { status(why, true); return; }
+    const b = branch;
+    try {
+      const r = await fetch('/_dev/api/publish?branch=' + encodeURIComponent(b), { cache: 'no-store' }), j = await r.json();
+      if (!pub || b !== branch) return;
+      if (!r.ok || j.ok === false) throw new Error(j.error || r.status);
+      pub = { step: 'plan', plan: j };
+    } catch (e) { if (pub) pub = { step: 'error', error: 'No se pudo comprobar qué se publicaría: ' + e.message }; }
+    showPublish();
+  }
+  function showPublish() { if (ED.drawProps) ED.drawProps(); else publishPanel($('props')); }
+  // drawn instead of the usual properties while a publish is open (flores.html asks through SITE.overlay)
+  function publishPanel(p) {
+    if (!pub || !p) return false;
+    const close = '<button id="pubNo">Cerrar</button>';
+    let h = '<h2>Publicar</h2>';
+    if (pub.step === 'refused') h += `<p class="note">${esc(pub.error)}</p><div class="btns">${close}</div>`;
+    else if (pub.step === 'check') h += `<p class="hint">Comprobando qué se publicaría…</p>`;
+    else if (pub.step === 'error') h += `<p class="note warn">${esc(pub.error)}</p><div class="btns">${close}</div>`;
+    else if (pub.step === 'done') {
+      const r = pub.result;
+      h += r.commit
+        ? `<p class="note own">Publicado (${esc(r.commit)}). GitHub tarda uno o dos minutos en servir la web nueva.</p><div class="pub-list">${(r.merged || []).map(commitRow).join('')}</div>`
+        : '<p class="note own">No había nada nuevo que publicar: la web ya tenía todo lo de esta rama.</p>';
+      h += `<div class="btns">${close}</div>`;
+    } else {
+      const pl = pub.plan, busy = pub.step === 'busy', n = pl.commits.length;
+      h += `<p class="hint">Esto une la rama <b>${esc(pl.branch)}</b> a main, que es la web que ven los invitados.</p>`;
+      if (pl.upToDate) h += '<p class="note own">No hay nada que publicar: main ya tiene todo lo de esta rama.</p>' + `<div class="btns">${close}</div>`;
+      else {
+        h += `<p class="note warn"><b>Publicar es inmediato.</b> En cuanto pulses «Publicar ahora», ${n === 1 ? 'este guardado pasa' : 'estos ' + n + ' guardados pasan'} a la web que ven los invitados.</p>`;
+        h += `<h2 style="margin-top:12px">${n === 1 ? 'Lo que se publica' : 'Lo que se publica (' + n + ')'}</h2><div class="pub-list">${pl.commits.map(commitRow).join('')}</div>`;
+        if (!pl.fetched) h += '<p class="note">No se pudo conectar con GitHub: la lista puede no estar al día y no se podrá publicar hasta que vuelva la conexión.</p>';
+        if (pl.pushBranch) h += `<p class="hint">Antes se subirá la rama ${esc(pl.branch)} a GitHub, para que coincida con lo publicado.</p>`;
+        if (pl.problem) h += `<p class="note warn">${esc(pl.problem)}</p>`;
+        h += `<div class="btns"><button id="pubGo" class="primary"${busy || pl.problem || !pl.fetched ? ' disabled' : ''}>${busy ? 'Publicando…' : 'Publicar ahora'}</button><button id="pubNo"${busy ? ' disabled' : ''}>Cancelar</button></div>`;
+        if (pub.error) h += `<p class="note warn">${esc(pub.error)}</p>`;
+      }
+    }
+    p.innerHTML = h;
+    const no = $('pubNo'); if (no) no.onclick = closePublish;
+    const go = $('pubGo'); if (go) go.onclick = doPublish;
+    return true;
+  }
+  async function doPublish() {
+    if (!pub || pub.step !== 'plan') return;
+    const why = pubRefusal();
+    if (why) { pub = { step: 'refused', error: why }; showPublish(); status(why, true); return; }
+    const who = $('who').value.trim();
+    if (!who) { pub.error = 'Escribe tu nombre (arriba) para firmar la publicación.'; showPublish(); status('Escribe tu nombre (arriba) para firmar la publicación', true); $('who').focus(); return; }
+    pub.step = 'busy'; pub.error = ''; showPublish(); status('Publicando…');
+    try {
+      const r = await fetch('/_dev/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch, who }) });
+      let j = {}; try { j = await r.json(); } catch (e) {}
+      if (!r.ok || !j.ok) throw new Error(j.error || 'error ' + r.status);
+      pub = { step: 'done', result: j };
+      showPublish(); status(j.commit ? `Publicado (${j.commit})` : 'Nada nuevo que publicar');
+    } catch (e) {
+      if (pub) { pub.step = 'plan'; pub.error = e.message; }
+      showPublish(); status('No se pudo publicar', true);
+    }
+  }
+
   // ---------- page events ----------
   function onFrame(win, doc) {
     const st = doc.createElement('style');
@@ -408,7 +527,10 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0 };
+  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL };
+  if ($('share')) $('share').onclick = openShare;
+  if ($('publish')) $('publish').onclick = openPublish;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sharePop')) closeShare(); });
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
   $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
   $('branch').onchange = e => { if (e.target.value === '__new') drawProps($('props')); else openBranch(e.target.value); };
