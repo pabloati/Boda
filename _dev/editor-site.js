@@ -240,7 +240,7 @@
     d.querySelectorAll('.ed-tsel').forEach(e => e.classList.remove('ed-tsel'));
     const els = [...d.querySelectorAll(`[data-i18n="${k}"]`)].filter(e => !e.closest('#envelope-overlay'));
     els.forEach(e => e.classList.add('ed-tsel'));
-    els.forEach(e => { const det = e.parentElement && e.parentElement.closest('details:not([open])'); if (det) det.open = true; });   // e.g. the IBAN box
+    els.forEach(e => { const det = e.closest('details:not([open])'); if (det && !e.closest('summary')) det.open = true; });   // a text inside the closed IBAN box shows
     if (scroll && els[0]) els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (at && els.includes(at.el) && !(editing && editing.el === at.el)) startEdit(at.el, k, at.x, at.y);
   }
@@ -531,6 +531,8 @@
       .ed-tsel { outline: 2px solid #c83c78 !important; outline-offset: 2px; }
       .ed-tsel[contenteditable] { cursor: text; caret-color: #c83c78; }`;
     doc.head.appendChild(st);
+    // a click on the <summary> being written must not open or close its <details>
+    doc.addEventListener('click', e => { if (editing && editing.el.contains(e.target) && e.target.closest('summary')) e.preventDefault(); }, true);
     doc.documentElement.classList.toggle('ed-mode-textos', tab === 'textos');
     applyLook(); applyTexts(); applyPhotos();
     if (!$('goto').options.length) $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECTIONS.map(k => `<option>${k}</option>`).join('');
@@ -546,7 +548,8 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0 };
+  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0,
+    edits: () => JSON.parse(JSON.stringify(textEdits)), editing: () => editing && editing.k };   // the texts changed (and the one being written), for tests
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
   $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
   $('branch').onchange = e => { if (e.target.value === '__new') drawProps($('props')); else openBranch(e.target.value); };
