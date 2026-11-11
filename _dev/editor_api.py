@@ -283,7 +283,7 @@ def _tdecl(p, reset):
 
 # Section background and spacing (Secciones tab), mirrored by sectionCSS() in _dev/editor-site.js.
 # Verde reproduces the olive band of #rsvp (.band-olive, .band-olive p, .band-olive .link-button,
-# .h-script.light and its wash), plus headings and text links so they stay readable on green.
+# .h-script.light and its wash), plus the texts in ON_OLIVE so they stay readable on green.
 # Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
 # Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
 BG = {'paper': 'var(--paper)', 'alt': 'var(--paper-deep)', 'olive': 'var(--olive)'}
@@ -291,6 +291,8 @@ SPACE = {-1: 0.6, 0: 1, 1: 1.5}
 WASH = {'light': 'rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%',     # .h-script.light::before
         'paper': 'var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%'}             # .h-script::before
 OUT = ':not(.paper-panel *)'
+# texts that turn cream on green (the ones styles.css colours with ink, ink-faint or olive-deep)
+ON_OLIVE = 'p, h1, h2, h3, h4, li, .h-script, .link-button, .text-link, .section-note, .countdown-number, .countdown-label, .ruta-time, .iban-code, .hashtag-text'
 
 
 def _pad(s):
@@ -307,7 +309,7 @@ def section_css(S, s, bg, space):
     css = []
     if bg == 'olive':
         css.append('%s { background: var(--olive); color: var(--cream-text); }' % S)
-        css.append('%s :is(p, h1, h2, h3, h4, .h-script, .link-button, .text-link)%s { color: var(--cream-text); }' % (S, OUT))
+        css.append('%s :is(%s)%s { color: var(--cream-text); }' % (S, ON_OLIVE, OUT))
         css.append('%s .h-script::before { background: radial-gradient(ellipse at 50%% 60%%, %s); }' % (S, WASH['light']))
     elif bg in BG:
         css.append('%s { background: %s; color: var(--ink); }' % (S, BG[bg]))

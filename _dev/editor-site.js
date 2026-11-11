@@ -63,7 +63,7 @@
   }
   // Section background and spacing: the same rules as section_css() in editor_api.py.
   // Verde reproduces the olive band of #rsvp (.band-olive, .band-olive p, .band-olive .link-button,
-  // .h-script.light and its wash), plus headings and text links so they stay readable on green.
+  // .h-script.light and its wash), plus the texts in ON_OLIVE so they stay readable on green.
   // Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
   // Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
   const BG = { paper: 'var(--paper)', alt: 'var(--paper-deep)', olive: 'var(--olive)' };
@@ -71,12 +71,14 @@
   const BG_OPTS = [['paper', 'Papel'], ['alt', 'Papel oscuro'], ['olive', 'Verde']], SPACE_OPTS = [[-1, 'Menos'], [0, 'Normal'], [1, 'Más']];
   const WASH = { light: 'rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%', paper: 'var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%' };
   const OUT = ':not(.paper-panel *)';
+  // texts that turn cream on green (the ones styles.css colours with ink, ink-faint or olive-deep)
+  const ON_OLIVE = 'p, h1, h2, h3, h4, li, .h-script, .link-button, .text-link, .section-note, .countdown-number, .countdown-label, .ruta-time, .iban-code, .hashtag-text';
   // vertical padding in styles.css: [top, bottom] on wide screens, then on phones (.section, .intro-band, .footer-section)
   const PAD = s => s === 'intro' ? [[64, 64], [48, 48]] : s === 'footer' ? [[64, 48], [64, 48]] : [[72, 72], [52, 52]];
   function sectionCSS(S, s, bg, space) {
     const css = [];
     if (bg === 'olive') css.push(`${S} { background: var(--olive); color: var(--cream-text); }`,
-      `${S} :is(p, h1, h2, h3, h4, .h-script, .link-button, .text-link)${OUT} { color: var(--cream-text); }`,
+      `${S} :is(${ON_OLIVE})${OUT} { color: var(--cream-text); }`,
       `${S} .h-script::before { background: radial-gradient(ellipse at 50% 60%, ${WASH.light}); }`);
     else if (BG[bg]) css.push(`${S} { background: ${BG[bg]}; color: var(--ink); }`,
       `${S}:is(.band-olive, .intro-band) p${OUT} { color: var(--ink-soft); }`,
@@ -444,8 +446,8 @@
     const opt = (v, label, on) => `<option value="${v}"${on ? ' selected' : ''}>${label}</option>`;
     const spaceSel = (s, i) => { const v = (look.space[s] || [0, 0])[i]; return `<select data-sp="${i}">${SPACE_OPTS.map(([n, l]) => opt(n, l, n === v)).join('')}</select>`; };
     box.innerHTML = '<h2>Secciones</h2><p class="hint">Arrastra para cambiar el orden. La casilla las muestra u oculta. La portada va siempre primero.</p>' +
-      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}" draggable="true" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'} title="Mostrar"><span>${LABELS[s] || s}</span><button data-mv="-1"${i ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 ? '' : ' disabled'}>↓</button><button data-rs title="Fondo y espacio como en la web"${look.bg[s] || look.space[s] ? '' : ' disabled'}>↺</button>
-        <div class="sec-opts"><label>Fondo <select data-bg>${opt('', 'Como está', !look.bg[s])}${BG_OPTS.map(([v, l]) => opt(v, l, look.bg[s] === v)).join('')}</select></label><label>Arriba ${spaceSel(s, 0)}</label><label>Abajo ${spaceSel(s, 1)}</label></div></div>`).join('') +
+      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}" draggable="true" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'} title="Mostrar"><span>${LABELS[s] || s}</span><button data-mv="-1"${i ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 ? '' : ' disabled'}>↓</button>
+        <div class="sec-opts"><label>Fondo <select data-bg>${opt('', 'Como está', !look.bg[s])}${BG_OPTS.map(([v, l]) => opt(v, l, look.bg[s] === v)).join('')}</select></label><label>Arriba ${spaceSel(s, 0)}</label><label>Abajo ${spaceSel(s, 1)}</label><button data-rs title="Fondo y espacio como en la web"${look.bg[s] || look.space[s] ? '' : ' disabled'}>↺</button></div></div>`).join('') +
       `<div class="btns" style="margin-top:8px"><button id="secReset"${look.order.length || look.hidden.length ? '' : ' disabled'}>Orden original, todas visibles</button></div>`;
     let drag = null;
     box.querySelectorAll('.sec-row').forEach(row => {
