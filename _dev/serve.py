@@ -159,7 +159,8 @@ button{font:inherit;padding:10px;border:0;border-radius:8px;background:#6c6f48;c
 def safe_next(path):
     """Where to go after logging in: a path on this site (e.g. a branch preview opened from the QR), else the editor."""
     path = str(path or '')
-    if re.fullmatch(r'/(?![/\\])[!-\[\]-~]{0,500}', path) and not path.startswith('/_dev/login'):   # printable ASCII, no backslash
+    if (re.fullmatch(r'/(?![/\\])[!-\[\]-~]{0,500}', path)   # printable ASCII, no backslash
+            and not path.startswith(('/_dev/login', '/_dev/api/'))):   # never straight into the API
         return path
     return '/_dev/flores.html'
 
@@ -252,6 +253,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return host.rsplit(':', 1)[0] in ('localhost', '127.0.0.1')
         origin = self.headers.get('Origin', '')
         return self.session_ok() and (not origin or urllib.parse.urlsplit(origin).netloc == host)
+
+    def api_get_allowed(self):
+        """API reads: some of them also act (opening a branch adds a worktree, the publish dry run
+        fetches from GitHub), so another web page must not trigger them (an <img> pointing here) nor
+        read them (DNS rebinding). Local mode: the Host must be this machine, as for writes. Both
+        modes: a browser's Sec-Fetch-Site must say the request comes from this same site (or was typed
+        in); tools that send no such header (curl, scripts) still work."""
+        if not PASSWORD and self.headers.get('Host', '').rsplit(':', 1)[0] not in ('localhost', '127.0.0.1'):
+            return False
+        return self.headers.get('Sec-Fetch-Site', 'none') in ('same-origin', 'none')
 
     def login(self):
         """GET shows the form; POST checks the password and starts a session."""
@@ -385,6 +396,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def route(self, body):
         u = urllib.parse.urlsplit(self.path); p = u.path
         if p.startswith('/_dev/api/'):
+            if not self.api_get_allowed():
+                return self.send_error(403)
             return self.api_get(p, urllib.parse.parse_qs(u.query))
         if p == '/_dev/sources.json':
             return self.send_bytes(json.dumps(sources()).encode(), 'application/json', body)

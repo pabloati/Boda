@@ -67,12 +67,26 @@
   // ---------- drafts: texts and look kept in localStorage per branch, offered back on open ----------
   // The flowers keep their own ('flores-draft:<branch>', in flores.html); one banner offers both.
   // While the banner waits for an answer, neither draft is overwritten. Photos are not drafted.
+  // A draft remembers the commit it started from (head) and the look it started from (base). If the
+  // branch has moved on since (another computer saved), restoring it only re-applies what the draft
+  // itself changed on top of the newer look (merge3), so the other computer's changes are kept.
   const draftKey = () => 'site-draft:' + branch;
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  // three-way merge of plain JSON values: b = what the draft started from, m = the draft, t = the branch now
+  function merge3(b, m, t) {
+    if (JSON.stringify(b) === JSON.stringify(m)) return t;                       // the draft did not change it: the branch's
+    if (!isObj(m) || !isObj(t) || (b !== undefined && !isObj(b))) return m;       // the draft changed it: the draft's (undefined = removed)
+    const o = Object.assign({}, t), bb = b || {};
+    new Set([...Object.keys(bb), ...Object.keys(m)]).forEach(k => { const v = merge3(bb[k], m[k], t[k]); if (v === undefined) delete o[k]; else o[k] = v; });
+    return o;
+  }
+  // the draft was started on an older commit than the one the branch has now
+  const staleDraft = d => !!(d && d.head && head && !sameHead(d.head, head) && typeof d.base === 'string');
   function scheduleDraft() { clearTimeout(draftTimer); draftTimer = setTimeout(writeDraft, 400); }
   function writeDraft() {
     if (!branch || draftHold) return;
     try {
-      if (Object.keys(textEdits).length || lookDirty()) localStorage.setItem(draftKey(), JSON.stringify({ texts: textEdits, look, at: Date.now() }));
+      if (Object.keys(textEdits).length || lookDirty()) localStorage.setItem(draftKey(), JSON.stringify({ texts: textEdits, look, base: savedLook, head, at: Date.now() }));
       else localStorage.removeItem(draftKey());
     } catch (e) {}
   }
@@ -87,8 +101,13 @@
       const es = String(v.es ?? texts[k].es), en = String(v.en ?? texts[k].en);
       if (es !== texts[k].es || en !== texts[k].en) t[k] = { es, en };
     });
-    const l = Object.assign(blankLook(), d.look && typeof d.look === 'object' ? d.look : {});
-    return Object.keys(t).length || JSON.stringify(l) !== savedLook ? { texts: t, look: l } : null;
+    let l = Object.assign(blankLook(), isObj(d.look) ? d.look : {});
+    let stale = false;
+    if (staleDraft(d)) {
+      let b = null; try { b = Object.assign(blankLook(), JSON.parse(d.base)); } catch (e) {}
+      if (b) { stale = true; l = Object.assign(blankLook(), merge3(b, l, JSON.parse(savedLook))); }
+    }
+    return Object.keys(t).length || JSON.stringify(l) !== savedLook ? { texts: t, look: l, stale } : null;
   }
   // called by flores.html once the page (and the flower layout) has loaded
   function offerDraft() {
@@ -99,12 +118,14 @@
     bn.classList.add('show');
     const done = () => { bn.classList.remove('show'); draftHold = false; sitePending = null; status(); };
     $('bRestore').onclick = () => {
+      const stale = (sitePending && sitePending.stale) || ED.restoreFloresDraftStale();
       if (sitePending) {
         textEdits = sitePending.texts; look = sitePending.look;
         ED.setTextPos(look.text); applyTexts(); applyLook(); ED.renderAll();
       }
       ED.restoreFloresDraft();   // after the look: it mirrors the text positions back into it
       palEdit = null; done(); renderTab(); drawProps($('props'));
+      if (stale) status('Borrador recuperado. Otro ordenador guardó después: se ha unido con lo suyo; revísalo antes de guardar', false, true);
     };
     $('bDrop').onclick = () => { dropSiteDraft(); ED.dropFloresDraft(); done(); };
   }
@@ -437,8 +458,16 @@
     });
     box.querySelectorAll('[data-h]').forEach(hx => {
       const inp = box.querySelector(`[data-t="${hx.dataset.h}"]`);
-      hx.oninput = () => { const h = normHex(hx.value); hx.classList.toggle('bad', !h); if (h) { inp.value = h; set(hx.dataset.h, h, true); } };
-      hx.onchange = () => { const h = normHex(hx.value); if (h) { hx.value = h; hx.classList.remove('bad'); set(hx.dataset.h, h, false); } else { hx.value = inp.value; hx.classList.remove('bad'); } };
+      // typing previews each valid value (live); on change an invalid value goes back to the last valid
+      // one, and if that was previewed it is stored too, so what the page shows is what gets saved
+      let previewed = false;
+      hx.oninput = () => { const h = normHex(hx.value); hx.classList.toggle('bad', !h); if (h) { inp.value = h; previewed = true; set(hx.dataset.h, h, true); } };
+      hx.onchange = () => {
+        const h = normHex(hx.value); hx.classList.remove('bad');
+        if (h) { hx.value = h; set(hx.dataset.h, h, false); }
+        else { hx.value = inp.value; if (previewed) set(hx.dataset.h, inp.value, false); }
+        previewed = false;
+      };
     });
   }
   const allPalettes = () => [...PRESETS, ...(look.palettes || []).map(p => Object.assign({ own: true }, p))];
@@ -882,8 +911,17 @@
     if (!who) { pub.error = 'Escribe tu nombre (arriba) para firmar la publicación.'; showPublish(); status('Escribe tu nombre (arriba) para firmar la publicación', true); $('who').focus(); return; }
     pub.step = 'busy'; pub.error = ''; showPublish(); status('Publicando…');
     try {
-      const r = await fetch('/_dev/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch, who }) });
+      const r = await fetch('/_dev/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch, who, tip: pub.plan.tip }) });
       let j = {}; try { j = await r.json(); } catch (e) {}
+      if (r.status === 409) {   // someone saved on the branch after the list was shown: show the new list
+        const b = branch, msg = j.error || 'La rama ha cambiado: revisa la lista otra vez.';
+        try {
+          const r2 = await fetch('/_dev/api/publish?branch=' + encodeURIComponent(b), { cache: 'no-store' }), j2 = await r2.json();
+          if (pub && b === branch && r2.ok && j2.ok !== false) pub = { step: 'plan', plan: j2, error: msg };
+          else if (pub) pub = { step: 'error', error: msg };
+        } catch (e2) { if (pub) pub = { step: 'error', error: msg }; }
+        showPublish(); status('No se ha publicado: la rama ha cambiado', true); return;
+      }
       if (!r.ok || !j.ok) throw new Error(j.error || 'error ' + r.status);
       pub = { step: 'done', result: j };
       showPublish(); status(j.commit ? `Publicado (${j.commit})` : 'Nada nuevo que publicar');
@@ -945,7 +983,7 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
+  window.SITE = { save, status, head: () => head, sameHead, merge3, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
     dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL,
     colourRow, wireColourRows, normHex,   // the text style panel in _dev/flores.html reuses the colour row
     edits: () => JSON.parse(JSON.stringify(textEdits)), editing: () => editing && editing.k };   // the texts changed (and the one being written), for tests

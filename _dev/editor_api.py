@@ -2,7 +2,10 @@
 
 The editor works on one branch at a time. Each branch is edited in its own worktree (created on
 demand under .claude/worktrees/ed-<branch>), and "Guardar" writes the changed files there and
-commits them on that branch (and pushes it, if asked). Nothing here touches other branches.
+commits them on that branch (and pushes it, if asked). Saving and going back only touch the branch
+that is open (which can be main itself, when someone opens "(web publicada)" to save on it; going back
+refuses main). The exception is publish(): it merges the branch into main and pushes main, which
+deploys the public site at once.
 
 What the editor can change, and where it lands:
   flowers   js/flores-layout.js                       (generated)
@@ -72,8 +75,8 @@ class EditorError(Exception):
 
 class Conflict(EditorError):
     """The branch moved on since the editor opened it (someone else saved). serve.py answers 409."""
-    def __init__(self, head):
-        super().__init__('La rama ha cambiado desde que la abriste (otro ordenador ha guardado).')
+    def __init__(self, head, msg='La rama ha cambiado desde que la abriste (otro ordenador ha guardado).'):
+        super().__init__(msg)
         self.head = head
 
 
@@ -556,9 +559,36 @@ def write_photo(wt, slot, data_url):
 
 # ---------- save: write, bump cache-busters, commit, push ----------
 
+# One lock per branch: the stale-head check and the write + commit that follow it run as one step, so
+# two saves (or a save and a go-back) on the same branch at once cannot both pass check_head.
+_BRANCH_LOCKS = {}
+_BRANCH_LOCKS_GUARD = threading.Lock()
+
+
+def branch_lock(branch):
+    with _BRANCH_LOCKS_GUARD:
+        return _BRANCH_LOCKS.setdefault(branch, threading.Lock())
+
+
+def _stamp(wt):
+    """A ?v= value none of the html files uses yet (minutes, plus -2, -3… within the same minute), so a
+    save or a go-back right after another one still gives every changed link a new URL."""
+    base = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    used = set()
+    for name in REPO_FILES:
+        path = os.path.join(wt, name)
+        if os.path.exists(path):
+            used.update(re.findall(r'\?v=([\w-]+)', open(path, encoding='utf-8').read()))
+    stamp, n = base, 1
+    while stamp in used:
+        n += 1
+        stamp = '%s-%d' % (base, n)
+    return stamp
+
+
 def bump(wt, photos):
     """New ?v= on css/js links (and on the changed photos), so visitors never mix old and new files."""
-    stamp = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    stamp = _stamp(wt)
     changed = []
     for name in REPO_FILES + ('css/styles.css', 'css/editor.css'):
         path = os.path.join(wt, name)
@@ -581,6 +611,11 @@ def _who(payload):
 
 def save(repo, branch, payload, write_flores):
     wt = open_branch(repo, branch)
+    with branch_lock(branch):
+        return _save(wt, branch, payload, write_flores)
+
+
+def _save(wt, branch, payload, write_flores):
     check_head(wt, payload)
     files, parts, photos = [], [], []
     if 'flores' in payload:
@@ -670,7 +705,15 @@ def revert(repo, branch, payload):
     sha = str(payload.get('sha') or '')
     if not SHA.match(sha):
         raise EditorError('Versión no válida')
+    if branch == 'main':
+        # main is the public site: going back on it would deploy an old site without Publicar's checks
+        raise EditorError('Estás en main, que es la web publicada: para volver atrás, hazlo en una rama y publícala, o %s' % ASK)
     wt = open_branch(repo, branch)
+    with branch_lock(branch):
+        return _revert(wt, branch, sha, payload)
+
+
+def _revert(wt, branch, sha, payload):
     check_head(wt, payload)
     r = subprocess.run(['git', '-C', wt, 'merge-base', '--is-ancestor', sha, 'HEAD'], capture_output=True, text=True)
     if r.returncode == 1:
@@ -768,24 +811,33 @@ def publish_plan(repo, branch, fetch=True):
         m = re.match(r'^editor \(([^)]*)\)', subject)
         commits.append({'sha': sha, 'who': m.group(1) if m else author, 'when': when, 'subject': subject})
     push = has_local and (not has_remote or _count(repo, remote + '..' + local) > 0)
+    tip = run(repo, 'rev-parse', ref).strip()
     return {'ok': True, 'branch': branch, 'commits': commits, 'upToDate': not commits, 'fetched': fetched,
-            'problem': problem, 'pushBranch': push, '_ref': ref}
+            'problem': problem, 'pushBranch': push, 'tip': tip, '_ref': ref}
 
 
 def publish(repo, branch, payload):
     """Push the branch if GitHub lacks some of it, bring main to origin/main, merge the branch into
-    main (--no-ff) and push main. Any conflict or failed push leaves main as it was on GitHub."""
-    with PUBLISH_LOCK:
+    main (--no-ff) and push main. Any conflict or failed push leaves main as it was on GitHub.
+    payload.tip is the branch commit the dry run showed (the editor sends it): if someone saved on the
+    branch since, nothing is published (409) and the editor shows the new list to confirm again.
+    Merges exactly that commit, so a save that lands while publishing is not published unseen."""
+    with PUBLISH_LOCK, branch_lock('main'):
         plan = publish_plan(repo, branch)
         if not plan['fetched']:
             raise EditorError('No se pudo conectar con GitHub: prueba otra vez en un momento')
+        tip = str(payload.get('tip') or '')
+        if tip and tip != plan['tip']:
+            raise Conflict(plan['tip'][:7], 'Alguien ha guardado en %s desde que revisaste la lista: '
+                           'mira lo que se publicaría ahora y vuelve a confirmar.' % branch)
         if plan['problem']:
             raise EditorError(plan['problem'])
         if not plan['commits']:
             return {'ok': True, 'merged': [], 'commit': None, 'upToDate': True}
+        plan['_ref'] = plan['tip']       # from here on, the commit that was checked, not the moving branch
         if plan['pushBranch']:
             ref = 'refs/heads/' + branch
-            run(repo, 'push', '-q', 'origin', '%s:%s' % (ref, ref))
+            run(repo, 'push', '-q', 'origin', '%s:%s' % (plan['tip'], ref))
         wt = open_branch(repo, 'main')
         if run(wt, 'status', '--porcelain', '--untracked-files=no').strip():
             raise EditorError('La copia de main de este ordenador tiene cambios a medias: %s antes de publicar.' % ASK)

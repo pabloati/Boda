@@ -157,7 +157,7 @@
   const SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
   const SNAP = 6;
   let DRAFT = 'flores-draft';
-  let pendingDraft = null;   // a flower draft from another session, until the banner (editor-site.js) restores or drops it
+  let pendingDraft = null;   // a flower draft from another session ({ items, base, head }), until the banner (editor-site.js) restores or drops it
   const frame = $('f');
   let LIB = [], items = [], sel = null, win = null, doc = null, dev = 'm', saved = '[]';
   let BASE = '/', MODE = 'flores', FLORES_OK = false;   // BASE: URL prefix of the branch's worktree
@@ -202,7 +202,9 @@
   function restore(js) { const o = JSON.parse(js); items = o.i; tpos = o.t || {}; if (!get(sel)) sel = null; }
   function snapshot() { undoSt.push(state()); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
   function changed() {
-    if (!pendingDraft) try { localStorage.setItem(DRAFT, JSON.stringify(items)); } catch (e) {}
+    // the draft keeps the layout it started from (base) and the branch commit (head), so restoring it after
+    // another computer saved only re-applies this session's own changes (mergeFlores)
+    if (!pendingDraft) try { localStorage.setItem(DRAFT, JSON.stringify({ items, base: saved, head: window.SITE ? window.SITE.head() : null })); } catch (e) {}
     if (window.SITE) { window.SITE.textChanged(); window.SITE.status(); }
     $('undo').disabled = !undoSt.length; $('redo').disabled = !redoSt.length;
     renderAll();
@@ -737,8 +739,11 @@
     doc.documentElement.classList.toggle('ed-mode-flores', MODE === 'flores');
     if (!items.length && !load.done) {
       items = clone((win.FLORES_LAYOUT && win.FLORES_LAYOUT.items) || []); saved = JSON.stringify(items); load.done = true;
-      let draft = null; try { draft = localStorage.getItem(DRAFT); } catch (e) {}
-      if (draft && draft !== saved && draft !== '[]') pendingDraft = draft;   // offered together with the texts/colours draft
+      let draft = null; try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) {}
+      if (Array.isArray(draft)) draft = { items: draft };   // drafts written before they kept their base
+      const di = draft && Array.isArray(draft.items) ? JSON.stringify(draft.items) : '[]';
+      // offered together with the texts/colours draft, if it changed something (against its base, and against the branch now)
+      if (di !== '[]' && di !== saved && di !== draft.base) pendingDraft = draft;
 
     }
     doc.addEventListener('pointerdown', e => {
@@ -758,6 +763,27 @@
     if (window.SITE) window.SITE.offerDraft();
   }
   const load = {};
+
+  // A flower draft started on an older commit of the branch: keep the layout saved since (theirs) and
+  // re-apply on it only what the draft changed against its base: flowers it added (a new id if the
+  // other save used the same one), changed or removed. Order changes alone are not carried over.
+  function draftStale(d) {
+    const S = window.SITE, h = S && S.head();
+    return !!(d && d.head && h && !S.sameHead(d.head, h) && typeof d.base === 'string');
+  }
+  function mergeFlores(base, mine, theirs) {
+    const J = JSON.stringify, B = new Map(base.map(o => [o.id, o])), M = new Map(mine.map(o => [o.id, o]));
+    const out = theirs.filter(o => !(B.has(o.id) && !M.has(o.id)))
+      .map(o => { const m = M.get(o.id), b = B.get(o.id); return m && b && J(m) !== J(b) ? clone(m) : o; });
+    const ids = new Set(out.map(o => o.id));
+    let n = [...base, ...mine, ...theirs].reduce((x, o) => Math.max(x, +String(o.id).slice(1) || 0), 0);
+    mine.forEach(o => {
+      const b = B.get(o.id);
+      if (!b) { const c = clone(o); if (ids.has(c.id)) c.id = 'f' + (++n); out.push(c); ids.add(c.id); }
+      else if (!ids.has(o.id) && J(o) !== J(b)) { out.push(clone(o)); ids.add(o.id); }   // changed here, removed there: keep it
+    });
+    return out;
+  }
 
   function onKey(e) {
     if (e.target.closest && e.target.closest('input, select, textarea')) return;
@@ -847,7 +873,13 @@
     openProps() { if (!widths.propsOpen) { widths.propsOpen = true; applyPanels(); } },
     // the flower draft left by another session (JSON) or null; restore or drop it (one banner for all drafts)
     floresDraft: () => pendingDraft,
-    restoreFloresDraft() { if (!pendingDraft) return; const d = pendingDraft; pendingDraft = null; items = JSON.parse(d); changed(); },
+    restoreFloresDraftStale: () => draftStale(pendingDraft),
+    restoreFloresDraft() {
+      if (!pendingDraft) return;
+      const d = pendingDraft; pendingDraft = null;
+      let base = null; if (draftStale(d)) try { base = JSON.parse(d.base); } catch (e) {}
+      items = Array.isArray(base) ? mergeFlores(base, d.items, items) : clone(d.items); changed();
+    },
     dropFloresDraft() { pendingDraft = null; try { localStorage.removeItem(DRAFT); } catch (e) {} },
     get doc() { return doc; }, get win() { return win; }, get dev() { return dev; }, get base() { return BASE; },
   };

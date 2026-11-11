@@ -32,7 +32,9 @@ replaces it, so anything `write_look()` writes must be mirrored there.
   a dry run). It is refused with unsaved changes, on `main` itself, when `main` has local commits
   not on GitHub, or when GitHub has changes the editor lacks. A conflict aborts the merge, leaves
   `main` untouched and asks to tell Pablo. The branch is pushed first if needed; the merge commit
-  reads `publicar: <branch> (editor, <who>)`.
+  reads `publicar: <branch> (editor, <who>)`. «Publicar ahora» sends the branch commit the list was
+  made from; if someone saved on the branch since, nothing is published (409) and the panel shows
+  the new list to confirm again.
 
 ## Safety
 
@@ -43,7 +45,16 @@ replaces it, so anything `write_look()` writes must be mirrored there.
   rama».
 - **Drafts.** Texts, colours, fonts, sections, moved/styled texts and flowers are kept in the
   browser per branch (`site-draft:<branch>`, `flores-draft:<branch>`) and offered back with one
-  banner when the branch is opened again. Photos are not drafted.
+  banner when the branch is opened again. Photos are not drafted. A draft remembers the commit and
+  the look/layout it started from: if another computer saved since, «Recuperar» re-applies only what
+  the draft changed on top of the newer version (per colour, font, section, text property and
+  flower), so the other computer's changes stay.
+- **One save at a time per branch.** Saves and «Volver a este punto» on the same branch run one
+  after the other on the server (the 409 check and the commit are one step). «Volver a este punto»
+  is refused on `main`: go back on a branch and publish it.
+- **API reads** (`GET /_dev/api/…`) only answer this machine's Host in local mode and, from a
+  browser, only requests from the editor's own site (`Sec-Fetch-Site`), because opening a branch
+  creates a worktree and the publish dry run fetches from GitHub.
 
 ## Branches
 
@@ -53,7 +64,8 @@ then pushes the branch if "Subir" is ticked. A branch nobody has checked out get
 `.claude/worktrees/ed-<branch>`. "＋ Nueva rama…" creates a branch from the current one. Editing
 `main` publishes the site on push: use a branch and «Publicar» (or merge by hand).
 
-Saving bumps the `?v=` cache-busters of the css/js links and of any changed photo.
+Saving bumps the `?v=` cache-busters of the css/js links and of any changed photo (`YYYYMMDDHHMM`,
+with `-2`, `-3`… when a save or a go-back lands in the same minute, so the URL always changes).
 
 Server side: `_dev/editor_api.py` (validation: texts keep only a few inline tags and safe links;
 colours must be hex or rgb(a); branch names `[A-Za-z0-9._-]`; photos must be JPEG under 4 MB).
