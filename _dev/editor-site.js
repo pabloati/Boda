@@ -1,5 +1,5 @@
-// Site editor: branch, texts, colours, photos and sections, on top of the flower editor
-// (_dev/flores.html exposes window.ED). Everything previews live in the page; "Guardar" sends the
+// Site editor: branch, texts, colours, fonts, photos, sections, history, "Ver en mi móvil" and
+// "Publicar", on top of the flower editor (_dev/flores.html exposes window.ED). Everything previews live in the page; "Guardar" sends the
 // changes to _dev/serve.py, which writes them into the chosen branch's worktree and commits them
 // (see _dev/editor_api.py). Not published: GitHub Pages skips _dev/.
 (function () {
@@ -147,6 +147,7 @@
   // .h-script.light and its wash), plus the texts in ON_OLIVE so they stay readable on green.
   // Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
   // Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
+  // The colour rules weigh one id plus one class, so a text's own colour (written after them) wins.
   const BG = { paper: 'var(--paper)', alt: 'var(--paper-deep)', olive: 'var(--olive)' };
   const SPACE = { '-1': 0.6, 0: 1, 1: 1.5 };
   const BG_OPTS = [['paper', 'Papel'], ['alt', 'Papel oscuro'], ['olive', 'Verde']], SPACE_OPTS = [[-1, 'Menos'], [0, 'Normal'], [1, 'Más']];
@@ -159,13 +160,13 @@
   function sectionCSS(S, s, bg, space) {
     const css = [];
     if (bg === 'olive') css.push(`${S} { background: var(--olive); color: var(--cream-text); }`,
-      `${S} :is(${ON_OLIVE})${OUT} { color: var(--cream-text); }`,
+      `${S} :where(${ON_OLIVE})${OUT} { color: var(--cream-text); }`,
       `${S} .h-script::before { background: radial-gradient(ellipse at 50% 60%, ${WASH.light}); }`);
     else if (BG[bg]) css.push(`${S} { background: ${BG[bg]}; color: var(--ink); }`,
-      `${S}:is(.band-olive, .intro-band) p${OUT} { color: var(--ink-soft); }`,
-      `${S} .h-script.light { color: var(--ink); }`,
+      `${S}:where(.band-olive, .intro-band) :where(p)${OUT} { color: var(--ink-soft); }`,
+      `${S} :where(.h-script.light) { color: var(--ink); }`,
       `${S} .h-script.light::before { background: radial-gradient(ellipse at 50% 60%, ${WASH.paper}); }`,
-      `${S}.band-olive .link-button${OUT} { color: var(--terracotta); }`);
+      `${S}:where(.band-olive) :where(.link-button)${OUT} { color: var(--terracotta); }`);
     if (space && (space[0] || space[1])) {
       const decl = pad => ['top', 'bottom'].map((side, i) => space[i] ? `padding-${side}: ${Math.round(pad[i] * SPACE[space[i]])}px` : '').filter(Boolean).join('; ');
       css.push(`${S} { ${decl(PAD(s)[0])}; }`, `@media (max-width: 768px) { ${S} { ${decl(PAD(s)[1])}; } }`);

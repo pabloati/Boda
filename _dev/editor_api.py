@@ -394,6 +394,8 @@ def _tdecl(p, reset):
 # .h-script.light and its wash), plus the texts in ON_OLIVE so they stay readable on green.
 # Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
 # Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
+# The colour rules weigh one id plus one class (:where() adds nothing), so they beat styles.css
+# (classes only) but not a text's own colour from the Flores view, written after them.
 BG = {'paper': 'var(--paper)', 'alt': 'var(--paper-deep)', 'olive': 'var(--olive)'}
 SPACE = {-1: 0.6, 0: 1, 1: 1.5}
 WASH = {'light': 'rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%',     # .h-script.light::before
@@ -417,14 +419,14 @@ def section_css(S, s, bg, space):
     css = []
     if bg == 'olive':
         css.append('%s { background: var(--olive); color: var(--cream-text); }' % S)
-        css.append('%s :is(%s)%s { color: var(--cream-text); }' % (S, ON_OLIVE, OUT))
+        css.append('%s :where(%s)%s { color: var(--cream-text); }' % (S, ON_OLIVE, OUT))
         css.append('%s .h-script::before { background: radial-gradient(ellipse at 50%% 60%%, %s); }' % (S, WASH['light']))
     elif bg in BG:
         css.append('%s { background: %s; color: var(--ink); }' % (S, BG[bg]))
-        css.append('%s:is(.band-olive, .intro-band) p%s { color: var(--ink-soft); }' % (S, OUT))
-        css.append('%s .h-script.light { color: var(--ink); }' % S)
+        css.append('%s:where(.band-olive, .intro-band) :where(p)%s { color: var(--ink-soft); }' % (S, OUT))
+        css.append('%s :where(.h-script.light) { color: var(--ink); }' % S)
         css.append('%s .h-script.light::before { background: radial-gradient(ellipse at 50%% 60%%, %s); }' % (S, WASH['paper']))
-        css.append('%s.band-olive .link-button%s { color: var(--terracotta); }' % (S, OUT))
+        css.append('%s:where(.band-olive) :where(.link-button)%s { color: var(--terracotta); }' % (S, OUT))
     if space and any(space):
         def decl(pad):
             return '; '.join('padding-%s: %dpx' % (side, round(pad[i] * SPACE[space[i]]))
