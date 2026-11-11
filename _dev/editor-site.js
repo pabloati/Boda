@@ -39,7 +39,7 @@
 
   // ---------- state ----------
   let branch = null, texts = {}, textEdits = {}, look = blankLook(), savedLook = '', photos = {}, selText = null, tab = 'flores', saving = false;
-  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [] }; }
+  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [], bg: {}, space: {} }; }
   let palEdit = null;   // the palette being built in the Colores tab: { idx, name, before }
   const lookDirty = () => JSON.stringify(look) !== savedLook;
   const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
@@ -61,6 +61,34 @@
     if (TEXT_Z[p.z] != null) d.push('position: relative', 'z-index: ' + TEXT_Z[p.z]); else if (reset) d.push('z-index: auto');
     return d.join('; ');
   }
+  // Section background and spacing: the same rules as section_css() in editor_api.py.
+  // Verde reproduces the olive band of #rsvp (.band-olive, .band-olive p, .band-olive .link-button,
+  // .h-script.light and its wash), plus headings and text links so they stay readable on green.
+  // Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
+  // Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
+  const BG = { paper: 'var(--paper)', alt: 'var(--paper-deep)', olive: 'var(--olive)' };
+  const SPACE = { '-1': 0.6, 0: 1, 1: 1.5 };
+  const BG_OPTS = [['paper', 'Papel'], ['alt', 'Papel oscuro'], ['olive', 'Verde']], SPACE_OPTS = [[-1, 'Menos'], [0, 'Normal'], [1, 'Más']];
+  const WASH = { light: 'rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%', paper: 'var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%' };
+  const OUT = ':not(.paper-panel *)';
+  // vertical padding in styles.css: [top, bottom] on wide screens, then on phones (.section, .intro-band, .footer-section)
+  const PAD = s => s === 'intro' ? [[64, 64], [48, 48]] : s === 'footer' ? [[64, 48], [64, 48]] : [[72, 72], [52, 52]];
+  function sectionCSS(S, s, bg, space) {
+    const css = [];
+    if (bg === 'olive') css.push(`${S} { background: var(--olive); color: var(--cream-text); }`,
+      `${S} :is(p, h1, h2, h3, h4, .h-script, .link-button, .text-link)${OUT} { color: var(--cream-text); }`,
+      `${S} .h-script::before { background: radial-gradient(ellipse at 50% 60%, ${WASH.light}); }`);
+    else if (BG[bg]) css.push(`${S} { background: ${BG[bg]}; color: var(--ink); }`,
+      `${S}:is(.band-olive, .intro-band) p${OUT} { color: var(--ink-soft); }`,
+      `${S} .h-script.light { color: var(--ink); }`,
+      `${S} .h-script.light::before { background: radial-gradient(ellipse at 50% 60%, ${WASH.paper}); }`,
+      `${S}.band-olive .link-button${OUT} { color: var(--terracotta); }`);
+    if (space && (space[0] || space[1])) {
+      const decl = pad => ['top', 'bottom'].map((side, i) => space[i] ? `padding-${side}: ${Math.round(pad[i] * SPACE[space[i]])}px` : '').filter(Boolean).join('; ');
+      css.push(`${S} { ${decl(PAD(s)[0])}; }`, `@media (max-width: 768px) { ${S} { ${decl(PAD(s)[1])}; } }`);
+    }
+    return css;
+  }
   function lookCSS(l) {
     const sel = s => s === 'footer' ? '.footer-section' : '#' + s, css = [];
     const t = Object.entries(l.tokens);
@@ -71,6 +99,7 @@
     if (f['foto-envio']) css.push(`.rsvp-modal-photo img { object-position: ${f['foto-envio'][0]}% ${f['foto-envio'][1]}%; }`);
     if (l.order.length) { css.push('#main-content { display: flex; flex-direction: column; } #hero { order: -1; }'); l.order.forEach((s, i) => css.push(`${sel(s)} { order: ${i + 1}; }`)); }
     if (l.hidden.length) css.push(l.hidden.map(sel).join(', ') + ' { display: none !important; }');
+    SECTIONS.forEach(s => css.push(...sectionCSS(sel(s), s, (l.bg || {})[s], (l.space || {})[s])));
     Object.entries(l.text || {}).forEach(([k, p]) => {
       css.push(`${tsel(k)} { ${tdecl(p, false)}; }`);
       if (p.d) css.push(`@media (min-width: 769px) { ${tsel(k)} { ${tdecl(p.d, true)}; } }`);
@@ -114,6 +143,7 @@
     status('Abriendo ' + b + '…');
     const r = await fetch('/_dev/api/state?branch=' + encodeURIComponent(b), { cache: 'no-store' }), st = await r.json();
     if (!r.ok) { status(st.error || 'No se pudo abrir la rama', true); $('branch').value = branch || ''; return; }
+    endEdit();
     branch = b; try { localStorage.setItem('ed-branch', b); } catch (e) {}
     texts = st.texts || {}; textEdits = {}; photos = {}; selText = null;
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
@@ -140,6 +170,35 @@
   const toEdit = h => h.replace(/\s*\n\s*/g, ' ').replace(/<br\s*\/?>\s*/gi, '\n').replace(/&laquo;/g, '«').replace(/&raquo;/g, '»').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
   const fromEdit = t => t.replace(/&(?![a-zA-Z]+;|#\d+;)/g, '&amp;').replace(/\r?\n/g, '<br>');
   const plain = h => toEdit(h).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const norm = h => fromEdit(toEdit(h || '')).trim();   // a text as the panel would write it back: same text, same form
+  // The HTML of a text written on the page, kept to the tags clean_html() allows on the server
+  // (br, span with class, a with a safe href, strong, em, b, i). The rest keep only their text;
+  // a block the browser may slip in (div, p) becomes a line break.
+  const KEEP = { br: [], span: ['class'], a: ['href', 'target', 'rel'], strong: [], em: [], b: [], i: [] };
+  function cleanNode(n) {
+    let out = '';
+    n.childNodes.forEach(c => {
+      if (c.nodeType === 3) { out += c.data.replace(/\u00a0/g, ' ').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch])); return; }
+      if (c.nodeType !== 1) return;
+      const t = c.tagName.toLowerCase();
+      if (t === 'script' || t === 'style') return;
+      if (t === 'br') { out += '<br>'; return; }
+      const inner = cleanNode(c);
+      if (t === 'div' || t === 'p') { out += (out && !/<br>$/.test(out) ? '<br>' : '') + inner; return; }
+      if (!KEEP[t]) { out += inner; return; }
+      const attrs = KEEP[t].map(a => {
+        let v = c.getAttribute(a);
+        if (a === 'class' && v != null) v = v.split(/\s+/).filter(x => x && !x.startsWith('ed-')).join(' ');   // not the editor's own marks
+        if (v == null || (a === 'class' && !v) || (a === 'href' && !/^(#|https?:\/\/|mailto:|tel:)/.test(v))) return '';
+        return ` ${a}="${esc(v)}"`;
+      }).join('');
+      if (t === 'span' && !attrs) { out += inner; return; }   // a bare span (the browser adds some while typing) says nothing
+      out += `<${t}${attrs}>${inner}</${t}>`;
+    });
+    return out;
+  }
+  // innerHTML of a text being written → the Spanish to save (no trailing line breaks: they show nothing)
+  const fromPage = el => norm(cleanNode(el)).replace(/(\s*<br>)+$/, '').trim();
   function textSection(key) {
     const el = ED.doc && ED.doc.querySelector(`main [data-i18n="${key}"]`) || (ED.doc && ED.doc.querySelector(`[data-i18n="${key}"]`));
     if (!el) return 'other';
@@ -163,31 +222,95 @@
     box.querySelectorAll('.t-item').forEach(b => b.onclick = () => pickText(b.dataset.k, true));
   }
   const cur = k => Object.assign({}, texts[k], textEdits[k] || {});
-  function pickText(k, scroll) {
+  // A text changed (in the panel or on the page): keep textEdits, the page and the list in step.
+  // skip: the element being written on, which already shows it (rewriting it would lose the caret).
+  function setText(k, es, en, skip) {
+    const o = texts[k];
+    if (es === norm(o.es) && en === norm(o.en)) delete textEdits[k]; else textEdits[k] = { es, en };
+    if (ED.doc) ED.doc.querySelectorAll(`[data-i18n="${k}"]`).forEach(el => { if (el !== skip) el.innerHTML = es; });
+    if (selText === k && $('tUndo')) $('tUndo').disabled = !textEdits[k];
+    status();
+    const b = $('tab-textos').querySelector(`.t-item[data-k="${CSS.escape(k)}"]`); if (b) { b.classList.toggle('mod', !!textEdits[k]); b.textContent = plain(es) || k; }
+  }
+  // at: { el, x, y } when the text was clicked on the page: that element becomes writable there
+  function pickText(k, scroll, at) {
+    if (editing && (editing.k !== k || !at || at.el !== editing.el)) endEdit();
     selText = k; renderTexts(); drawProps($('props'));
     const d = ED.doc; if (!d) return;
     d.querySelectorAll('.ed-tsel').forEach(e => e.classList.remove('ed-tsel'));
     const els = [...d.querySelectorAll(`[data-i18n="${k}"]`)].filter(e => !e.closest('#envelope-overlay'));
     els.forEach(e => e.classList.add('ed-tsel'));
+    els.forEach(e => { const det = e.parentElement && e.parentElement.closest('details:not([open])'); if (det) det.open = true; });   // e.g. the IBAN box
     if (scroll && els[0]) els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (at && els.includes(at.el) && !(editing && editing.el === at.el)) startEdit(at.el, k, at.x, at.y);
+  }
+
+  // ---------- writing on the page ----------
+  // Only the clicked element is editable. Enter is a line break, a paste is plain text; every
+  // keystroke lands in textEdits (and the Spanish box). Esc or a click elsewhere ends it, keeping it.
+  let editing = null;   // { el, k, on: listeners }
+  // not on the envelope (pickText leaves it out too) nor inside a button or a form control (no caret there)
+  const inlineOK = el => !el.closest('#envelope-overlay, button, select, option, textarea, input');
+  function startEdit(el, k, x, y) {
+    endEdit();
+    const d = ED.doc, w = ED.win;
+    if (!d || !el.isConnected || !inlineOK(el)) return;
+    const lineBreak = () => d.execCommand('insertLineBreak');
+    const on = {
+      keydown: e => {
+        if (e.key === 'Enter') { e.preventDefault(); lineBreak(); }
+        else if (e.key === ' ' && el.closest('summary')) { e.preventDefault(); d.execCommand('insertText', false, ' '); }
+        else if (e.key === 'Escape') { e.preventDefault(); endEdit(); }
+      },
+      paste: e => {
+        e.preventDefault();
+        const t = ((e.clipboardData && e.clipboardData.getData('text/plain')) || '').replace(/\r\n?/g, '\n');
+        t.split('\n').forEach((line, i) => { if (i) lineBreak(); if (line) d.execCommand('insertText', false, line); });
+      },
+      drop: e => e.preventDefault(),
+      input: () => { if (editing && editing.el === el) inlineInput(); },
+      blur: () => { if (editing && editing.el === el) endEdit(); },
+    };
+    Object.entries(on).forEach(([t, f]) => el.addEventListener(t, f));
+    el.setAttribute('contenteditable', 'true');
+    editing = { el, k, on };
+    el.focus({ preventScroll: true });
+    // the caret where she clicked (else at the end)
+    let r = null;
+    if (x != null && d.caretRangeFromPoint) r = d.caretRangeFromPoint(x, y);
+    else if (x != null && d.caretPositionFromPoint) { const p = d.caretPositionFromPoint(x, y); if (p) { r = d.createRange(); r.setStart(p.offsetNode, p.offset); } }
+    const inside = !!(r && el.contains(r.startContainer));
+    if (!inside) { r = d.createRange(); r.selectNodeContents(el); }
+    r.collapse(inside);
+    const s = w.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  function inlineInput() {
+    const { el, k } = editing, es = fromPage(el);
+    const en = selText === k && $('tEn') ? fromEdit($('tEn').value) : norm(cur(k).en);
+    setText(k, es, en, el);
+    if (selText === k && $('tEs')) $('tEs').value = toEdit(es);
+  }
+  function endEdit() {
+    if (!editing) return;
+    const { el, k, on } = editing; editing = null;
+    Object.entries(on).forEach(([t, f]) => el.removeEventListener(t, f));
+    el.removeAttribute('contenteditable');
+    if (textEdits[k] && el.isConnected) el.innerHTML = textEdits[k].es;   // show exactly what will be saved
+    try { const s = ED.win && ED.win.getSelection(); if (s && s.anchorNode && el.contains(s.anchorNode)) s.removeAllRanges(); } catch (e) {}
   }
   function textProps(p) {
-    if (!selText) { p.innerHTML = '<h2>Textos</h2><p class="hint">Elige un texto en la lista o haz clic sobre él en la web. Puedes escribirlo en español y en inglés.</p><p class="hint">Un salto de línea en el cuadro es un salto de línea en la web.</p>' + changesList(); return; }
+    if (!selText) { p.innerHTML = '<h2>Textos</h2><p class="hint">Haz clic en un texto de la web y escribe encima, o elígelo en la lista. Puedes escribirlo en español y en inglés.</p><p class="hint">Un salto de línea en el cuadro es un salto de línea en la web.</p>' + changesList(); return; }
     const v = cur(selText), mod = !!textEdits[selText];
+    const onPage = ED.doc && [...ED.doc.querySelectorAll(`[data-i18n="${selText}"]`)].some(inlineOK);
     p.innerHTML = `<h2>Texto</h2><p class="hint" style="font:11px monospace">${esc(selText)}</p>
+      <p class="hint" id="tWhere">${onPage ? 'Escribe directamente sobre la web, o aquí.' : 'Este texto se cambia aquí.'} El inglés, solo aquí.</p>
       <label class="hint">Español</label><textarea id="tEs" rows="4">${esc(toEdit(v.es || ''))}</textarea>
       <label class="hint">Inglés</label><textarea id="tEn" rows="4">${esc(toEdit(v.en || ''))}</textarea>
       ${/<[a-z]/i.test(toEdit(v.es || '')) ? '<p class="hint">Las marcas entre &lt; &gt; dan estilo (por ejemplo, el texto más pequeño entre paréntesis): déjalas si quieres mantenerlo.</p>' : ''}
       <div class="btns"><button id="tUndo"${mod ? '' : ' disabled'}>Deshacer cambios de este texto</button></div>${changesList()}`;
-    const upd = () => {
-      const es = fromEdit($('tEs').value), en = fromEdit($('tEn').value), o = texts[selText];
-      if (es === o.es && en === o.en) delete textEdits[selText]; else textEdits[selText] = { es, en };
-      ED.doc && ED.doc.querySelectorAll(`[data-i18n="${selText}"]`).forEach(el => { el.innerHTML = es; });
-      $('tUndo').disabled = !textEdits[selText]; status();
-      const b = $('tab-textos').querySelector(`.t-item[data-k="${CSS.escape(selText)}"]`); if (b) { b.classList.toggle('mod', !!textEdits[selText]); b.textContent = plain(es) || selText; }
-    };
+    const upd = () => { endEdit(); setText(selText, fromEdit($('tEs').value), fromEdit($('tEn').value)); };
     $('tEs').oninput = upd; $('tEn').oninput = upd;
-    $('tUndo').onclick = () => { const k = selText; delete textEdits[k]; ED.doc && ED.doc.querySelectorAll(`[data-i18n="${k}"]`).forEach(el => { el.innerHTML = texts[k].es; }); renderTexts(); textProps(p); status(); };
+    $('tUndo').onclick = () => { endEdit(); const k = selText; delete textEdits[k]; ED.doc && ED.doc.querySelectorAll(`[data-i18n="${k}"]`).forEach(el => { el.innerHTML = texts[k].es; }); renderTexts(); textProps(p); status(); };
   }
 
   // ---------- colours ----------
@@ -318,13 +441,23 @@
   }
   function renderSections() {
     const box = $('tab-secciones'), order = currentOrder();
+    const opt = (v, label, on) => `<option value="${v}"${on ? ' selected' : ''}>${label}</option>`;
+    const spaceSel = (s, i) => { const v = (look.space[s] || [0, 0])[i]; return `<select data-sp="${i}">${SPACE_OPTS.map(([n, l]) => opt(n, l, n === v)).join('')}</select>`; };
     box.innerHTML = '<h2>Secciones</h2><p class="hint">Arrastra para cambiar el orden. La casilla las muestra u oculta. La portada va siempre primero.</p>' +
-      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}" draggable="true" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'} title="Mostrar"><span>${LABELS[s] || s}</span><button data-mv="-1"${i ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 ? '' : ' disabled'}>↓</button></div>`).join('') +
+      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}" draggable="true" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'} title="Mostrar"><span>${LABELS[s] || s}</span><button data-mv="-1"${i ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 ? '' : ' disabled'}>↓</button><button data-rs title="Fondo y espacio como en la web"${look.bg[s] || look.space[s] ? '' : ' disabled'}>↺</button>
+        <div class="sec-opts"><label>Fondo <select data-bg>${opt('', 'Como está', !look.bg[s])}${BG_OPTS.map(([v, l]) => opt(v, l, look.bg[s] === v)).join('')}</select></label><label>Arriba ${spaceSel(s, 0)}</label><label>Abajo ${spaceSel(s, 1)}</label></div></div>`).join('') +
       `<div class="btns" style="margin-top:8px"><button id="secReset"${look.order.length || look.hidden.length ? '' : ' disabled'}>Orden original, todas visibles</button></div>`;
     let drag = null;
     box.querySelectorAll('.sec-row').forEach(row => {
       const s = row.dataset.s;
       row.querySelector('input').onchange = e => { look.hidden = e.target.checked ? look.hidden.filter(x => x !== s) : [...look.hidden, s]; applyLook(); renderSections(); };
+      row.querySelector('[data-bg]').onchange = e => { if (e.target.value) look.bg[s] = e.target.value; else delete look.bg[s]; applyLook(); renderSections(); };
+      row.querySelectorAll('[data-sp]').forEach(sel => sel.onchange = () => {
+        const sp = (look.space[s] || [0, 0]).slice(); sp[+sel.dataset.sp] = +sel.value;
+        if (sp[0] || sp[1]) look.space[s] = sp; else delete look.space[s];
+        applyLook(); renderSections();
+      });
+      row.querySelector('[data-rs]').onclick = () => { delete look.bg[s]; delete look.space[s]; applyLook(); renderSections(); };
       row.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => move(s, +b.dataset.mv));
       row.ondragstart = () => { drag = s; };
       row.ondragover = e => { e.preventDefault(); row.classList.add('over'); };
@@ -344,7 +477,7 @@
     if ($('branch').value === '__new') return newBranchForm(p);
     if (tab === 'textos') return textProps(p);
     if (tab === 'colores' && palEdit) return paletteForm(p);
-    const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
+    const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.<br><br>Fondo: papel, papel oscuro o verde (como la confirmación, con el texto claro). Arriba y abajo: menos o más aire en ese borde. «↺» deja el fondo y el espacio de esa sección como en la web.' }[tab] || '';
     p.innerHTML = `<h2>${{ colores: 'Colores', fotos: 'Fotos', secciones: 'Secciones' }[tab] || ''}</h2><p class="hint">${help}</p>` + changesList();
   }
   function renderTab() {
@@ -354,6 +487,7 @@
     if (tab === 'secciones') renderSections();
   }
   function setTab(t) {
+    endEdit();
     tab = t;
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
     document.querySelectorAll('#lib .tab').forEach(s => { s.hidden = s.id !== 'tab-' + t; });
@@ -365,6 +499,7 @@
   // ---------- save ----------
   async function save() {
     if (saving) return;
+    endEdit();
     const parts = dirtyParts();
     if (!parts.length) { status('No hay nada que guardar'); return; }
     const who = $('who').value.trim();
@@ -390,9 +525,11 @@
 
   // ---------- page events ----------
   function onFrame(win, doc) {
+    editing = null;   // a new page: nothing is being written on it
     const st = doc.createElement('style');
     st.textContent = `.ed-mode-textos [data-i18n] { cursor: text; } .ed-mode-textos [data-i18n]:hover { outline: 1.5px dashed #c83c78; outline-offset: 2px; }
-      .ed-tsel { outline: 2px solid #c83c78 !important; outline-offset: 2px; }`;
+      .ed-tsel { outline: 2px solid #c83c78 !important; outline-offset: 2px; }
+      .ed-tsel[contenteditable] { cursor: text; caret-color: #c83c78; }`;
     doc.head.appendChild(st);
     doc.documentElement.classList.toggle('ed-mode-textos', tab === 'textos');
     applyLook(); applyTexts(); applyPhotos();
@@ -401,8 +538,9 @@
   }
   function onPointer(e) {
     if (tab !== 'textos') return;
+    if (editing && editing.el.contains(e.target)) return;   // inside the text being written: the browser moves the caret
     const el = e.target.closest('[data-i18n]');
-    if (el && texts[el.dataset.i18n]) { e.preventDefault(); pickText(el.dataset.i18n, false); }
+    if (el && texts[el.dataset.i18n]) { e.preventDefault(); pickText(el.dataset.i18n, false, { el, x: e.clientX, y: e.clientY }); }
   }
 
   // ---------- boot ----------

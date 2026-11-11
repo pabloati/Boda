@@ -7,7 +7,8 @@ commits them on that branch (and pushes it, if asked). Nothing here touches othe
 What the editor can change, and where it lands:
   flowers   js/flores-layout.js                       (generated)
   texts     index.html (Spanish, inside data-i18n elements) and js/i18n.js (English map)
-  look      css/editor.css: palette tokens, photo framing, section order and visibility (generated)
+  look      css/editor.css: palette tokens, photo framing, section order, visibility, background
+                                                      and spacing, moved texts (generated)
   photos    assets/hero-desktop.jpg, assets/hero-mobile.jpg, assets/foto-envio.jpg
 """
 import base64
@@ -280,9 +281,54 @@ def _tdecl(p, reset):
     return '; '.join(d)
 
 
+# Section background and spacing (Secciones tab), mirrored by sectionCSS() in _dev/editor-site.js.
+# Verde reproduces the olive band of #rsvp (.band-olive, .band-olive p, .band-olive .link-button,
+# .h-script.light and its wash), plus headings and text links so they stay readable on green.
+# Papel / Papel oscuro undo that cream text on a section that was green (#intro, #rsvp, the footer).
+# Text inside a .paper-panel (the RSVP form, the playlist card) keeps its own colours.
+BG = {'paper': 'var(--paper)', 'alt': 'var(--paper-deep)', 'olive': 'var(--olive)'}
+SPACE = {-1: 0.6, 0: 1, 1: 1.5}
+WASH = {'light': 'rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%',     # .h-script.light::before
+        'paper': 'var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%'}             # .h-script::before
+OUT = ':not(.paper-panel *)'
+
+
+def _pad(s):
+    """Vertical padding of a section in styles.css: ([top, bottom] wide screens, [top, bottom] phones)."""
+    if s == 'intro':
+        return [64, 64], [48, 48]
+    if s == 'footer':
+        return [64, 48], [64, 48]
+    return [72, 72], [52, 52]
+
+
+def section_css(S, s, bg, space):
+    """CSS for one section (selector S, id s): background paper | alt | olive, spacing [top, bottom] in -1, 0, 1."""
+    css = []
+    if bg == 'olive':
+        css.append('%s { background: var(--olive); color: var(--cream-text); }' % S)
+        css.append('%s :is(p, h1, h2, h3, h4, .h-script, .link-button, .text-link)%s { color: var(--cream-text); }' % (S, OUT))
+        css.append('%s .h-script::before { background: radial-gradient(ellipse at 50%% 60%%, %s); }' % (S, WASH['light']))
+    elif bg in BG:
+        css.append('%s { background: %s; color: var(--ink); }' % (S, BG[bg]))
+        css.append('%s:is(.band-olive, .intro-band) p%s { color: var(--ink-soft); }' % (S, OUT))
+        css.append('%s .h-script.light { color: var(--ink); }' % S)
+        css.append('%s .h-script.light::before { background: radial-gradient(ellipse at 50%% 60%%, %s); }' % (S, WASH['paper']))
+        css.append('%s.band-olive .link-button%s { color: var(--terracotta); }' % (S, OUT))
+    if space and any(space):
+        def decl(pad):
+            return '; '.join('padding-%s: %dpx' % (side, round(pad[i] * SPACE[space[i]]))
+                             for i, side in enumerate(('top', 'bottom')) if space[i])
+        wide, phone = _pad(s)
+        css.append('%s { %s; }' % (S, decl(wide)))
+        css.append('@media (max-width: 768px) {\n  %s { %s; }\n}' % (S, decl(phone)))
+    return css
+
+
 def write_look(wt, look):
     """look: {tokens: {name: color}, frame: {slot: [x, y]}, order: [ids], hidden: [ids],
-    text: {key: {x, y, z, d?: {x, y, z}}}, palettes: [{name, tokens}]}."""
+    text: {key: {x, y, z, d?: {x, y, z}}}, palettes: [{name, tokens}],
+    bg: {section: 'paper' | 'alt' | 'olive'}, space: {section: [top, bottom]} with -1 | 0 | 1}."""
     tokens = {k: v.strip() for k, v in (look.get('tokens') or {}).items() if k in TOKENS and COLOR.match(str(v).strip())}
     frame = {k: [_pct(v[0], 50), _pct(v[1], 50)] for k, v in (look.get('frame') or {}).items() if k in PHOTOS and isinstance(v, list) and len(v) == 2}
     order = [s for s in (look.get('order') or []) if s in SECTIONS]
@@ -307,7 +353,17 @@ def write_look(wt, look):
         name = re.sub(r'[^\w áéíóúñÁÉÍÓÚÑüÜ,.()/+-]', '', str(pal.get('name') or '')).strip()[:40]
         if toks and name:
             palettes.append({'name': name, 'tokens': toks})
-    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes}
+    raw_bg, raw_space = look.get('bg'), look.get('space')
+    raw_bg = raw_bg if isinstance(raw_bg, dict) else {}
+    raw_space = raw_space if isinstance(raw_space, dict) else {}
+    bg = {s: raw_bg[s] for s in SECTIONS if raw_bg.get(s) in BG}
+    space = {}
+    for s in SECTIONS:
+        v = raw_space.get(s)
+        if isinstance(v, list) and len(v) == 2 and all(type(x) is int and x in SPACE for x in v) and any(v):
+            space[s] = v
+    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes,
+             'bg': bg, 'space': space}
     sel = lambda s: '.footer-section' if s == 'footer' else '#' + s
     css = ['/* Written by the site editor (_dev/flores.html): edit it there, not by hand.',
            '   Loaded after styles.css. Delete this file to go back to styles.css alone. */',
@@ -328,6 +384,8 @@ def write_look(wt, look):
         css.extend('%s { order: %d; }' % (sel(s), i + 1) for i, s in enumerate(order))
     if hidden:
         css.append('%s { display: none !important; }' % ', '.join(sel(s) for s in hidden))
+    for s in SECTIONS:
+        css.extend(section_css(sel(s), s, bg.get(s), space.get(s)))
     for k, p in text.items():
         css.append('%s { %s; }' % (_tsel(k), _tdecl(p, False)))
         if p.get('d'):
