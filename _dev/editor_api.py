@@ -18,6 +18,7 @@ import json
 import os
 import re
 import subprocess
+import threading
 
 REPO_FILES = ('index.html', 'playlist-admin.html')
 PHOTOS = {'hero-desktop': 'assets/hero-desktop.jpg', 'hero-mobile': 'assets/hero-mobile.jpg', 'foto-envio': 'assets/foto-envio.jpg'}
@@ -380,6 +381,10 @@ def bump(wt, photos):
     return changed
 
 
+def _who(payload):
+    return re.sub(r'[^\w áéíóúñÁÉÍÓÚÑ.-]', '', str(payload.get('who') or ''))[:40].strip() or 'editor'
+
+
 def save(repo, branch, payload, write_flores):
     wt = open_branch(repo, branch)
     files, parts, photos = [], [], []
@@ -402,7 +407,7 @@ def save(repo, branch, payload, write_flores):
     run(wt, 'add', '--', *files)
     if not run(wt, 'diff', '--cached', '--name-only').strip():
         return {'ok': True, 'commit': None, 'files': []}
-    who = re.sub(r'[^\w áéíóúñÁÉÍÓÚÑ.-]', '', str(payload.get('who') or ''))[:40] or 'editor'
+    who = _who(payload)
     note = re.sub(r'[\r\n]+', ' ', str(payload.get('message') or ''))[:200]
     msg = 'editor (%s): %s%s' % (who, ', '.join(parts), ('\n\n' + note) if note else '')
     run(wt, '-c', 'user.name=pabloati', '-c', 'user.email=pabloatienzalo@gmail.com', 'commit', '-q', '-m', msg)
@@ -415,3 +420,116 @@ def save(repo, branch, payload, write_flores):
         except EditorError as e:
             pushed = str(e)
     return {'ok': True, 'commit': sha, 'files': files, 'pushed': pushed}
+
+
+# ---------- publish: merge a branch into main and push main (that publishes the site) ----------
+
+PUBLISH_LOCK = threading.Lock()
+IDENT = ('-c', 'user.name=pabloati', '-c', 'user.email=pabloatienzalo@gmail.com')
+ASK = 'pide a Pablo que lo revise'
+
+
+def _has(repo, ref):
+    try:
+        run(repo, 'rev-parse', '--verify', '-q', ref + '^{commit}')
+        return True
+    except EditorError:
+        return False
+
+
+def _count(repo, rng):
+    return int(run(repo, 'rev-list', '--count', rng).strip() or 0)
+
+
+def _publish_branch(repo, branch):
+    if not isinstance(branch, str) or not BRANCH.match(branch) or branch.startswith(('-', '.')) or '..' in branch or branch.endswith('.lock'):
+        raise EditorError('Nombre de rama no válido')
+    try:
+        run(repo, 'check-ref-format', '--branch', branch)
+    except EditorError:
+        raise EditorError('Nombre de rama no válido')
+    if branch == 'main':
+        raise EditorError('Estás en main, que ya es la web publicada: abre la rama con los cambios que quieres publicar')
+    return branch
+
+
+def publish_plan(repo, branch, fetch=True):
+    """Dry run: what publishing <branch> would put on main, and anything that stops it.
+    Commits are the ones on the branch that origin/main does not have yet, newest first."""
+    _publish_branch(repo, branch)
+    fetched = False
+    if fetch:
+        try:
+            run(repo, 'fetch', '-q', 'origin')
+            fetched = True
+        except EditorError:
+            pass
+    local, remote = 'refs/heads/' + branch, 'refs/remotes/origin/' + branch
+    has_local, has_remote = _has(repo, local), _has(repo, remote)
+    if not (has_local or has_remote):
+        raise EditorError('La rama %s no existe' % branch)
+    base = 'refs/remotes/origin/main' if _has(repo, 'refs/remotes/origin/main') else 'refs/heads/main'
+    if not _has(repo, base):
+        raise EditorError('No encuentro la rama main')
+    ref = local if has_local else remote
+    problem = None
+    if base != 'refs/heads/main' and _has(repo, 'refs/heads/main'):
+        ahead = _count(repo, base + '..refs/heads/main')
+        if ahead:
+            problem = 'main tiene %d cambio(s) en este ordenador que no están en GitHub: %s antes de publicar.' % (ahead, ASK)
+    if not problem and has_local and has_remote and _count(repo, local + '..' + remote):
+        problem = 'La rama %s tiene en GitHub cambios que no están en el editor: %s antes de publicar.' % (branch, ASK)
+    wt_main = worktree_map(repo).get('main')
+    if not problem and wt_main and run(wt_main, 'status', '--porcelain', '--untracked-files=no').strip():
+        problem = 'La copia de main de este ordenador tiene cambios a medias: %s antes de publicar.' % ASK
+    commits = []
+    for line in run(repo, 'log', '--max-count=200', '--format=%h%x1f%an%x1f%aI%x1f%s', base + '..' + ref).splitlines():
+        sha, author, when, subject = (line.split('\x1f') + ['', '', ''])[:4]
+        m = re.match(r'^editor \(([^)]*)\)', subject)
+        commits.append({'sha': sha, 'who': m.group(1) if m else author, 'when': when, 'subject': subject})
+    push = has_local and (not has_remote or _count(repo, remote + '..' + local) > 0)
+    return {'ok': True, 'branch': branch, 'commits': commits, 'upToDate': not commits, 'fetched': fetched,
+            'problem': problem, 'pushBranch': push, '_ref': ref}
+
+
+def publish(repo, branch, payload):
+    """Push the branch if GitHub lacks some of it, bring main to origin/main, merge the branch into
+    main (--no-ff) and push main. Any conflict or failed push leaves main as it was on GitHub."""
+    with PUBLISH_LOCK:
+        plan = publish_plan(repo, branch)
+        if not plan['fetched']:
+            raise EditorError('No se pudo conectar con GitHub: prueba otra vez en un momento')
+        if plan['problem']:
+            raise EditorError(plan['problem'])
+        if not plan['commits']:
+            return {'ok': True, 'merged': [], 'commit': None, 'upToDate': True}
+        if plan['pushBranch']:
+            ref = 'refs/heads/' + branch
+            run(repo, 'push', '-q', 'origin', '%s:%s' % (ref, ref))
+        wt = open_branch(repo, 'main')
+        if run(wt, 'status', '--porcelain', '--untracked-files=no').strip():
+            raise EditorError('La copia de main de este ordenador tiene cambios a medias: %s antes de publicar.' % ASK)
+        try:
+            run(wt, 'merge', '-q', '--ff-only', 'refs/remotes/origin/main')
+        except EditorError:
+            raise EditorError('main no se pudo poner al día con GitHub: %s antes de publicar.' % ASK)
+        before = run(wt, 'rev-parse', 'HEAD').strip()
+        msg = 'publicar: %s (editor, %s)' % (branch, _who(payload))
+        try:
+            run(wt, *IDENT, 'merge', '-q', '--no-ff', '--no-edit', '-m', msg, plan['_ref'])
+        except EditorError as e:
+            if _has(wt, 'MERGE_HEAD'):   # a real conflict: undo the half-done merge
+                try:
+                    run(wt, 'merge', '--abort')
+                except EditorError:
+                    run(wt, 'reset', '-q', '--merge', before)
+                raise EditorError('No se pudo publicar: los cambios de %s chocan con lo que ya hay en la web. '
+                                  'No se ha tocado nada; pide a Pablo que los una a mano.' % branch)
+            raise EditorError('No se pudo publicar (%s). No se ha tocado nada: %s.' % (e, ASK))
+        try:
+            run(wt, 'push', '-q', 'origin', 'refs/heads/main:refs/heads/main')
+        except EditorError as e:
+            run(wt, 'reset', '-q', '--keep', before)
+            raise EditorError('No se pudo subir main a GitHub (%s). No se ha publicado nada.' % e)
+        return {'ok': True, 'merged': plan['commits'], 'commit': run(wt, 'rev-parse', '--short', 'HEAD').strip(),
+                'branchPushed': plan['pushBranch']}
