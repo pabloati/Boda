@@ -32,6 +32,16 @@ class EditorError(Exception):
     pass
 
 
+class Conflict(EditorError):
+    """The branch moved on since the editor opened it (someone else saved). serve.py answers 409."""
+    def __init__(self, head):
+        super().__init__('La rama ha cambiado desde que la abriste (otro ordenador ha guardado).')
+        self.head = head
+
+
+SHA = re.compile(r'^[0-9a-f]{7,40}$')
+
+
 def run(cwd, *args):
     r = subprocess.run(['git', '-C', cwd, *args], capture_output=True, text=True)
     if r.returncode:
@@ -382,6 +392,7 @@ def bump(wt, photos):
 
 def save(repo, branch, payload, write_flores):
     wt = open_branch(repo, branch)
+    check_head(wt, payload)
     files, parts, photos = [], [], []
     if 'flores' in payload:
         files.append(write_flores(wt, payload['flores'])); parts.append('flores')
@@ -398,20 +409,104 @@ def save(repo, branch, payload, write_flores):
         files += bump(wt, photos)
     files = sorted(set(files))
     if not files:
-        return {'ok': True, 'commit': None, 'files': []}
+        return {'ok': True, 'commit': None, 'files': [], 'head': head(wt)}
     run(wt, 'add', '--', *files)
     if not run(wt, 'diff', '--cached', '--name-only').strip():
-        return {'ok': True, 'commit': None, 'files': []}
-    who = re.sub(r'[^\w áéíóúñÁÉÍÓÚÑ.-]', '', str(payload.get('who') or ''))[:40] or 'editor'
+        return {'ok': True, 'commit': None, 'files': [], 'head': head(wt)}
     note = re.sub(r'[\r\n]+', ' ', str(payload.get('message') or ''))[:200]
-    msg = 'editor (%s): %s%s' % (who, ', '.join(parts), ('\n\n' + note) if note else '')
+    msg = 'editor (%s): %s%s' % (_who(payload), ', '.join(parts), ('\n\n' + note) if note else '')
+    out = _commit(wt, branch, msg, payload.get('push'))
+    out['files'] = files
+    return out
+
+
+def _who(payload):
+    return re.sub(r'[^\w áéíóúñÁÉÍÓÚÑ.-]', '', str(payload.get('who') or ''))[:40] or 'editor'
+
+
+def _commit(wt, branch, msg, push):
+    """Commit what is staged (as pabloati) and push the branch if asked. The push error, if any, goes back as text."""
     run(wt, '-c', 'user.name=pabloati', '-c', 'user.email=pabloatienzalo@gmail.com', 'commit', '-q', '-m', msg)
-    sha = run(wt, 'rev-parse', '--short', 'HEAD').strip()
+    sha = head(wt)
     pushed = None
-    if payload.get('push'):
+    if push:
         try:
             run(wt, 'push', '-q', '-u', 'origin', branch)
             pushed = True
         except EditorError as e:
             pushed = str(e)
-    return {'ok': True, 'commit': sha, 'files': files, 'pushed': pushed}
+    return {'ok': True, 'commit': sha, 'pushed': pushed, 'head': sha}
+
+
+# ---------- history: list, stale-branch check, go back to a commit ----------
+
+def head(wt):
+    return run(wt, 'rev-parse', '--short', 'HEAD').strip()
+
+
+def check_head(wt, payload):
+    """Refuse to write when the client opened an older HEAD than the worktree has now, unless payload.force.
+    A client that sends no head (older editor) is not checked."""
+    h = payload.get('head')
+    if not h or payload.get('force'):
+        return
+    if not SHA.match(str(h)):
+        raise EditorError('Versión de la rama no válida')
+    full = run(wt, 'rev-parse', 'HEAD').strip()
+    if not full.startswith(h):
+        raise Conflict(head(wt))
+
+
+def history(repo, branch, n=40):
+    """The branch's last n commits: sha, who, date (unix), subject, files touched, made by the editor or not."""
+    wt = open_branch(repo, branch)
+    out = run(wt, '-c', 'core.quotepath=off', 'log', '-n', str(n), '--name-only',
+              '--format=%x1e%H%x1f%h%x1f%an%x1f%at%x1f%P%x1f%s')
+    commits = []
+    for rec in out.split('\x1e')[1:]:
+        lines = rec.split('\n')
+        f = lines[0].split('\x1f')
+        if len(f) < 6:
+            continue
+        subject = f[5]
+        m = re.match(r'^editor \(([^)]*)\):', subject)
+        commits.append({
+            'sha': f[0], 'short': f[1], 'author': f[2], 'date': int(f[3] or 0), 'merge': len(f[4].split()) > 1,
+            'subject': subject, 'who': m.group(1) if m else f[2],
+            'editor': bool(m) or subject.startswith('publicar:'),
+            'files': [x for x in lines[1:] if x.strip()][:50],
+        })
+    return {'branch': branch, 'head': head(wt), 'commits': commits}
+
+
+def revert(repo, branch, payload):
+    """Put the branch's files back as they were at an older commit of the same branch, as one new commit
+    on top (nothing is rewritten). Refuses if the worktree has changes nobody committed."""
+    sha = str(payload.get('sha') or '')
+    if not SHA.match(sha):
+        raise EditorError('Versión no válida')
+    wt = open_branch(repo, branch)
+    check_head(wt, payload)
+    r = subprocess.run(['git', '-C', wt, 'merge-base', '--is-ancestor', sha, 'HEAD'], capture_output=True, text=True)
+    if r.returncode == 1:
+        raise EditorError('Esa versión no es de esta rama')
+    if r.returncode:
+        raise EditorError('No encuentro esa versión')
+    if run(wt, 'status', '--porcelain', '--untracked-files=no').strip():
+        raise EditorError('La carpeta de esta rama tiene cambios sin guardar hechos fuera del editor: guárdalos o descártalos antes')
+    short = run(wt, 'rev-parse', '--short', sha).strip()
+    subject = run(wt, 'log', '-1', '--format=%s', sha).strip()
+    run(wt, 'read-tree', '-m', '-u', sha)          # index and files as at sha; files added since are removed
+    changed = run(wt, '-c', 'core.quotepath=off', 'diff', '--cached', '--name-only').split('\n')
+    changed = [f for f in changed if f]
+    if not changed:
+        return {'ok': True, 'commit': None, 'head': head(wt)}
+    # new ?v= on the links, so visitors who already have the newer css/js/photos cached get the old ones back
+    photos = [f for f in changed if f in PHOTOS.values()]
+    if photos or any(f.startswith(('css/', 'js/')) for f in changed):
+        bumped = bump(wt, photos)
+        if bumped:
+            run(wt, 'add', '--', *bumped)
+    subject = re.sub(r'\s+', ' ', subject)
+    msg = 'editor (%s): volver a %s (%s)' % (_who(payload), short, subject[:72] + ('…' if len(subject) > 72 else ''))
+    return _commit(wt, branch, msg, payload.get('push'))
