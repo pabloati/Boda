@@ -346,7 +346,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if q.get('head'):         # the cheap variant the editor polls: has someone saved since?
                     return self.send_json({'head': editor_api.head(wt)})
                 return self.send_json({'url': wt_url(wt), 'head': editor_api.head(wt),
-                                       'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+                                       'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt),
+                                       'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
             if p == '/_dev/api/history':
                 return self.send_json(editor_api.history(HERE, q['branch'][0]))
             if p == '/_dev/api/publish':   # dry run; the merge itself is a POST

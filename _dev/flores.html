@@ -35,6 +35,9 @@
   .pal-row { display: flex; gap: 3px; align-items: stretch; } .pal-row .preset { flex: 1; min-width: 0; } .pal-row .preset b { width: 9px; } .pal-row > button:not(.preset) { padding: 0 5px; margin-bottom: 5px; font-size: 12px; } .sw-row input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
   .preset { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 5px; text-align: left; } .preset i { display: flex; gap: 2px; } .preset b { width: 12px; height: 18px; border-radius: 2px; }
   .preset.on { border-color: var(--acc); }
+  .font-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; width: 100%; margin-bottom: 4px; text-align: left; padding: 4px 9px; }
+  .font-row span { font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .font-row em { font: normal 10px system-ui, sans-serif; color: var(--soft); flex: none; }
+  .font-row.on { border-color: var(--acc); background: #fff4f8; color: var(--accd); }
   .ph-slot { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 12px; background: #fff; }
   .ph-slot img { width: 100%; max-height: 160px; object-fit: contain; background: #eee; border-radius: 4px; display: block; margin-bottom: 6px; }
 .fake-btn { display: inline-block; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
@@ -127,11 +130,12 @@
 </header>
 <div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib">
-  <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button><button data-tab="historial">Historial</button></nav>
+  <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fuentes">Fuentes</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button><button data-tab="historial">Historial</button></nav>
   <section class="tab" id="tab-flores"><h2>Flores</h2><div id="libGrid"></div>
     <p class="hint" style="margin-top:12px">Haz clic en una flor para añadirla a la sección que estás viendo.</p></section>
   <section class="tab" id="tab-textos" hidden></section>
   <section class="tab" id="tab-colores" hidden></section>
+  <section class="tab" id="tab-fuentes" hidden></section>
   <section class="tab" id="tab-fotos" hidden></section>
   <section class="tab" id="tab-secciones" hidden></section>
   <section class="tab" id="tab-historial" hidden></section>
@@ -158,7 +162,7 @@
   let undoSt = [], redoSt = [];
   let clip = null, fmt = null;   // Ctrl+C copies a plate; Ctrl+Mayús+C copies its size and turn
   let multi = new Set();         // Mayús+clic: several plates selected; sel is the last one clicked
-  let tpos = {}, tsel = null;    // moved texts: key → { x, y, z, d? } (saved by the site module in the look); the selected text's key
+  let tpos = {}, tsel = null;    // moved texts: key → { x, y, z, size?, color?, align?, font?, d? } (saved by the site module in the look); the selected text's key
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const clone = o => JSON.parse(JSON.stringify(o));
@@ -274,8 +278,12 @@
   const textEl = k => { const el = doc.querySelector(k.startsWith('#') ? 'main ' + k : `main [data-i18n="${k}"]`); return el && textAt(el) === el ? el : null; };
   const tview = t => DESK() && t.d ? t.d : t;
   const tget = k => tpos[k] || { x: 0, y: 0, z: '' };
-  function ted(k) { const t = tpos[k] = tpos[k] || { x: 0, y: 0, z: '' }; if (!DESK()) return t; if (!t.d) t.d = { x: t.x, y: t.y, z: t.z }; return t.d; }
-  const atRest = v => !v.x && !v.y && !v.z;
+  // the desktop variant starts as a copy of the phone one (move, layer and style)
+  function ted(k) { const t = tpos[k] = tpos[k] || { x: 0, y: 0, z: '' }; if (!DESK()) return t; if (!t.d) { const c = clone(t); delete c.d; t.d = c; } return t.d; }
+  // a text's own style: size (px, absolute), colour (hex), alignment, font role; absent = as in styles.css
+  const TSTYLE = ['size', 'color', 'align', 'font'];
+  const moveRest = v => !v.x && !v.y && !v.z, styleRest = v => TSTYLE.every(s => v[s] == null);
+  const atRest = v => moveRest(v) && styleRest(v);
   function tclean(k) { const t = tpos[k]; if (!t) return; if (t.d && atRest(t.d) && atRest(t)) delete t.d; if (atRest(t) && !t.d) delete tpos[k]; }
   function tgeom(el) { const sec = el.closest('main > *'), r = el.getBoundingClientRect(), p = sec.getBoundingClientRect(); return { left: r.left - p.left, top: r.top - p.top, w: r.width, h: r.height, sec }; }
   const tlabel = el => (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48);
@@ -296,13 +304,32 @@
     doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
   }
   function tnudge(k, dx, dy) { snapshot(); const t = ted(k); t.x = (t.x || 0) + dx; t.y = (t.y || 0) + dy; tclean(k); changed(); }
-  function tset(k, patch) { snapshot(); Object.assign(ted(k), patch); tclean(k); changed(); }
-  function treset(k) { snapshot(); if (DESK() && tpos[k]) { tpos[k].d = { x: 0, y: 0, z: '' }; tclean(k); } else delete tpos[k]; changed(); }
+  // patch: a style key set to null goes back to the site's own
+  // (a patch that changes nothing, like a second "change" from a box the panel just replaced, is no undo step)
+  function tset(k, patch) {
+    const cur = tview(tget(k)), norm = v => (v == null || v === '' ? null : v);
+    if (Object.entries(patch).every(([a, v]) => TSTYLE.includes(a) ? norm(cur[a]) === norm(v) : (cur[a] || (a === 'z' ? '' : 0)) === v)) return;
+    snapshot(); const t = ted(k); Object.entries(patch).forEach(([a, v]) => { if (TSTYLE.includes(a) && (v == null || v === '')) delete t[a]; else t[a] = v; }); tclean(k); changed(); }
+  // "Dejar en su sitio" undoes the move and layer, "Quitar estilo" the style. On the phone view both
+  // placements go back; on the desktop view, only the desktop one.
+  function tback(k, fn) { snapshot(); const t = DESK() ? ted(k) : tpos[k]; if (t) { fn(t); if (!DESK() && t.d) fn(t.d); } tclean(k); changed(); }
+  const treset = k => tback(k, t => { t.x = 0; t.y = 0; t.z = ''; });
+  const tunstyle = k => tback(k, t => TSTYLE.forEach(s => delete t[s]));
+  const rgbHex = c => { const m = String(c).match(/\d+(\.\d+)?/g); return m && m.length >= 3 ? '#' + m.slice(0, 3).map(v => Math.round(+v).toString(16).padStart(2, '0')).join('') : '#000000'; };
+  const FONT_ROLES = [['', 'Sin cambio'], ['serif', 'Texto'], ['script', 'Títulos'], ['hand', 'Manuscrita']];
   function goToText(k) { const el = textEl(k); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); selectText(k); }
   function drawTextProps(p, k) {
     const el = textEl(k); if (!el) { tsel = null; return drawProps(); }
-    const t = tget(k), v = tview(t);
-    const deskNote = DESK() ? `<div class="note${t.d ? ' own' : ''}">${t.d ? 'En escritorio tiene su <b>propio desplazamiento y capa</b>.' : 'En escritorio usa <b>lo mismo que en el móvil</b>. Si lo mueves aquí, tendrá lo suyo.'}${t.d ? ' <button id="tUseM">Usar lo del móvil</button>' : ''}</div>` : '';
+    const t = tget(k), v = tview(t), S = window.SITE, cs = win.getComputedStyle(el);
+    const size = v.size != null ? v.size : Math.round(parseFloat(cs.fontSize) || 16), col = (S && S.normHex(v.color)) || rgbHex(cs.color);
+    const deskNote = DESK() ? `<div class="note${t.d ? ' own' : ''}">${t.d ? 'En escritorio tiene su <b>propio desplazamiento, capa y estilo</b>.' : 'En escritorio usa <b>lo mismo que en el móvil</b>. Si lo mueves o le cambias el estilo aquí, tendrá lo suyo.'}${t.d ? ' <button id="tUseM">Usar lo del móvil</button>' : ''}</div>` : '';
+    const AL = [['left', 'Izquierda'], ['center', 'Centro'], ['right', 'Derecha']];
+    const styleBox = `<h2 style="margin-top:14px">Estilo</h2>
+      <div class="row"><label>Tamaño (px)</label><input type="range" id="tSize" min="8" max="200" step="1" value="${size}"><input type="number" id="tSizeN" min="8" max="200" step="1" value="${size}" style="width:4.6em;flex:none"></div>
+      ${S && S.colourRow ? S.colourRow('tcolor', 'Color' + (v.color ? '' : ' (el de la web)'), col, v.color ? '<button id="tColR" title="Volver al de la web">↺</button>' : '') : ''}
+      <div class="grp2">${AL.map(([a, l]) => `<button data-ta="${a}" class="${v.align === a ? 'on' : ''}" title="${v.align === a ? 'Pulsa otra vez para quitarlo' : ''}">${l}</button>`).join('')}</div>
+      <div class="row"><label>Letra</label><select id="tFont">${FONT_ROLES.map(([f, l]) => `<option value="${f}"${(v.font || '') === f ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="btns"><button id="tUnstyle"${styleRest(v) ? ' disabled' : ''}>Quitar estilo</button></div>`;
     p.innerHTML = `<h2>Texto</h2><p class="hint" style="font-style:italic">«${esc(tlabel(el))}»</p>${deskNote}
       <p class="hint">Arrastra el texto para moverlo (<kbd>Mayús</kbd>: solo en una dirección). <kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px). El texto sigue ocupando su hueco: lo que cambia es dónde se pinta.</p>
       <div class="row"><label>Horizontal</label><input type="number" id="tX" step="1" value="${v.x || 0}"></div>
@@ -310,7 +337,8 @@
       <h2 style="margin-top:14px">Capa</h2>
       <div class="grp2"><button data-tz="back" class="${v.z === 'back' ? 'on' : ''}">Bajo las flores</button><button data-tz="" class="${!v.z ? 'on' : ''}">Normal</button><button data-tz="front" class="${v.z === 'front' ? 'on' : ''}">Sobre las flores</button></div>
       <p class="hint" style="margin:-4px 0 10px">Normal: entre las flores de detrás y las de delante.</p>
-      <div class="btns"><button id="tReset" title="Supr"${atRest(v) ? ' disabled' : ''}>Dejar en su sitio</button></div>
+      <div class="btns"><button id="tReset" title="Supr"${moveRest(v) ? ' disabled' : ''}>Dejar en su sitio</button></div>
+      ${styleBox}
       <p class="hint">Para cambiar lo que dice, usa la pestaña Textos.</p>
       ${placedList()}`;
     wirePlaced(p);
@@ -318,6 +346,16 @@
     $('tY').onchange = e => tset(k, { y: Math.round(+e.target.value || 0) });
     p.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => tset(k, { z: b.dataset.tz }));
     $('tReset').onclick = () => treset(k);
+    // size: the slider previews on the element, the value is stored when it is let go
+    const sz = n => Math.max(8, Math.min(200, Math.round(+n || size)));
+    $('tSize').oninput = e => { $('tSizeN').value = e.target.value; el.style.fontSize = e.target.value + 'px'; drawSel(); };
+    $('tSize').onchange = e => { el.style.fontSize = ''; tset(k, { size: sz(e.target.value) }); };
+    $('tSizeN').onchange = e => tset(k, { size: sz(e.target.value) });
+    if (S && S.wireColourRows) S.wireColourRows(p, (_, h, live) => { if (live) el.style.color = h; else { el.style.color = ''; tset(k, { color: h }); } });
+    if ($('tColR')) $('tColR').onclick = () => tset(k, { color: null });
+    p.querySelectorAll('[data-ta]').forEach(b => b.onclick = () => tset(k, { align: v.align === b.dataset.ta ? null : b.dataset.ta }));
+    $('tFont').onchange = e => tset(k, { font: e.target.value || null });
+    $('tUnstyle').onclick = () => tunstyle(k);
     if ($('tUseM')) $('tUseM').onclick = () => { snapshot(); delete tpos[k].d; tclean(k); changed(); };
   }
   function toggleSel(id) {
@@ -565,8 +603,9 @@
   }
   function movedTexts() {
     const ks = Object.keys(tpos).filter(textEl); if (!ks.length) return '';
-    const Z = { back: 'bajo', front: 'sobre' };
-    return `<h2 style="margin-top:14px">Textos movidos (${ks.length})</h2><div class="placed">` + ks.map(k => { const v = tview(tget(k)); return `<button class="pl${k === tsel ? ' on' : ''}" data-gt="${esc(k)}">${esc(tlabel(textEl(k)))} <span>${v.x || 0}, ${v.y || 0}${Z[v.z] ? ' · ' + Z[v.z] : ''}</span></button>`; }).join('') + '</div>';
+    const Z = { back: 'bajo', front: 'sobre' }, F = { serif: 'texto', script: 'títulos', hand: 'manuscrita' };
+    const info = v => [(v.x || v.y) && `${v.x || 0}, ${v.y || 0}`, Z[v.z], v.size != null && v.size + ' px', v.color && 'color', v.align && { left: 'izq.', center: 'centro', right: 'der.' }[v.align], F[v.font]].filter(Boolean).join(' · ') || '0, 0';
+    return `<h2 style="margin-top:14px">Textos movidos (${ks.length})</h2><div class="placed">` + ks.map(k => { const v = tview(tget(k)); return `<button class="pl${k === tsel ? ' on' : ''}" data-gt="${esc(k)}">${esc(tlabel(textEl(k)))} <span>${esc(info(v))}</span></button>`; }).join('') + '</div>';
   }
   const wirePlaced = p => { p.querySelectorAll('[data-go]').forEach(b => b.onclick = ev => goTo(get(b.dataset.go), ev.shiftKey)); p.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => goToText(b.dataset.gt)); };
 

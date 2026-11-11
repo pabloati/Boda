@@ -7,7 +7,8 @@ commits them on that branch (and pushes it, if asked). Nothing here touches othe
 What the editor can change, and where it lands:
   flowers   js/flores-layout.js                       (generated)
   texts     index.html (Spanish, inside data-i18n elements) and js/i18n.js (English map)
-  look      css/editor.css: palette tokens, photo framing, section order and visibility (generated)
+  look      css/editor.css: palette tokens, fonts, photo framing, section order and visibility,
+            moved and styled texts (generated)
   photos    assets/hero-desktop.jpg, assets/hero-mobile.jpg, assets/foto-envio.jpg
 """
 import base64
@@ -27,6 +28,42 @@ TOKENS = ('paper', 'paper-deep', 'paper-line', 'olive', 'olive-deep', 'olive-sof
 SECTIONS = ('intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer')
 COLOR = re.compile(r'^(#[0-9a-fA-F]{3,8}|rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(,\s*[\d.]+\s*)?\))$')
 BRANCH = re.compile(r'^[A-Za-z0-9._-]{1,60}(/[A-Za-z0-9._-]{1,60})?$')
+
+# The fonts the Fuentes tab offers: free Google Fonts, one list per role (the CSS token it sets).
+# The first of each list is the site's own (styles.css). This list is the source of truth: the
+# editor renders it from /_dev/api/state and write_look accepts nothing else. Script faces differ a
+# lot in size, so each carries a scale that headings (.h-script) multiply their size by.
+# Serif axes: what styles.css uses (400-600 and italics); Libre Caslon Text and Cardo only come in
+# 400, 700 and italic 400, so they ask for those (600 then takes the bold).
+_SERIF_AXES, _SERIF_AXES_3 = 'ital,wght@0,400;0,500;0,600;1,400;1,500', 'ital,wght@0,400;0,700;1,400'
+FONTS = {
+    'serif': [{'name': n, 'axes': _SERIF_AXES_3 if n in ('Libre Caslon Text', 'Cardo') else _SERIF_AXES} for n in (
+        'Cormorant Garamond', 'EB Garamond', 'Playfair Display', 'Libre Caslon Text', 'Lora', 'Crimson Pro',
+        'Spectral', 'Cardo')],
+    'script': [{'name': n, 'scale': s} for n, s in (
+        # scale: about the same width as Allison for the same heading (measured, then eyeballed)
+        ('Allison', 1), ('Great Vibes', 0.75), ('Parisienne', 0.65), ('Pinyon Script', 0.7), ('Alex Brush', 0.75),
+        ('Sacramento', 0.75), ('Mrs Saint Delafield', 0.9), ('Dancing Script', 0.7))],
+    'hand': [{'name': n} for n in (
+        'Homemade Apple', 'Caveat', 'Indie Flower', 'Shadows Into Light', 'Nothing You Could Do', 'Reenie Beanie',
+        'Kalam', 'Patrick Hand')],
+}
+FONT_FALLBACK = {'serif': "'Times New Roman', serif", 'script': 'cursive', 'hand': 'cursive'}
+
+
+def font_spec(role, name):
+    """The curated entry for a family, or None."""
+    return next((f for f in FONTS.get(role, ()) if f['name'] == name), None)
+
+
+def fonts_url(fonts):
+    """Google Fonts stylesheet for {role: family}: one request for all of them."""
+    fam = []
+    for role, name in fonts.items():
+        f = font_spec(role, name)
+        if f:
+            fam.append('family=' + f['name'].replace(' ', '+') + (':' + f['axes'] if f.get('axes') else ''))
+    return 'https://fonts.googleapis.com/css2?%s&display=swap' % '&'.join(fam) if fam else ''
 
 
 class EditorError(Exception):
@@ -262,23 +299,84 @@ TEXT_Z = {'back': -2, 'front': 3}   # against .flor (z -1) and .flor--front (z 2
 TEXT_KEY = re.compile(r'^(#[\w-]+|[\w.-]+)$')
 
 
+TEXT_ALIGN = ('left', 'center', 'right')
+TEXT_FONT = ('serif', 'script', 'hand')
+STYLE_KEYS = ('size', 'color', 'align', 'font')
+HEX6 = re.compile(r'^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$')
+
+
 def _tplace(v):
-    """One text placement {x, y, z} in px; None if it is not one."""
+    """One text placement {x, y, z} in px, plus its style if any (size px, color hex, align, font
+    role); None if it is not one."""
     if not isinstance(v, dict):
         return None
     try:
         x, y = (max(-2000, min(2000, int(round(float(v.get(k) or 0))))) for k in ('x', 'y'))
     except (TypeError, ValueError):
         return None
-    return {'x': x, 'y': y, 'z': v.get('z') if v.get('z') in TEXT_Z else ''}
+    p = {'x': x, 'y': y, 'z': v.get('z') if v.get('z') in TEXT_Z else ''}
+    try:
+        if v.get('size') is not None:
+            p['size'] = max(8, min(200, int(round(float(v['size'])))))
+    except (TypeError, ValueError):
+        pass
+    c = str(v.get('color') or '').strip()
+    if HEX6.match(c):
+        c = c.lower()
+        p['color'] = c if len(c) == 7 else '#' + ''.join(ch * 2 for ch in c[1:])
+    if v.get('align') in TEXT_ALIGN:
+        p['align'] = v['align']
+    if v.get('font') in TEXT_FONT:
+        p['font'] = v['font']
+    return p
+
+
+def _styled(p):
+    return any(k in p for k in STYLE_KEYS)
 
 
 def _tsel(k):
     return 'main %s' % k if k.startswith('#') else 'main [data-i18n="%s"]' % k
 
 
+def _tkey(k):
+    return k if k.startswith('#') else '[data-i18n="%s"]' % k
+
+
+# A text's own style goes in rules of its own, under #main-content: an id beats the class rules of
+# styles.css (.h-script.light sets the colour, .text-center > .h-script the margins).
+H_ALIGN = {'left': ('0', 'auto'), 'center': ('auto', 'auto'), 'right': ('auto', '0')}
+
+
+def _tstyle(p):
+    """The style declarations of one placement (size, colour, alignment, font)."""
+    d = []
+    if 'size' in p:
+        d.append('font-size: %dpx' % p['size'])
+    if 'color' in p:
+        d.append('color: %s' % p['color'])
+    if 'align' in p:
+        d.append('text-align: %s' % p['align'])
+    if 'font' in p:
+        d.append('font-family: var(--font-%s)' % p['font'])
+    return d
+
+
+def _trules(k, p):
+    """[(selector, [declarations])] for the style of one placement. A script heading (.h-script)
+    is an inline-block as wide as its text: to align it, it becomes a block of that width placed by
+    its margins (the extra rule only matches if the text is one)."""
+    st = _tstyle(p)
+    rules = [('#main-content %s' % _tkey(k), st)] if st else []
+    if 'align' in p:
+        ml, mr = H_ALIGN[p['align']]
+        rules.append(('#main-content .h-script%s' % _tkey(k),
+                      ['display: block', 'width: fit-content', 'margin-left: %s' % ml, 'margin-right: %s' % mr]))
+    return rules
+
+
 def _tdecl(p, reset):
-    """The declarations for one placement; reset=True (the wide-screen rule) undoes the phone one."""
+    """The move/layer declarations for one placement; reset=True (the wide-screen rule) undoes the phone one."""
     d = []
     if p['x'] or p['y']:
         d.append('transform: translate(%dpx, %dpx)' % (p['x'], p['y']))
@@ -288,12 +386,13 @@ def _tdecl(p, reset):
         d += ['position: relative', 'z-index: %d' % TEXT_Z[p['z']]]
     elif reset:
         d.append('z-index: auto')
-    return '; '.join(d)
+    return d
 
 
 def write_look(wt, look):
     """look: {tokens: {name: color}, frame: {slot: [x, y]}, order: [ids], hidden: [ids],
-    text: {key: {x, y, z, d?: {x, y, z}}}, palettes: [{name, tokens}]}."""
+    text: {key: {x, y, z, size?, color?, align?, font?, d?: {same}}}, palettes: [{name, tokens}],
+    fonts: {serif?, script?, hand?: family from FONTS}}."""
     tokens = {k: v.strip() for k, v in (look.get('tokens') or {}).items() if k in TOKENS and COLOR.match(str(v).strip())}
     frame = {k: [_pct(v[0], 50), _pct(v[1], 50)] for k, v in (look.get('frame') or {}).items() if k in PHOTOS and isinstance(v, list) and len(v) == 2}
     order = [s for s in (look.get('order') or []) if s in SECTIONS]
@@ -308,7 +407,7 @@ def write_look(wt, look):
         d = _tplace(v.get('d'))
         if d:
             p['d'] = d
-        if p['x'] or p['y'] or p['z'] or d:
+        if p['x'] or p['y'] or p['z'] or _styled(p) or d:
             text[k] = p
     palettes = []   # the couple's own palettes, so every computer that opens the branch sees them
     for pal in (look.get('palettes') or [])[:20]:
@@ -318,11 +417,22 @@ def write_look(wt, look):
         name = re.sub(r'[^\w áéíóúñÁÉÍÓÚÑüÜ,.()/+-]', '', str(pal.get('name') or '')).strip()[:40]
         if toks and name:
             palettes.append({'name': name, 'tokens': toks})
-    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes}
+    fonts = {}   # role -> family, from the curated list only
+    raw = look.get('fonts') if isinstance(look.get('fonts'), dict) else {}
+    for role, name in raw.items():
+        if role in FONTS and font_spec(role, name):
+            fonts[role] = name
+    state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes, 'fonts': fonts}
     sel = lambda s: '.footer-section' if s == 'footer' else '#' + s
     css = ['/* Written by the site editor (_dev/flores.html): edit it there, not by hand.',
            '   Loaded after styles.css. Delete this file to go back to styles.css alone. */',
            '/* editor-state %s */' % json.dumps(state, ensure_ascii=False)]
+    if fonts:   # @import must come before every rule (comments may precede it)
+        css.append('@import url("%s");' % fonts_url(fonts))
+        decl = ['  --font-%s: \'%s\', %s;' % (r, n, FONT_FALLBACK[r]) for r, n in fonts.items()]
+        if 'script' in fonts:
+            decl.append('  --font-script-scale: %s;' % font_spec('script', fonts['script'])['scale'])
+        css.append(':root {\n%s\n}' % '\n'.join(decl))
     if tokens:
         css.append(':root {\n%s\n}' % '\n'.join('  --%s: %s;' % (k, v) for k, v in tokens.items()))
     if 'hero-desktop' in frame:
@@ -339,10 +449,23 @@ def write_look(wt, look):
         css.extend('%s { order: %d; }' % (sel(s), i + 1) for i, s in enumerate(order))
     if hidden:
         css.append('%s { display: none !important; }' % ', '.join(sel(s) for s in hidden))
+    rule = lambda r: '%s { %s; }' % (r[0], '; '.join(r[1]))
     for k, p in text.items():
-        css.append('%s { %s; }' % (_tsel(k), _tdecl(p, False)))
+        # moves and layers: a phone rule, undone or replaced by the wide-screen one
+        base = _tdecl(p, False)
+        if base:
+            css.append('%s { %s; }' % (_tsel(k), '; '.join(base)))
         if p.get('d'):
-            css.append('@media (min-width: 769px) {\n  %s { %s; }\n}' % (_tsel(k), _tdecl(p['d'], True)))
+            css.append('@media (min-width: 769px) {\n  %s { %s; }\n}' % (_tsel(k), '; '.join(_tdecl(p['d'], True))))
+        # styles: one set for every width, or (if the text has its own wide-screen variant) one per
+        # width in its own media query, since a later rule cannot hand a property back to styles.css
+        if not p.get('d'):
+            css.extend(rule(r) for r in _trules(k, p))
+        else:
+            for mq, q in (('(max-width: 768px)', p), ('(min-width: 769px)', p['d'])):
+                rs = _trules(k, q)
+                if rs:
+                    css.append('@media %s {\n%s\n}' % (mq, '\n'.join('  ' + rule(r) for r in rs)))
     os.makedirs(os.path.join(wt, 'css'), exist_ok=True)
     open(os.path.join(wt, 'css', 'editor.css'), 'w', encoding='utf-8').write('\n'.join(css) + '\n')
     # make sure the page loads it, right after styles.css
