@@ -49,8 +49,14 @@
   const lookDirty = () => JSON.stringify(look) !== savedLook;
   const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
 
-  function status(msg, bad) {
+  // stick: keep this message (the result of a save or a go-back) while nothing is unsaved, so the
+  // page reload that follows (which calls status() again) does not replace it with "Sin cambios"
+  let note = null;
+  function status(msg, bad, stick) {
     const parts = dirtyParts(), el = $('status');
+    if (msg) note = stick ? { msg, bad } : null;
+    else if (note && !parts.length) { msg = note.msg; bad = note.bad; }
+    else note = null;
     el.textContent = msg || (parts.length ? 'Sin guardar: ' + parts.join(', ') : 'Sin cambios');
     el.classList.toggle('dirty', !!bad || (!msg && parts.length > 0));
     scheduleDraft(); renderRemote();
@@ -464,7 +470,7 @@
       saving = false; histPick = null;
       await openBranch(branch);
       const pushed = j.pushed === true ? ' · subido a GitHub' : (j.pushed ? ' · NO se pudo subir: ' + j.pushed : '');
-      status(j.commit ? `Vuelto a ${c.short} (guardado nuevo ${j.commit})${pushed}` : 'La web ya estaba así: nada que cambiar', !!(j.pushed && j.pushed !== true));
+      status(j.commit ? `Vuelto a ${c.short} (guardado nuevo ${j.commit})${pushed}` : 'La web ya estaba así: nada que cambiar', !!(j.pushed && j.pushed !== true), true);
     } catch (e) {
       saving = false; err('No se pudo volver atrás: ' + e.message);
       resetHistory(); if (tab === 'historial') renderHistory();
@@ -549,11 +555,11 @@
       remoteHead = null; resetHistory(); dropSiteDraft();
       ED.markSaved(); ED.reloadFrame();
       const pushed = j.pushed === true ? ' · subido a GitHub' : (j.pushed ? ' · NO se pudo subir: ' + j.pushed : '');
-      status(j.commit ? `Guardado en ${branch} (${j.commit})${pushed}` : 'Nada que guardar', !!(j.pushed && j.pushed !== true));
+      status(j.commit ? `Guardado en ${branch} (${j.commit})${pushed}` : 'Nada que guardar', !!(j.pushed && j.pushed !== true), true);
       if (tab === 'historial') renderHistory();
       if (force) {   // written on top of someone else's version: read the branch again so every text and colour is the current one
         saving = false; const msg = $('status').textContent, bad = $('status').classList.contains('dirty');
-        await openBranch(branch); status(msg, bad);
+        await openBranch(branch); status(msg, bad, true);
       }
     } catch (e) { status('No se pudo guardar: ' + e.message, true); }
     saving = false;

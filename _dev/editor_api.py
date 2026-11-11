@@ -497,16 +497,21 @@ def revert(repo, branch, payload):
     short = run(wt, 'rev-parse', '--short', sha).strip()
     subject = run(wt, 'log', '-1', '--format=%s', sha).strip()
     run(wt, 'read-tree', '-m', '-u', sha)          # index and files as at sha; files added since are removed
-    changed = run(wt, '-c', 'core.quotepath=off', 'diff', '--cached', '--name-only').split('\n')
-    changed = [f for f in changed if f]
-    if not changed:
-        return {'ok': True, 'commit': None, 'head': head(wt)}
-    # new ?v= on the links, so visitors who already have the newer css/js/photos cached get the old ones back
-    photos = [f for f in changed if f in PHOTOS.values()]
-    if photos or any(f.startswith(('css/', 'js/')) for f in changed):
-        bumped = bump(wt, photos)
-        if bumped:
-            run(wt, 'add', '--', *bumped)
-    subject = re.sub(r'\s+', ' ', subject)
-    msg = 'editor (%s): volver a %s (%s)' % (_who(payload), short, subject[:72] + ('…' if len(subject) > 72 else ''))
-    return _commit(wt, branch, msg, payload.get('push'))
+    try:
+        changed = run(wt, '-c', 'core.quotepath=off', 'diff', '--cached', '--name-only').split('\n')
+        changed = [f for f in changed if f]
+        if not changed:
+            return {'ok': True, 'commit': None, 'head': head(wt)}
+        # new ?v= on the links, so visitors who already have the newer css/js/photos cached get the old ones back
+        photos = [f for f in changed if f in PHOTOS.values()]
+        if photos or any(f.startswith(('css/', 'js/')) for f in changed):
+            bumped = bump(wt, photos)
+            if bumped:
+                run(wt, 'add', '--', *bumped)
+        subject = re.sub(r'\s+', ' ', subject)
+        msg = 'editor (%s): volver a %s (%s)' % (_who(payload), short, subject[:72] + ('…' if len(subject) > 72 else ''))
+        return _commit(wt, branch, msg, payload.get('push'))
+    except Exception:
+        # nothing was committed: put the folder back as the branch has it (it was clean, checked above)
+        subprocess.run(['git', '-C', wt, 'read-tree', '-m', '-u', 'HEAD'], capture_output=True)
+        raise
