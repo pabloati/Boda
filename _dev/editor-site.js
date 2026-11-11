@@ -39,10 +39,11 @@
 
   // ---------- state ----------
   let branch = null, texts = {}, textEdits = {}, look = blankLook(), savedLook = '', photos = {}, selText = null, tab = 'flores', saving = false;
-  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [] }; }
+  let FONTS = {}, FALLBACK = {};   // the curated fonts per role, from the server (editor_api.FONTS)
+  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [], fonts: {} }; }
   let palEdit = null;   // the palette being built in the Colores tab: { idx, name, before }
   const lookDirty = () => JSON.stringify(look) !== savedLook;
-  const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
+  const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/fuentes/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
 
   function status(msg, bad) {
     const parts = dirtyParts(), el = $('status');
@@ -59,10 +60,36 @@
     const d = [];
     if (p.x || p.y) d.push(`transform: translate(${p.x || 0}px, ${p.y || 0}px)`); else if (reset) d.push('transform: none');
     if (TEXT_Z[p.z] != null) d.push('position: relative', 'z-index: ' + TEXT_Z[p.z]); else if (reset) d.push('z-index: auto');
-    return d.join('; ');
+    return d;
+  }
+  // a text's own style: size (px), colour, alignment, font role. Its own rules under #main-content
+  // (an id beats styles.css's class rules); an aligned script heading (an inline-block as wide as
+  // its text) becomes a block of that width placed by its margins. Same as _trules in editor_api.py.
+  const tkey = k => k.startsWith('#') ? k : `[data-i18n="${k}"]`;
+  const H_ALIGN = { left: ['0', 'auto'], center: ['auto', 'auto'], right: ['auto', '0'] };
+  function trules(k, p) {
+    const d = [];
+    if (p.size != null) d.push(`font-size: ${Math.round(p.size)}px`);
+    if (normHex(p.color)) d.push('color: ' + normHex(p.color));
+    if (H_ALIGN[p.align]) d.push('text-align: ' + p.align);
+    if (['serif', 'script', 'hand'].includes(p.font)) d.push(`font-family: var(--font-${p.font})`);
+    const r = d.length ? [`#main-content ${tkey(k)} { ${d.join('; ')}; }`] : [];
+    if (H_ALIGN[p.align]) r.push(`#main-content .h-script${tkey(k)} { display: block; width: fit-content; margin-left: ${H_ALIGN[p.align][0]}; margin-right: ${H_ALIGN[p.align][1]}; }`);
+    return r;
+  }
+  // fonts: {role: family} → the Google Fonts stylesheet and the :root tokens (same as the server)
+  const fontSpec = (role, name) => (FONTS[role] || []).find(f => f.name === name);
+  function fontsURL(fonts) {
+    const fam = Object.entries(fonts || {}).map(([r, n]) => fontSpec(r, n)).filter(Boolean).map(f => 'family=' + f.name.replace(/ /g, '+') + (f.axes ? ':' + f.axes : ''));
+    return fam.length ? 'https://fonts.googleapis.com/css2?' + fam.join('&') + '&display=swap' : '';
   }
   function lookCSS(l) {
     const sel = s => s === 'footer' ? '.footer-section' : '#' + s, css = [];
+    const fo = Object.entries(l.fonts || {}).filter(([r, n]) => fontSpec(r, n));
+    if (fo.length) {
+      const sc = l.fonts.script && fontSpec('script', l.fonts.script);
+      css.push(':root {' + fo.map(([r, n]) => `--font-${r}: '${n}', ${FALLBACK[r] || 'serif'};`).join(' ') + (sc ? ` --font-script-scale: ${sc.scale};` : '') + '}');
+    }
     const t = Object.entries(l.tokens);
     if (t.length) css.push(':root {' + t.map(([k, v]) => `--${k}: ${v};`).join(' ') + '}');
     const f = l.frame;
@@ -72,8 +99,11 @@
     if (l.order.length) { css.push('#main-content { display: flex; flex-direction: column; } #hero { order: -1; }'); l.order.forEach((s, i) => css.push(`${sel(s)} { order: ${i + 1}; }`)); }
     if (l.hidden.length) css.push(l.hidden.map(sel).join(', ') + ' { display: none !important; }');
     Object.entries(l.text || {}).forEach(([k, p]) => {
-      css.push(`${tsel(k)} { ${tdecl(p, false)}; }`);
-      if (p.d) css.push(`@media (min-width: 769px) { ${tsel(k)} { ${tdecl(p.d, true)}; } }`);
+      const base = tdecl(p, false);
+      if (base.length) css.push(`${tsel(k)} { ${base.join('; ')}; }`);
+      if (p.d) css.push(`@media (min-width: 769px) { ${tsel(k)} { ${tdecl(p.d, true).join('; ')}; } }`);
+      if (!p.d) css.push(...trules(k, p));
+      else [['(max-width: 768px)', p], ['(min-width: 769px)', p.d]].forEach(([mq, q]) => { const r = trules(k, q); if (r.length) css.push(`@media ${mq} { ${r.join(' ')} }`); });
     });
     return css.join('\n');
   }
@@ -82,6 +112,13 @@
     let st = d.getElementById('ed-look');
     if (!st) { st = d.createElement('style'); st.id = 'ed-look'; d.head.appendChild(st); }
     st.textContent = lookCSS(look);
+    // the branch's saved css/editor.css is off in the preview: #ed-look mirrors it, so a choice
+    // undone here (a font, a text style, a move) also disappears from the page before saving
+    d.querySelectorAll('link[rel=stylesheet][href*="css/editor.css"]').forEach(l => { l.disabled = true; });
+    const url = fontsURL(look.fonts);   // the chosen fonts' stylesheet, before the look's <style>
+    let fl = d.getElementById('ed-fonts');
+    if (url && !fl) { fl = d.createElement('link'); fl.id = 'ed-fonts'; fl.rel = 'stylesheet'; d.head.insertBefore(fl, st); }
+    if (fl) { if (url) { if (fl.getAttribute('href') !== url) fl.setAttribute('href', url); } else fl.remove(); }
     const olive = look.tokens.olive;
     if (olive) d.documentElement.style.setProperty('--olive-wash', `rgba(${hex(olive).join(', ')}, 0.16)`); else d.documentElement.style.removeProperty('--olive-wash');
     status();
@@ -116,6 +153,7 @@
     if (!r.ok) { status(st.error || 'No se pudo abrir la rama', true); $('branch').value = branch || ''; return; }
     branch = b; try { localStorage.setItem('ed-branch', b); } catch (e) {}
     texts = st.texts || {}; textEdits = {}; photos = {}; selText = null;
+    FONTS = st.fonts || {}; FALLBACK = st.font_fallback || {};
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
     ED.open(st.url, b); ED.setTextPos(look.text);
     palEdit = null;
@@ -265,6 +303,37 @@
     };
   }
 
+  // ---------- fonts ----------
+  // Three roles, as in styles.css: --font-serif (all text), --font-script (headings), --font-hand
+  // (handwritten labels). The first of each list is the site's own: picking it clears the choice.
+  const ROLES = [['serif', 'Texto', 'Todo el texto de la web.'], ['script', 'Títulos', 'Los títulos con letra de pluma.'], ['hand', 'Manuscrita', 'Las etiquetas escritas a mano.']];
+  function editorFonts() {   // the editor page loads every listed font once, so each name shows in its own face
+    if (document.getElementById('ed-font-names')) return;
+    const fam = Object.values(FONTS).flat().map(f => 'family=' + f.name.replace(/ /g, '+'));
+    if (!fam.length) return;
+    const l = document.createElement('link'); l.id = 'ed-font-names'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?' + fam.join('&') + '&display=swap'; document.head.appendChild(l);
+  }
+  function renderFonts() {
+    const box = $('tab-fuentes');
+    if (!box) return;
+    if (!Object.keys(FONTS).length) { box.innerHTML = '<h2>Fuentes</h2><p class="hint">El servidor del editor no tiene la lista de fuentes: reinícialo.</p>'; return; }
+    editorFonts();
+    const fonts = look.fonts || {};
+    box.innerHTML = '<h2>Fuentes</h2><p class="hint">Todas son Google Fonts gratuitas: la web las descarga de Google al abrirse.</p>' + ROLES.map(([r, label, help]) => {
+      const list = FONTS[r] || [], cur = fonts[r] || (list[0] && list[0].name);
+      return `<div class="pl-sec">${label}</div><p class="hint" style="margin:2px 0 4px">${help}</p>` + list.map((f, i) =>
+        `<button class="font-row${f.name === cur ? ' on' : ''}" data-fr="${r}" data-fn="${esc(f.name)}" title="${esc(f.name)}"><span style="font-family:'${esc(f.name)}', ${r === 'serif' ? 'serif' : 'cursive'}${r === 'script' ? ';font-size:' + Math.round(26 * (f.scale || 1)) + 'px' : ''}">${esc(f.name)}</span>${i ? '' : '<em>la de la web</em>'}</button>`).join('');
+    }).join('') + `<div class="btns" style="margin-top:10px"><button id="fontReset"${Object.keys(fonts).length ? '' : ' disabled'}>Las de la web</button></div>`;
+    box.querySelectorAll('[data-fr]').forEach(b => b.onclick = () => {
+      const r = b.dataset.fr, n = b.dataset.fn, first = (FONTS[r] || [])[0];
+      look.fonts = Object.assign({}, look.fonts);
+      if (first && first.name === n) delete look.fonts[r]; else look.fonts[r] = n;
+      applyLook(); renderFonts(); if (ED.renderAll) setTimeout(ED.renderAll, 300);   // the boxes follow the new text sizes
+    });
+    $('fontReset').onclick = () => { look.fonts = {}; applyLook(); renderFonts(); };
+  }
+
   // ---------- photos ----------
   function framePos(P) {
     if (look.frame[P.slot]) return look.frame[P.slot];
@@ -344,12 +413,13 @@
     if ($('branch').value === '__new') return newBranchForm(p);
     if (tab === 'textos') return textProps(p);
     if (tab === 'colores' && palEdit) return paletteForm(p);
-    const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
-    p.innerHTML = `<h2>${{ colores: 'Colores', fotos: 'Fotos', secciones: 'Secciones' }[tab] || ''}</h2><p class="hint">${help}</p>` + changesList();
+    const help = { fuentes: 'Elige una fuente para cada papel: la web cambia al momento. Los títulos se ajustan de tamaño para que cada letra de pluma ocupe lo mismo. Para cambiar la letra de un solo texto, selecciónalo en la pestaña Flores.', colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
+    p.innerHTML = `<h2>${{ colores: 'Colores', fuentes: 'Fuentes', fotos: 'Fotos', secciones: 'Secciones' }[tab] || ''}</h2><p class="hint">${help}</p>` + changesList();
   }
   function renderTab() {
     if (tab === 'textos') renderTexts();
     if (tab === 'colores') renderColours();
+    if (tab === 'fuentes') renderFonts();
     if (tab === 'fotos') renderPhotos();
     if (tab === 'secciones') renderSections();
   }
@@ -408,7 +478,8 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0 };
+  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0,
+    colourRow, wireColourRows, normHex };   // the text style panel in _dev/flores.html reuses the colour row
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
   $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
   $('branch').onchange = e => { if (e.target.value === '__new') drawProps($('props')); else openBranch(e.target.value); };

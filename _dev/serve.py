@@ -323,7 +323,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_api.branches(HERE))
             if p == '/_dev/api/state':
                 wt = editor_api.open_branch(HERE, q['branch'][0])
-                return self.send_json({'url': wt_url(wt), 'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+                return self.send_json({'url': wt_url(wt), 'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt),
+                                       'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
         except editor_api.EditorError as e:
             return self.send_json({'ok': False, 'error': str(e)}, 400)
         except (KeyError, IndexError):
