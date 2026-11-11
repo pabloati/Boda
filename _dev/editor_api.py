@@ -40,8 +40,9 @@ FONTS = {
         'Cormorant Garamond', 'EB Garamond', 'Playfair Display', 'Libre Caslon Text', 'Lora', 'Crimson Pro',
         'Spectral', 'Cardo')],
     'script': [{'name': n, 'scale': s} for n, s in (
-        ('Allison', 1), ('Great Vibes', 0.75), ('Parisienne', 0.67), ('Pinyon Script', 0.7), ('Alex Brush', 0.7),
-        ('Sacramento', 0.75), ('Mrs Saint Delafield', 0.95), ('Dancing Script', 0.7))],
+        # scale: about the same width as Allison for the same heading (measured, then eyeballed)
+        ('Allison', 1), ('Great Vibes', 0.75), ('Parisienne', 0.65), ('Pinyon Script', 0.7), ('Alex Brush', 0.75),
+        ('Sacramento', 0.75), ('Mrs Saint Delafield', 0.9), ('Dancing Script', 0.7))],
     'hand': [{'name': n} for n in (
         'Homemade Apple', 'Caveat', 'Indie Flower', 'Shadows Into Light', 'Nothing You Could Do', 'Reenie Beanie',
         'Kalam', 'Patrick Hand')],
