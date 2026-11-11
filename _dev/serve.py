@@ -15,7 +15,8 @@ Routes
   POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
   /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save
                        (writes into that branch's worktree and commits; see _dev/editor_api.py),
-                       publish (GET: dry run, POST: merge the branch into main and push main).
+                       publish (GET: dry run, POST: merge the branch into main and push main),
+                       history of a branch and going back to one of its commits (POST revert).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
 
@@ -326,6 +327,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_api.save(HERE, req['branch'], req, write_flores))
             if p == '/_dev/api/publish':
                 return self.send_json(editor_api.publish(HERE, req['branch'], req))
+            if p == '/_dev/api/revert':
+                return self.send_json(editor_api.revert(HERE, req['branch'], req))
+        except editor_api.Conflict as e:
+            return self.send_json({'ok': False, 'error': str(e), 'head': e.head}, 409)
         except editor_api.EditorError as e:
             return self.send_json({'ok': False, 'error': str(e)}, 400)
         except (ValueError, KeyError, TypeError) as e:
@@ -338,7 +343,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_api.branches(HERE))
             if p == '/_dev/api/state':
                 wt = editor_api.open_branch(HERE, q['branch'][0])
-                return self.send_json({'url': wt_url(wt), 'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+                if q.get('head'):         # the cheap variant the editor polls: has someone saved since?
+                    return self.send_json({'head': editor_api.head(wt)})
+                return self.send_json({'url': wt_url(wt), 'head': editor_api.head(wt),
+                                       'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt)})
+            if p == '/_dev/api/history':
+                return self.send_json(editor_api.history(HERE, q['branch'][0]))
             if p == '/_dev/api/publish':   # dry run; the merge itself is a POST
                 plan = editor_api.publish_plan(HERE, q['branch'][0])
                 plan.pop('_ref', None)

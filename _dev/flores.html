@@ -83,8 +83,17 @@
   button:disabled { opacity: .45; cursor: default; }
   .note { background: #fff4d6; border: 1px solid #ecd48a; border-radius: 6px; padding: 7px 9px; margin: 8px 0; }
   .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
-  #banner { display: none; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 9; gap: 10px; align-items: center; }
-  #banner.show { display: flex; } #banner button { padding: 3px 9px; }
+  #banners { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+  .bn { display: none; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; gap: 10px; align-items: center; pointer-events: auto; max-width: 70vw; }
+  .bn.show { display: flex; } .bn button { padding: 3px 9px; color: var(--ink); }
+  /* Historial tab */
+  .h-row { border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; margin-bottom: 5px; background: #fff; font-size: .92em; }
+  .h-row.ed { border-left: 3px solid var(--acc); } .h-row.on { border-color: var(--acc); background: #fff4f8; }
+  .h-top { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; color: var(--soft); font-size: .9em; } .h-top code { color: var(--ink); }
+  .h-tag { font: 600 9px monospace; text-transform: uppercase; background: var(--acc); color: #fff; border-radius: 3px; padding: 0 4px; }
+  .h-tag.now { background: var(--ink); }
+  .h-sub { margin: 2px 0; overflow-wrap: anywhere; } .h-files { color: var(--soft); font: 10px monospace; overflow-wrap: anywhere; }
+  .h-row button { margin-top: 4px; padding: 2px 8px; font-size: .9em; }
   /* "Ver en mi móvil": link + QR popover under the bar; "Publicar": confirmation in the right panel */
   #sharePop { position: fixed; z-index: 20; width: 300px; max-width: calc(100vw - 16px); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px; }
   #sharePop h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
@@ -118,18 +127,22 @@
 </header>
 <div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib">
-  <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button></nav>
+  <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button><button data-tab="historial">Historial</button></nav>
   <section class="tab" id="tab-flores"><h2>Flores</h2><div id="libGrid"></div>
     <p class="hint" style="margin-top:12px">Haz clic en una flor para añadirla a la sección que estás viendo.</p></section>
   <section class="tab" id="tab-textos" hidden></section>
   <section class="tab" id="tab-colores" hidden></section>
   <section class="tab" id="tab-fotos" hidden></section>
   <section class="tab" id="tab-secciones" hidden></section>
+  <section class="tab" id="tab-historial" hidden></section>
 </aside>
 <main id="stage"><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
 <div class="gutter" id="gr" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="props"></aside>
-<div id="banner"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
+<div id="banners">
+  <div id="banner" class="bn"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
+  <div id="remote" class="bn"></div>
+</div>
 
 <script>
 (function () {
@@ -138,6 +151,7 @@
   const SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
   const SNAP = 6;
   let DRAFT = 'flores-draft';
+  let pendingDraft = null;   // a flower draft from another session, until the banner (editor-site.js) restores or drops it
   const frame = $('f');
   let LIB = [], items = [], sel = null, win = null, doc = null, dev = 'm', saved = '[]';
   let BASE = '/', MODE = 'flores', FLORES_OK = false;   // BASE: URL prefix of the branch's worktree
@@ -182,7 +196,7 @@
   function restore(js) { const o = JSON.parse(js); items = o.i; tpos = o.t || {}; if (!get(sel)) sel = null; }
   function snapshot() { undoSt.push(state()); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
   function changed() {
-    try { localStorage.setItem(DRAFT, JSON.stringify(items)); } catch (e) {}
+    if (!pendingDraft) try { localStorage.setItem(DRAFT, JSON.stringify(items)); } catch (e) {}
     if (window.SITE) { window.SITE.textChanged(); window.SITE.status(); }
     $('undo').disabled = !undoSt.length; $('redo').disabled = !redoSt.length;
     renderAll();
@@ -598,7 +612,8 @@
   }
   function drawProps() {
     if (window.SITE && window.SITE.overlay && window.SITE.overlay($('props'))) return;   // e.g. the Publicar confirmation, in any tab
-    if (MODE !== 'flores') { if (window.SITE) window.SITE.drawProps($('props')); return; }
+    // other tabs draw their own panel; so does the site module while it asks something (a save that met a newer branch)
+    if (MODE !== 'flores' || (window.SITE && window.SITE.asking())) { if (window.SITE) window.SITE.drawProps($('props')); return; }
     const p = $('props'), it = get(sel), list = selected();
     if (tsel && !it) return drawTextProps(p, tsel);
     if (list.length > 1) return drawMulti(p, list, it);
@@ -673,7 +688,7 @@
     doc.addEventListener('click', e => { if (e.target.closest('a, button, label')) e.preventDefault(); }, true);
     doc.addEventListener('keydown', onKey);
     if (window.SITE) window.SITE.onFrame(win, doc);
-    if (!FLORES_OK) { $('libGrid').innerHTML = '<p class="hint">Esta rama no tiene las flores (js/flores.js). Usa otra rama para colocarlas.</p>'; fit(); return; }
+    if (!FLORES_OK) { $('libGrid').innerHTML = '<p class="hint">Esta rama no tiene las flores (js/flores.js). Usa otra rama para colocarlas.</p>'; fit(); if (window.SITE) window.SITE.offerDraft(); return; }
     const st = doc.createElement('style'); st.textContent = EDIT_CSS; doc.head.appendChild(st);
     doc.documentElement.classList.add('ed-guides');
     sections().forEach(s => { s.el.classList.add('ed-sec', 'has-flores'); const lb = doc.createElement('div'); lb.className = 'ed-label'; lb.textContent = s.key; s.el.appendChild(lb); });
@@ -682,11 +697,8 @@
     if (!items.length && !load.done) {
       items = clone((win.FLORES_LAYOUT && win.FLORES_LAYOUT.items) || []); saved = JSON.stringify(items); load.done = true;
       let draft = null; try { draft = localStorage.getItem(DRAFT); } catch (e) {}
-      if (draft && draft !== saved && draft !== '[]') {
-        $('banner').classList.add('show');
-        $('bRestore').onclick = () => { items = JSON.parse(draft); $('banner').classList.remove('show'); changed(); };
-        $('bDrop').onclick = () => { $('banner').classList.remove('show'); try { localStorage.removeItem(DRAFT); } catch (e) {} };
-      }
+      if (draft && draft !== saved && draft !== '[]') pendingDraft = draft;   // offered together with the texts/colours draft
+
     }
     doc.addEventListener('pointerdown', e => {
       if (MODE !== 'flores') { if (window.SITE) window.SITE.onPointer(e); return; }
@@ -702,6 +714,7 @@
     });
     doc.addEventListener('pointermove', e => { if (MODE === 'flores' && !e.buttons) { const t = hit(e.pageX, e.pageY), te = textAt(e.target); doc.documentElement.style.cursor = t ? (t.lock && !te ? 'default' : 'move') : ''; } });
     renderAll(); changed();
+    if (window.SITE) window.SITE.offerDraft();
   }
   const load = {};
 
@@ -777,7 +790,7 @@
   window.ED = {
     // load a branch: BASE is the URL of its worktree; flower state starts from its layout
     open(base, branch) {
-      BASE = base; DRAFT = 'flores-draft:' + branch; items = []; saved = '[]'; sel = null; tsel = null; tpos = {}; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
+      BASE = base; DRAFT = 'flores-draft:' + branch; pendingDraft = null; items = []; saved = '[]'; sel = null; tsel = null; tpos = {}; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
       LIB = []; $('libGrid').innerHTML = '';
       fetch(BASE + 'assets/flores/flores.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(l => { LIB = l; if (LIB.length) buildLib(); drawProps(); }).catch(() => {});
       frame.src = BASE + 'index.html';
@@ -791,6 +804,10 @@
     floresItems: () => clone(items),
     markSaved, fit, renderAll, drawProps,
     openProps() { if (!widths.propsOpen) { widths.propsOpen = true; applyPanels(); } },
+    // the flower draft left by another session (JSON) or null; restore or drop it (one banner for all drafts)
+    floresDraft: () => pendingDraft,
+    restoreFloresDraft() { if (!pendingDraft) return; const d = pendingDraft; pendingDraft = null; items = JSON.parse(d); changed(); },
+    dropFloresDraft() { pendingDraft = null; try { localStorage.removeItem(DRAFT); } catch (e) {} },
     get doc() { return doc; }, get win() { return win; }, get dev() { return dev; }, get base() { return BASE; },
   };
 })();

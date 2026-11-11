@@ -41,14 +41,73 @@
   let branch = null, texts = {}, textEdits = {}, look = blankLook(), savedLook = '', photos = {}, selText = null, tab = 'flores', saving = false;
   function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [] }; }
   let palEdit = null;   // the palette being built in the Colores tab: { idx, name, before }
+  let head = null;           // the branch's commit when it was opened (or last saved here): the server refuses a save on top of a newer one
+  let remoteHead = null, remoteHidden = null;   // a newer commit seen by the poll, and the one whose banner was closed
+  let conflict = null;       // { head } after a save answered 409: the props panel offers reload or save anyway
+  let hist = null, histPick = null, histErr = '';   // Historial tab: commits of the branch, the one picked to go back to
+  let sitePending = null, draftHold = false, draftOffered = false, draftTimer = 0;   // drafts: see offerDraft()
   const lookDirty = () => JSON.stringify(look) !== savedLook;
   const dirtyParts = () => [ED.floresDirty() && 'flores', Object.keys(textEdits).length && 'textos', lookDirty() && 'colores/secciones/textos movidos', Object.keys(photos).length && 'fotos'].filter(Boolean);
 
-  function status(msg, bad) {
+  // stick: keep this message (the result of a save or a go-back) while nothing is unsaved, so the
+  // page reload that follows (which calls status() again) does not replace it with "Sin cambios"
+  let note = null;
+  function status(msg, bad, stick) {
     const parts = dirtyParts(), el = $('status');
+    if (msg) note = stick ? { msg, bad } : null;
+    else if (note && !parts.length) { msg = note.msg; bad = note.bad; }
+    else note = null;
     el.textContent = msg || (parts.length ? 'Sin guardar: ' + parts.join(', ') : 'Sin cambios');
     el.classList.toggle('dirty', !!bad || (!msg && parts.length > 0));
+    scheduleDraft(); renderRemote();
   }
+  const sameHead = (a, b) => !!a && !!b && (a.startsWith(b) || b.startsWith(a));
+
+  // ---------- drafts: texts and look kept in localStorage per branch, offered back on open ----------
+  // The flowers keep their own ('flores-draft:<branch>', in flores.html); one banner offers both.
+  // While the banner waits for an answer, neither draft is overwritten. Photos are not drafted.
+  const draftKey = () => 'site-draft:' + branch;
+  function scheduleDraft() { clearTimeout(draftTimer); draftTimer = setTimeout(writeDraft, 400); }
+  function writeDraft() {
+    if (!branch || draftHold) return;
+    try {
+      if (Object.keys(textEdits).length || lookDirty()) localStorage.setItem(draftKey(), JSON.stringify({ texts: textEdits, look, at: Date.now() }));
+      else localStorage.removeItem(draftKey());
+    } catch (e) {}
+  }
+  function dropSiteDraft() { clearTimeout(draftTimer); try { localStorage.removeItem(draftKey()); } catch (e) {} }
+  // read on open, before anything can overwrite it; kept only if it differs from what the branch has
+  function readSiteDraft() {
+    let d = null; try { d = JSON.parse(localStorage.getItem(draftKey()) || 'null'); } catch (e) {}
+    if (!d || typeof d !== 'object') return null;
+    const t = {};
+    Object.entries(d.texts || {}).forEach(([k, v]) => {
+      if (!texts[k] || !v || typeof v !== 'object') return;
+      const es = String(v.es ?? texts[k].es), en = String(v.en ?? texts[k].en);
+      if (es !== texts[k].es || en !== texts[k].en) t[k] = { es, en };
+    });
+    const l = Object.assign(blankLook(), d.look && typeof d.look === 'object' ? d.look : {});
+    return Object.keys(t).length || JSON.stringify(l) !== savedLook ? { texts: t, look: l } : null;
+  }
+  // called by flores.html once the page (and the flower layout) has loaded
+  function offerDraft() {
+    if (draftOffered || !branch) return;
+    draftOffered = true;
+    const fl = ED.floresDraft(), bn = $('banner');
+    if ((!sitePending && !fl) || !bn) { draftHold = false; sitePending = null; return; }
+    bn.classList.add('show');
+    const done = () => { bn.classList.remove('show'); draftHold = false; sitePending = null; status(); };
+    $('bRestore').onclick = () => {
+      if (sitePending) {
+        textEdits = sitePending.texts; look = sitePending.look;
+        ED.setTextPos(look.text); applyTexts(); applyLook(); ED.renderAll();
+      }
+      ED.restoreFloresDraft();   // after the look: it mirrors the text positions back into it
+      palEdit = null; done(); renderTab(); drawProps($('props'));
+    };
+    $('bDrop').onclick = () => { dropSiteDraft(); ED.dropFloresDraft(); done(); };
+  }
+  function hideDraftBanner() { const bn = $('banner'); if (bn) bn.classList.remove('show'); }
 
   // ---------- live preview: the same CSS the server writes into css/editor.css ----------
   // A moved text keeps its place in the flow; only where it is painted changes (transform), and a
@@ -109,17 +168,25 @@
     $('branch').value = b;
     await openBranch(b);
   }
-  async function openBranch(b) {
-    if (branch && dirtyParts().length) { $('branch').value = branch; status('Guarda o descarta los cambios antes de cambiar de rama', true); return; }
+  // force: open even with unsaved changes, which are lost (used by "Recargar y perder mis cambios")
+  async function openBranch(b, force) {
+    if (!force && branch && dirtyParts().length) { $('branch').value = branch; status('Guarda o descarta los cambios antes de cambiar de rama', true); return; }
+    const hold = draftHold; draftHold = true; clearTimeout(draftTimer);   // nothing is drafted while the branch is (re)loading
     status('Abriendo ' + b + '…');
-    const r = await fetch('/_dev/api/state?branch=' + encodeURIComponent(b), { cache: 'no-store' }), st = await r.json();
-    if (!r.ok) { status(st.error || 'No se pudo abrir la rama', true); $('branch').value = branch || ''; return; }
-    branch = b; pub = null; closeShare(); try { localStorage.setItem('ed-branch', b); } catch (e) {}
+    let r, st;
+    try { r = await fetch('/_dev/api/state?branch=' + encodeURIComponent(b), { cache: 'no-store' }); st = await r.json(); } catch (e) { r = { ok: false }; st = {}; }
+    if (!r.ok) { draftHold = hold; status(st.error || 'No se pudo abrir la rama', true); $('branch').value = branch || ''; return; }
+    if (branch !== b) histPick = null;
+    resetHistory();
+    branch = b; pub = null; closeShare(); $('branch').value = b; try { localStorage.setItem('ed-branch', b); } catch (e) {}
     texts = st.texts || {}; textEdits = {}; photos = {}; selText = null;
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
+    head = st.head || null; remoteHead = null; remoteHidden = null; conflict = null; histErr = '';
+    hideDraftBanner(); sitePending = readSiteDraft(); draftHold = true; draftOffered = false;
     ED.open(st.url, b); ED.setTextPos(look.text);
     palEdit = null;
     renderTab(); status();
+    if (tab !== 'flores') panel();   // the flower editor redraws its own panel once the branch loads
   }
   function newBranchForm(p) {
     p.innerHTML = `<h2>Nueva rama</h2><p class="hint">Una rama es una copia de la web en la que probar cambios sin tocar la publicada. Se crea a partir de la rama actual (${esc(branch)}).</p>
@@ -333,6 +400,83 @@
     });
     $('secReset').onclick = () => { look.order = []; look.hidden = []; applyLook(); renderSections(); };
   }
+  // ---------- history: the branch's last commits, and going back to one ----------
+  const DAY = 86400;
+  function ago(ts) {
+    const s = Math.max(0, Date.now() / 1000 - ts);
+    if (s < 60) return 'hace un momento';
+    if (s < 3600) return 'hace ' + Math.round(s / 60) + ' min';
+    if (s < DAY) return 'hace ' + Math.round(s / 3600) + ' h';
+    if (s < 2 * DAY) return 'ayer';
+    if (s < 30 * DAY) return 'hace ' + Math.round(s / DAY) + ' días';
+    return new Date(ts * 1000).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  const when = ts => new Date(ts * 1000).toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  // only the latest request counts: resetHistory() (branch opened, saved, reverted) makes older answers stale
+  let histReq = 0, histBusy = false;
+  function resetHistory() { hist = null; histBusy = false; histReq++; }
+  async function loadHistory() {
+    const id = ++histReq; histBusy = true;
+    let list = null, error = '';
+    try {
+      const r = await fetch('/_dev/api/history?branch=' + encodeURIComponent(branch), { cache: 'no-store' }), j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.status);
+      list = j.commits;
+    } catch (e) { list = []; error = 'No se pudo leer el historial: ' + e.message; }
+    if (id !== histReq) return;
+    hist = list; histErr = error; histBusy = false;
+    if (histPick && !hist.some(c => c.sha === histPick.sha)) histPick = null;
+    if (tab === 'historial') { renderHistory(); panel(); }
+  }
+  function renderHistory() {
+    const box = $('tab-historial'); if (!box) return;
+    if (!hist) { box.innerHTML = '<h2>Historial</h2><p class="hint">Cargando…</p>'; if (!histBusy) loadHistory(); return; }
+    const files = f => esc(f.slice(0, 3).join(', ')) + (f.length > 3 ? ' +' + (f.length - 3) : '');
+    box.innerHTML = `<h2>Historial</h2><p class="hint">Los últimos guardados de <b>${esc(branch)}</b>, del más nuevo al más antiguo. Los del editor llevan la marca rosa.</p>` +
+      (histErr ? `<p class="note">${esc(histErr)}</p>` : '') +
+      hist.map((c, i) => `<div class="h-row${c.editor ? ' ed' : ''}${histPick && histPick.sha === c.sha ? ' on' : ''}">
+        <div class="h-top"><code>${esc(c.short)}</code><span>${esc(c.who)}</span><span title="${esc(when(c.date))}">${esc(ago(c.date))}</span>${i === 0 ? '<span class="h-tag now">ahora</span>' : ''}${c.editor ? '<span class="h-tag">editor</span>' : ''}</div>
+        <div class="h-sub">${esc(c.subject)}</div>${c.files.length ? `<div class="h-files">${files(c.files)}</div>` : (c.merge ? '<div class="h-files">fusión de ramas</div>' : '')}
+        ${i ? `<button data-rev="${esc(c.sha)}">Volver a este punto</button>` : ''}</div>`).join('') +
+      '<div class="btns"><button id="histReload">Actualizar</button></div>';
+    box.querySelectorAll('[data-rev]').forEach(bt => bt.onclick = () => { histPick = hist.find(c => c.sha === bt.dataset.rev) || null; renderHistory(); drawProps($('props')); });
+    $('histReload').onclick = () => { resetHistory(); renderHistory(); };
+  }
+  function historyProps(p) {
+    if (!histPick) {
+      p.innerHTML = '<h2>Historial</h2><p class="hint">Cada vez que alguien pulsa «Guardar» queda un punto en el historial. «Volver a este punto» deja la web como estaba entonces con un guardado nuevo: no se borra nada.</p>' + changesList();
+      return;
+    }
+    const c = histPick, dirty = dirtyParts().length > 0;
+    p.innerHTML = `<h2>Volver atrás</h2>
+      <p>La web volverá a como estaba el ${esc(when(c.date))} (${esc(c.subject)}). Los guardados posteriores no se borran: se crea un guardado nuevo que deshace los cambios.</p>
+      ${dirty ? `<p class="note">Tienes cambios sin guardar (${esc(dirtyParts().join(', '))}). Guárdalos o descártalos antes de volver atrás.</p>` : ''}
+      <p class="hint">${$('push').checked ? 'Con «Subir» marcado, la rama se sube a GitHub después.' : '«Subir» está desmarcado: el cambio se queda en este ordenador.'}</p>
+      <div class="btns"><button id="revGo" class="primary"${dirty ? ' disabled' : ''}>Volver a este punto</button><button id="revNo">Cancelar</button></div><p id="revErr" class="note" hidden></p>`;
+    $('revNo').onclick = () => { histPick = null; renderHistory(); historyProps(p); };
+    $('revGo').onclick = () => revertTo(c);
+  }
+  async function revertTo(c) {
+    const err = m => { const e = $('revErr'); if (e) { e.hidden = false; e.textContent = m; } status(m, true); };
+    if (dirtyParts().length) return err('Guarda o descarta los cambios antes de volver atrás');
+    const who = $('who').value.trim();
+    if (!who) { $('who').focus(); return err('Escribe tu nombre (arriba) para firmar el cambio'); }
+    if (saving) return;
+    saving = true; status('Volviendo a ' + c.short + '…');
+    try {
+      const r = await fetch('/_dev/api/revert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch, sha: c.sha, who, push: $('push').checked, head }) });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || r.status);
+      saving = false; histPick = null;
+      await openBranch(branch);
+      const pushed = j.pushed === true ? ' · subido a GitHub' : (j.pushed ? ' · NO se pudo subir: ' + j.pushed : '');
+      status(j.commit ? `Vuelto a ${c.short} (guardado nuevo ${j.commit})${pushed}` : 'La web ya estaba así: nada que cambiar', !!(j.pushed && j.pushed !== true), true);
+    } catch (e) {
+      saving = false; err('No se pudo volver atrás: ' + e.message);
+      resetHistory(); if (tab === 'historial') renderHistory();
+    }
+  }
+
   function move(s, d) { const o = currentOrder(), i = o.indexOf(s), j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; look.order = o; applyLook(); renderSections(); }
 
   // ---------- panels ----------
@@ -340,9 +484,26 @@
     const parts = dirtyParts();
     return parts.length ? `<h2 style="margin-top:14px">Sin guardar</h2><p class="hint">${parts.join(', ')}. «Guardar» lo sube todo a la rama <b>${esc(branch)}</b> en un solo cambio.</p>` : '';
   }
+  // after a 409: someone saved on this branch since it was opened here
+  function conflictProps(p) {
+    p.innerHTML = `<h2>La rama ha cambiado</h2>
+      <p>Otro ordenador ha guardado en <b>${esc(branch)}</b> desde que la abriste${conflict.head ? ` (ahora está en <code>${esc(conflict.head)}</code>)` : ''}. Tus cambios siguen aquí sin guardar: ${esc(dirtyParts().join(', ') || 'ninguno')}.</p>
+      <div class="btns"><button id="cfReload">Recargar y perder mis cambios</button></div>
+      <p class="hint">Abre la versión nueva de la rama. Lo que has cambiado aquí se pierde.</p>
+      <div class="btns"><button id="cfForce" class="primary">Guardar igualmente</button></div>
+      <p class="hint">Escribe tus cambios encima de la versión nueva, sin mezclar nada. Los textos que no has tocado se quedan como los dejó la otra persona, pero lo que tú guardas va entero: si también cambió esos mismos textos, los colores, las secciones, los textos movidos o las flores, su versión de eso se pierde (la puedes recuperar desde el Historial).</p>
+      <div class="btns"><button id="cfNo">Cancelar</button></div>`;
+    $('cfReload').onclick = () => { conflict = null; dropSiteDraft(); ED.dropFloresDraft(); openBranch(branch, true); };
+    $('cfForce').onclick = () => { conflict = null; save(true); };
+    $('cfNo').onclick = () => { conflict = null; status(); panel(); };
+  }
+  // the right panel of the current tab (the flower editor draws its own)
+  const panel = () => tab === 'flores' ? ED.drawProps() : drawProps($('props'));
   function drawProps(p) {
     if (publishPanel(p)) return;
     if ($('branch').value === '__new') return newBranchForm(p);
+    if (conflict) return conflictProps(p);
+    if (tab === 'historial') return historyProps(p);
     if (tab === 'textos') return textProps(p);
     if (tab === 'colores' && palEdit) return paletteForm(p);
     const help = { colores: 'Elige una paleta o cambia un color suelto: la web se actualiza al momento. «↺» devuelve ese color al de la web. Con «Nueva paleta» creas la tuya a partir de seis colores.', fotos: 'Las fotos nuevas se reducen a un tamaño adecuado para la web antes de guardarse.', secciones: 'Ocultar una sección no la borra: se puede volver a mostrar cuando quieras.' }[tab] || '';
@@ -353,6 +514,7 @@
     if (tab === 'colores') renderColours();
     if (tab === 'fotos') renderPhotos();
     if (tab === 'secciones') renderSections();
+    if (tab === 'historial') renderHistory();
   }
   function setTab(t) {
     tab = t;
@@ -364,13 +526,16 @@
   }
 
   // ---------- save ----------
-  async function save() {
+  // force: write even if the branch moved on since it was opened here (the choice offered after a 409)
+  async function save(force) {
     if (saving) return;
+    force = force === true;
     const parts = dirtyParts();
     if (!parts.length) { status('No hay nada que guardar'); return; }
     const who = $('who').value.trim();
     if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); $('who').focus(); return; }
-    const payload = { branch, who, push: $('push').checked };
+    const payload = { branch, who, push: $('push').checked, head };
+    if (force) payload.force = true;
     if (ED.floresDirty()) payload.flores = ED.floresItems();
     if (Object.keys(textEdits).length) payload.texts = textEdits;
     if (lookDirty()) payload.look = look;
@@ -379,12 +544,24 @@
     try {
       const r = await fetch('/_dev/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const j = await r.json();
+      if (r.status === 409) {   // someone saved on this branch since it was opened here: ask what to do
+        conflict = { head: j.head || '' }; saving = false;
+        status(j.error || 'La rama ha cambiado desde que la abriste', true); panel();
+        return;
+      }
       if (!r.ok || !j.ok) throw new Error(j.error || r.status);
       Object.entries(textEdits).forEach(([k, v]) => { texts[k] = Object.assign({}, texts[k], v); });
-      textEdits = {}; photos = {}; savedLook = JSON.stringify(look);
+      textEdits = {}; photos = {}; savedLook = JSON.stringify(look); conflict = null;
+      if (j.head) head = j.head;
+      remoteHead = null; resetHistory(); dropSiteDraft();
       ED.markSaved(); ED.reloadFrame();
       const pushed = j.pushed === true ? ' · subido a GitHub' : (j.pushed ? ' · NO se pudo subir: ' + j.pushed : '');
-      status(j.commit ? `Guardado en ${branch} (${j.commit})${pushed}` : 'Nada que guardar', !!(j.pushed && j.pushed !== true));
+      status(j.commit ? `Guardado en ${branch} (${j.commit})${pushed}` : 'Nada que guardar', !!(j.pushed && j.pushed !== true), true);
+      if (tab === 'historial') renderHistory();
+      if (force) {   // written on top of someone else's version: read the branch again so every text and colour is the current one
+        saving = false; const msg = $('status').textContent, bad = $('status').classList.contains('dirty');
+        await openBranch(branch); status(msg, bad, true);
+      }
     } catch (e) { status('No se pudo guardar: ' + e.message, true); }
     saving = false;
   }
@@ -427,8 +604,8 @@
   // ---------- "Publicar": merge this branch into main and push main (the guests' site) ----------
   // The confirmation lives in the right panel and stays there (in any tab) until Cancelar.
   let pub = null;   // { step: 'check' | 'plan' | 'busy' | 'done' | 'error' | 'refused', plan, error, result }
-  const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
-  const commitRow = c => `<div class="pub-c"><code>${esc(c.sha)}</code> <span>${esc(c.who)} · ${esc(when(c.when))}</span><div>${esc(c.subject)}</div></div>`;
+  const whenISO = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+  const commitRow = c => `<div class="pub-c"><code>${esc(c.sha)}</code> <span>${esc(c.who)} · ${esc(whenISO(c.when))}</span><div>${esc(c.subject)}</div></div>`;
   function pubRefusal() {
     if (!branch) return 'Todavía no hay ninguna rama abierta.';
     if (branch === 'main') return 'Estás en main, que ya es la web publicada. Abre la rama con los cambios que quieres publicar.';
@@ -507,6 +684,33 @@
     }
   }
 
+  // ---------- someone else saved on this branch: poll its HEAD every minute while the tab is visible ----------
+  async function checkHead() {
+    if (!branch || !head || saving || document.hidden) return;
+    const b = branch;
+    try {
+      const r = await fetch('/_dev/api/state?head=1&branch=' + encodeURIComponent(b), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (b === branch && !saving && j.head) { remoteHead = sameHead(j.head, head) ? null : j.head; renderRemote(); }
+    } catch (e) {}
+  }
+  function renderRemote() {
+    const bn = $('remote'); if (!bn) return;
+    const show = !!remoteHead && !sameHead(remoteHead, head) && remoteHead !== remoteHidden;
+    bn.classList.toggle('show', show);
+    if (!show) { bn.innerHTML = ''; bn.dataset.k = ''; return; }
+    const dirty = dirtyParts().length > 0, key = remoteHead + (dirty ? ':d' : ':c');
+    if (bn.dataset.k === key) return;   // status() runs often: redraw only when something changed
+    bn.dataset.k = key;
+    bn.innerHTML = dirty
+      ? '<span>Alguien ha guardado en esta rama. Tienes cambios sin guardar: al guardar podrás elegir qué hacer.</span><button data-x title="Cerrar">✕</button>'
+      : '<span>Alguien ha guardado en esta rama.</span><button data-rl>Recargar</button><button data-x title="Cerrar">✕</button>';
+    const rl = bn.querySelector('[data-rl]');
+    if (rl) rl.onclick = () => { if (!dirtyParts().length) openBranch(branch); };
+    bn.querySelector('[data-x]').onclick = () => { remoteHidden = remoteHead; renderRemote(); };
+  }
+
   // ---------- page events ----------
   function onFrame(win, doc) {
     const st = doc.createElement('style');
@@ -527,7 +731,8 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL };
+  window.SITE = { save, status, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
+    dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL };
   if ($('share')) $('share').onclick = openShare;
   if ($('publish')) $('publish').onclick = openPublish;
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sharePop')) closeShare(); });
@@ -537,5 +742,7 @@
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
   document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && e.target.closest('input, textarea, select')) { e.preventDefault(); save(); } });
   window.addEventListener('beforeunload', e => { if (dirtyParts().length) { e.preventDefault(); e.returnValue = ''; } });
+  setInterval(checkHead, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHead(); });
   loadBranches();
 })();
