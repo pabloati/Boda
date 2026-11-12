@@ -1,0 +1,254 @@
+[
+ {
+  "id": "narciso-jonquilla",
+  "label": "Narciso jonquilla",
+  "w": 349,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": true,
+   "right": false
+  }
+ },
+ {
+  "id": "narciso-poeta",
+  "label": "Narciso de los poetas",
+  "w": 510,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "narciso-trompon",
+  "label": "Narciso trompón",
+  "w": 363,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "jacinto",
+  "label": "Jacinto",
+  "w": 346,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "muscari",
+  "label": "Muscari",
+  "w": 351,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "azafran",
+  "label": "Azafrán",
+  "w": 355,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "anemona-azul",
+  "label": "Anémona azul",
+  "w": 486,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": true,
+   "right": false
+  }
+ },
+ {
+  "id": "anemona-bosque",
+  "label": "Anémona de bosque",
+  "w": 499,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "glicinia",
+  "label": "Glicinia",
+  "w": 477,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "muguete",
+  "label": "Muguete",
+  "w": 265,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": true
+  }
+ },
+ {
+  "id": "manzano",
+  "label": "Flor de manzano",
+  "w": 1013,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "paniculata",
+  "label": "Paniculata",
+  "w": 515,
+  "h": 640,
+  "cut": {
+   "top": true,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "tulipan",
+  "label": "Tulipán",
+  "w": 480,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "primula-amarilla",
+  "label": "Prímula amarilla",
+  "w": 851,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "primula-rosa",
+  "label": "Prímula rosa",
+  "w": 406,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "lirio-naranja",
+  "label": "Lirio naranja",
+  "w": 406,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "lirio-rosa",
+  "label": "Lirio rosa",
+  "w": 411,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "mimosa",
+  "label": "Mimosa",
+  "w": 494,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "mimosa-rama",
+  "label": "Mimosa (rama)",
+  "w": 456,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": true
+  }
+ },
+ {
+  "id": "almendro",
+  "label": "Flor de almendro",
+  "w": 270,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": true,
+   "left": false,
+   "right": false
+  }
+ },
+ {
+  "id": "crisantemo",
+  "label": "Crisantemo",
+  "w": 442,
+  "h": 640,
+  "cut": {
+   "top": false,
+   "bottom": false,
+   "left": false,
+   "right": false
+  }
+ }
+]

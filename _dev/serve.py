@@ -12,17 +12,41 @@ Routes
                        branches no worktree has checked out ("/" in a branch
                        name is written "~": origin~redesign).
   /_dev/sources.json   the list of worktrees and branches the phone page shows.
+  POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
+  /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save
+                       (writes into that branch's worktree and commits; see _dev/editor_api.py),
+                       publish (GET: dry run, POST: merge the branch into main and push main),
+                       history of a branch and going back to one of its commits (POST revert).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
+
+Shared mode (to edit from another computer through a tunnel, see _dev/compartir.md):
+  BODA_EDITOR_PASSWORD=... python3 _dev/serve.py [port]
+  (or BODA_EDITOR_PASSWORD_FILE=path). Then every page, the editor and the API need a login at
+  /_dev/login; a session lasts 30 days; 8 wrong passwords from one address lock it for 10 minutes.
+  A page opened without a session (e.g. a branch preview from the editor's QR) goes back there after the login.
+  BODA_PUBLIC_LINK_FILE=path: a file where the tunnel's https address appears once it is up
+  (compartir.sh and the container set it); GET /_dev/api/public returns it, so the editor's QR
+  points there even when the editor itself is open on localhost.
 """
+import hashlib
+import hmac
+import html
 import http.server
 import json
+import secrets
+import threading
+import time
 import mimetypes
 import os
 import posixpath
+import re
 import subprocess
 import sys
 import urllib.parse
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import editor_api  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,6 +97,121 @@ def sources():
     }
 
 
+def clean_place(p):
+    """One placement: width, offsets from the nearest edges, turn."""
+    ax, ay = p['x'], p['y']
+    if ax['a'] not in ('l', 'r') or ay['a'] not in ('t', 'b'):
+        raise ValueError
+    return {'w': round(float(p['w']), 1), 'x': {'a': ax['a'], 'v': round(float(ax['v']), 1)},
+            'y': {'a': ay['a'], 'v': round(float(ay['v']), 1)}, 'rot': round(float(p.get('rot') or 0), 1)}
+
+
+def clean_flores(items):
+    """Keeps only the fields the page reads, with the types it expects."""
+    if not isinstance(items, list) or len(items) > 300:
+        raise ValueError
+    out = []
+    for it in items:
+        if not (re.fullmatch(r'[a-z0-9-]+', it['img']) and re.fullmatch(r'[a-z0-9-]+', it['sec'])):
+            raise ValueError
+        ax, ay = it['x'], it['y']
+        if ax['a'] not in ('l', 'r') or ay['a'] not in ('t', 'b'):
+            raise ValueError
+        out.append({
+            'id': str(it['id'])[:12], 'sec': it['sec'], 'img': it['img'], 'w': round(float(it['w']), 1),
+            'x': {'a': ax['a'], 'v': round(float(ax['v']), 1)}, 'y': {'a': ay['a'], 'v': round(float(ay['v']), 1)},
+            'flip': bool(it.get('flip')), 'flipY': bool(it.get('flipY')), 'rot': round(float(it.get('rot') or 0), 1),
+            'front': bool(it.get('front')), 'hide': it.get('hide') if it.get('hide') in ('m', 'd') else '',
+        })
+        op = round(float(it.get('op', 1) or 1), 2)
+        if op < 1:
+            out[-1]['op'] = max(0.1, op)            # opacity
+        if it.get('lock'):
+            out[-1]['lock'] = True                   # editor only: cannot be dragged by mistake
+        if it.get('d'):
+            out[-1]['d'] = clean_place(it['d'])      # own placement on wide screens
+    return out
+
+
+# ---------- shared mode: password login ----------
+def _password():
+    pw = os.environ.get('BODA_EDITOR_PASSWORD', '')
+    f = os.environ.get('BODA_EDITOR_PASSWORD_FILE', '')
+    if not pw and f:
+        with open(os.path.expanduser(f)) as fh:
+            pw = fh.read().strip()
+    return pw
+
+
+PASSWORD = _password()
+SESSIONS = {}                     # token -> expiry
+FAILS = {}                        # address -> [timestamps of wrong passwords]
+LOCK = threading.Lock()
+SESSION_DAYS = 30
+
+LOGIN_PAGE = '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de la boda</title><style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3eee3;font:16px/1.4 system-ui,sans-serif;color:#3b382f}
+form{background:#fffdf8;padding:28px 26px;border-radius:12px;box-shadow:0 10px 30px -12px rgba(0,0,0,.25);width:min(340px,90vw);display:grid;gap:12px}
+h1{font-size:20px;margin:0}p{margin:0;color:#6f6a5c;font-size:14px}input{font:inherit;padding:10px;border:1px solid #d9d0ba;border-radius:8px}
+button{font:inherit;padding:10px;border:0;border-radius:8px;background:#6c6f48;color:#fff;font-weight:600;cursor:pointer}.err{color:#a22}
+</style></head><body><form method="post" action="/_dev/login"><h1>Editor de la boda</h1><p>Escribe la contraseña para entrar.</p>
+%s<input type="hidden" name="next" value="%s"><input type="password" name="password" autocomplete="current-password" autofocus required><button>Entrar</button></form></body></html>'''
+
+
+def safe_next(path):
+    """Where to go after logging in: a path on this site (e.g. a branch preview opened from the QR), else the editor."""
+    path = str(path or '')
+    if (re.fullmatch(r'/(?![/\\])[!-\[\]-~]{0,500}', path)   # printable ASCII, no backslash
+            and not path.startswith(('/_dev/login', '/_dev/api/'))):   # never straight into the API
+        return path
+    return '/_dev/flores.html'
+
+
+LINK_FILE = os.environ.get('BODA_PUBLIC_LINK_FILE', '')
+
+
+def public_origin():
+    """The https address of the tunnel in front of this server, for the editor's "Ver en mi móvil" when
+    it is open on this machine. compartir.sh and the container write it to BODA_PUBLIC_LINK_FILE once
+    the tunnel is up (read on every call: the tunnel comes up after the server and changes on restart).
+    None without one, and always None without a password: a public link is only offered for a server
+    that asks for one."""
+    if not (PASSWORD and LINK_FILE):
+        return None
+    try:
+        with open(os.path.expanduser(LINK_FILE)) as fh:
+            m = re.match(r'\s*(https://[a-z0-9-]+\.trycloudflare\.com)(?:[/\s]|$)', fh.read(500))
+    except OSError:
+        return None
+    return m.group(1) if m else None
+
+
+def check_password(given):
+    return bool(PASSWORD) and hmac.compare_digest(hashlib.sha256(given.encode()).digest(), hashlib.sha256(PASSWORD.encode()).digest())
+
+
+def layout_js(items):
+    lines = ',\n'.join('  ' + json.dumps(i, ensure_ascii=False, separators=(', ', ': ')) for i in items)
+    return ('// Where the botanical plates sit on the page. Written by _dev/flores.html (the flower editor):\n'
+            '// edit it there, not by hand. Each item is anchored to the nearest edge of its section.\n'
+            'window.FLORES_LAYOUT = {"items": [\n%s\n]};\n' % lines)
+
+
+def write_flores(wt, items):
+    with open(os.path.join(wt, 'js', 'flores-layout.js'), 'w') as f:
+        f.write(layout_js(clean_flores(items)))
+    return 'js/flores-layout.js'
+
+
+def wt_url(path):
+    """URL prefix this server uses for a worktree folder."""
+    if os.path.realpath(path) == os.path.realpath(HERE):
+        return '/'
+    root = editor_api.repo_root(HERE)
+    return '/wt/%s/' % ('repo' if os.path.realpath(path) == os.path.realpath(root) else os.path.basename(path))
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=HERE, **k)
@@ -102,13 +241,188 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return super().translate_path(path)
 
     def do_GET(self):
+        if PASSWORD and self.gate():
+            return
         self.route(body=True)
 
     def do_HEAD(self):
+        if PASSWORD and self.gate():
+            return
         self.route(body=False)
 
-    def route(self, body):
+    def client(self):
+        """The visitor's address: the tunnel passes it in a header."""
+        return self.headers.get('CF-Connecting-IP') or self.headers.get('X-Forwarded-For', '').split(',')[0].strip() or self.client_address[0]
+
+    def session_ok(self):
+        if not PASSWORD:
+            return True
+        for part in self.headers.get('Cookie', '').split(';'):
+            k, _, v = part.strip().partition('=')
+            if k == 'boda_ed':
+                with LOCK:
+                    exp = SESSIONS.get(v)
+                    if exp and exp > time.time():
+                        return True
+        return False
+
+    def allowed(self):
+        """Writes: JSON only; from this machine, or (shared mode) with a session and from this same site."""
+        if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+            return False
+        host = self.headers.get('Host', '')
+        if not PASSWORD:
+            return host.rsplit(':', 1)[0] in ('localhost', '127.0.0.1')
+        origin = self.headers.get('Origin', '')
+        return self.session_ok() and (not origin or urllib.parse.urlsplit(origin).netloc == host)
+
+    def api_get_allowed(self):
+        """API reads: some of them also act (opening a branch adds a worktree, the publish dry run
+        fetches from GitHub), so another web page must not trigger them (an <img> pointing here) nor
+        read them (DNS rebinding). Local mode: the Host must be this machine, as for writes. Both
+        modes: a browser's Sec-Fetch-Site must say the request comes from this same site (or was typed
+        in); tools that send no such header (curl, scripts) still work."""
+        if not PASSWORD and self.headers.get('Host', '').rsplit(':', 1)[0] not in ('localhost', '127.0.0.1'):
+            return False
+        return self.headers.get('Sec-Fetch-Site', 'none') in ('same-origin', 'none')
+
+    def login(self):
+        """GET shows the form; POST checks the password and starts a session."""
+        if self.command == 'GET':
+            nxt = (urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get('next') or [''])[0]
+            return self.send_html(LOGIN_PAGE % ('', html.escape(safe_next(nxt), quote=True)))
+        ip, now = self.client(), time.time()
+        with LOCK:
+            recent = [t for t in FAILS.get(ip, []) if now - t < 600]
+            FAILS[ip] = recent
+        n = min(int(self.headers.get('Content-Length') or 0), 2000)
+        form = urllib.parse.parse_qs(self.rfile.read(n).decode('utf-8', 'replace'))
+        nxt = safe_next((form.get('next') or [''])[0])
+        if len(recent) >= 8:
+            return self.send_html(LOGIN_PAGE % ('<p class="err">Demasiados intentos. Espera 10 minutos.</p>', html.escape(nxt, quote=True)), 429)
+        if not check_password((form.get('password') or [''])[0]):
+            with LOCK:
+                FAILS.setdefault(ip, []).append(now)
+            time.sleep(1)
+            return self.send_html(LOGIN_PAGE % ('<p class="err">Contraseña incorrecta.</p>', html.escape(nxt, quote=True)), 401)
+        token = secrets.token_urlsafe(32)
+        with LOCK:
+            SESSIONS[token] = now + SESSION_DAYS * 86400
+        secure = '; Secure' if self.headers.get('X-Forwarded-Proto', '') == 'https' or self.headers.get('CF-Visitor', '').find('https') >= 0 else ''
+        self.send_response(303)
+        self.send_header('Set-Cookie', 'boda_ed=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Strict%s' % (token, SESSION_DAYS * 86400, secure))
+        self.send_header('Location', nxt)
+        self.end_headers()
+
+    def send_html(self, text, status=200):
+        data = text.encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def gate(self):
+        """Shared mode: everything except the login page needs a session. Returns True if handled."""
         p = urllib.parse.urlsplit(self.path).path
+        if p == '/_dev/login':
+            self.login()
+            return True
+        if not self.session_ok():
+            if self.command == 'GET' and not p.startswith('/_dev/api/'):
+                self.send_response(303); self.send_header('Location', '/_dev/login?next=' + urllib.parse.quote(self.path, safe='/~')); self.end_headers()
+            else:
+                self.send_error(401)
+            return True
+        return False
+
+    def send_json(self, obj, status=200):
+        data = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def api_post(self, p):
+        n = int(self.headers.get('Content-Length') or 0)
+        if n > 12_000_000:
+            return self.send_error(413)
+        try:
+            req = json.loads(self.rfile.read(n) or b'{}')
+            if p == '/_dev/api/open':
+                wt = editor_api.open_branch(HERE, req['branch'])
+                return self.send_json({'branch': req['branch'], 'url': wt_url(wt)})
+            if p == '/_dev/api/branch':
+                wt = editor_api.new_branch(HERE, req['name'], req['base'])
+                return self.send_json({'branch': req['name'], 'url': wt_url(wt)})
+            if p == '/_dev/api/save':
+                return self.send_json(editor_api.save(HERE, req['branch'], req, write_flores))
+            if p == '/_dev/api/publish':
+                return self.send_json(editor_api.publish(HERE, req['branch'], req))
+            if p == '/_dev/api/revert':
+                return self.send_json(editor_api.revert(HERE, req['branch'], req))
+        except editor_api.Conflict as e:
+            return self.send_json({'ok': False, 'error': str(e), 'head': e.head}, 409)
+        except editor_api.EditorError as e:
+            return self.send_json({'ok': False, 'error': str(e)}, 400)
+        except (ValueError, KeyError, TypeError) as e:
+            return self.send_json({'ok': False, 'error': 'Petición no válida: %s' % e}, 400)
+        return self.send_error(404)
+
+    def api_get(self, p, q):
+        try:
+            if p == '/_dev/api/branches':
+                return self.send_json(editor_api.branches(HERE))
+            if p == '/_dev/api/public':    # this server's tunnel address, or null
+                return self.send_json({'origin': public_origin()})
+            if p == '/_dev/api/state':
+                wt = editor_api.open_branch(HERE, q['branch'][0])
+                if q.get('head'):         # the cheap variant the editor polls: has someone saved since?
+                    return self.send_json({'head': editor_api.head(wt)})
+                return self.send_json({'url': wt_url(wt), 'head': editor_api.head(wt),
+                                       'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt),
+                                       'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
+            if p == '/_dev/api/history':
+                return self.send_json(editor_api.history(HERE, q['branch'][0]))
+            if p == '/_dev/api/publish':   # dry run; the merge itself is a POST
+                plan = editor_api.publish_plan(HERE, q['branch'][0])
+                plan.pop('_ref', None)
+                return self.send_json(plan)
+        except editor_api.EditorError as e:
+            return self.send_json({'ok': False, 'error': str(e)}, 400)
+        except (KeyError, IndexError):
+            return self.send_json({'ok': False, 'error': 'Falta la rama'}, 400)
+        return self.send_error(404)
+
+    def do_POST(self):
+        """Writes: the flower layout (old route) and the site editor's API, from this machine only."""
+        p = urllib.parse.urlsplit(self.path).path
+        if PASSWORD and self.gate():
+            return
+        if not self.allowed():
+            return self.send_error(403)
+        if p.startswith('/_dev/api/'):
+            return self.api_post(p)
+        if p != '/_dev/save-flores':
+            return self.send_error(404)
+        n = int(self.headers.get('Content-Length') or 0)
+        if n > 200000:
+            return self.send_error(413)
+        try:
+            items = clean_flores(json.loads(self.rfile.read(n))['items'])
+        except (ValueError, KeyError, TypeError):
+            return self.send_error(400, 'Bad layout')
+        with open(os.path.join(HERE, 'js', 'flores-layout.js'), 'w') as f:
+            f.write(layout_js(items))
+        self.send_bytes(json.dumps({'ok': True, 'items': len(items)}).encode(), 'application/json', True)
+
+    def route(self, body):
+        u = urllib.parse.urlsplit(self.path); p = u.path
+        if p.startswith('/_dev/api/'):
+            if not self.api_get_allowed():
+                return self.send_error(403)
+            return self.api_get(p, urllib.parse.parse_qs(u.query))
         if p == '/_dev/sources.json':
             return self.send_bytes(json.dumps(sources()).encode(), 'application/json', body)
         if p.startswith('/b/'):
@@ -152,7 +466,10 @@ def main():
         sys.exit('Port %d is busy: stop the other server (Ctrl+C in its terminal) or run: '
                  'python3 _dev/serve.py %d' % (port, port + 1))
     print('Site:          http://localhost:%d/' % port)
-    print('Phone preview: http://localhost:%d/_dev/phones.html   (Ctrl+C to stop)' % port)
+    print('Phone preview: http://localhost:%d/_dev/phones.html' % port)
+    print('Site editor:   http://localhost:%d/_dev/flores.html   (Ctrl+C to stop)' % port)
+    if PASSWORD:
+        print('Shared mode: password required (/_dev/login).')
     try:
         server.serve_forever()
     except KeyboardInterrupt:

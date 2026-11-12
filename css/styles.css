@@ -147,7 +147,8 @@ button {
   display: inline-block;
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: clamp(3.2rem, 11vw, 4.6rem);
+  /* --font-script-scale: set by the site editor (css/editor.css) when it swaps the script font */
+  font-size: calc(clamp(3.2rem, 11vw, 4.6rem) * var(--font-script-scale, 1));
   line-height: 1;
   color: var(--ink);
   margin-bottom: 28px;
@@ -1907,3 +1908,11 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 }
 
+/* ---------- Botanical plates (js/flores.js, laid out with _dev/flores.html) ----------
+   A section that holds plates clips them and starts its own stacking context, so a plate with
+   z-index -1 sits above the section's background and below its text. */
+.has-flores { position: relative; overflow: hidden; isolation: isolate; }
+.flor { position: absolute; z-index: -1; max-width: none; height: auto; pointer-events: none; user-select: none; }
+.flor--front { z-index: 2; }
+@media (max-width: 768px) { .flor--no-m { display: none; } }
+@media (min-width: 769px) { .flor--no-d { display: none; } }

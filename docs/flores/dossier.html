@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Flores y cuaderno de viaje</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&family=Special+Elite&display=block" rel="stylesheet">
+<style>
+  :root {
+    --paper:#f3eee3; --paper-deep:#e9e2d1; --paper-line:#d9d0ba;
+    --olive:#8e9166; --olive-deep:#6c6f48; --olive-soft:#c8c9ab;
+    --terracotta:#b3613f; --terracotta-deep:#8f4a2f;
+    --ink:#3a3a2e; --ink-soft:#6a6a58; --cream:#f6f2e8;
+    --serif:'Cormorant Garamond',serif; --script:'Allison',cursive; --hand:'Homemade Apple',cursive; --mono:'Special Elite','Courier New',monospace;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#ddd; font-family:var(--serif); color:var(--ink); }
+  .page { width:794px; height:1123px; background:var(--paper); margin:0 auto 20px; padding:46px 52px; position:relative; overflow:hidden; page-break-after:always; }
+  h1 { font-family:var(--script); font-weight:400; font-size:54px; margin:0 0 6px; color:var(--ink); }
+  h2 { font-family:var(--script); font-weight:400; font-size:40px; margin:0 0 4px; }
+  h3 { font-family:var(--serif); font-weight:600; font-size:18px; margin:0 0 2px; }
+  p { font-size:15.5px; line-height:1.45; margin:0 0 10px; }
+  .lead { font-size:17px; color:var(--ink-soft); max-width:640px; }
+  .mono { font-family:var(--mono); font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--olive-deep); }
+  .small { font-size:12.5px; color:var(--ink-soft); line-height:1.35; }
+
+  /* catalogue */
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:18px 16px; margin-top:16px; }
+  .grid4 figure { margin:0; }
+  .grid4 .im { height:150px; background:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--paper-line); }
+  .grid4 .im.line { background:var(--paper-deep); border:0; }
+  .grid4 img { max-width:100%; max-height:100%; }
+  .grid4 figcaption { margin-top:6px; }
+  .grid4 figcaption b { font-size:15.5px; display:block; }
+  .grid4 figcaption i { font-size:13.5px; color:var(--ink-soft); display:block; }
+  .grid4 figcaption span { font-size:11.5px; color:var(--ink-soft); display:block; line-height:1.25; margin-top:2px; }
+  .tag { display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:1px; padding:1px 6px; border-radius:8px; margin-top:3px; text-transform:uppercase; }
+  .ok { background:#dfe3c7; color:var(--olive-deep); } .late { background:#f0d9cb; color:var(--terracotta-deep); }
+
+  /* season table */
+  table.season { border-collapse:collapse; width:100%; margin-top:14px; font-size:14px; }
+  table.season th, table.season td { border-bottom:1px solid var(--paper-line); padding:6px 6px; text-align:center; }
+  table.season th:first-child, table.season td:first-child { text-align:left; }
+  table.season th { font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--olive-deep); font-weight:400; }
+  table.season td.on { background:#dfe3c7; } table.season td.peak { background:var(--olive); color:#fff; } table.season td.day { box-shadow: inset 3px 0 0 var(--terracotta); }
+
+  /* concepts */
+  .concept { display:grid; grid-template-columns:1fr 300px; gap:34px; margin-top:14px; }
+  .bullets { padding-left:18px; margin:6px 0 0; } .bullets li { font-size:15px; line-height:1.4; margin-bottom:7px; }
+  .pros { margin-top:12px; padding:10px 14px; background:var(--paper-deep); border-radius:6px; font-size:14px; line-height:1.4; }
+  .pair { display:flex; gap:16px; }
+
+  /* phone */
+  .phone { width:300px; height:620px; border:7px solid #1d1d19; border-radius:34px; overflow:hidden; background:var(--paper); position:relative; flex:none; }
+  .scr { position:absolute; inset:0; overflow:hidden; }
+  .fl { position:absolute; pointer-events:none; }
+  .band-olive { background:var(--olive); color:var(--cream); }
+  .band-hero { background:#4f6347; color:var(--cream); }
+  .sec { position:relative; padding:18px 20px; text-align:center; }
+  .script { font-family:var(--script); font-size:32px; line-height:1; }
+  .cap { font-family:var(--mono); font-size:8.5px; letter-spacing:1.6px; text-transform:uppercase; }
+  .btn { display:inline-block; background:var(--terracotta); color:#fff; padding:7px 22px; border-radius:20px; font-size:13px; }
+  .postmark { position:absolute; width:78px; height:78px; border:2px solid; border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center; font-family:var(--mono); font-size:7.5px; letter-spacing:1px; line-height:1.25; transform:rotate(-9deg); }
+  .postmark::before { content:""; position:absolute; inset:7px; border:1.2px solid; border-radius:50%; }
+  .stamp { position:absolute; background:var(--paper-deep); padding:7px; width:66px; text-align:center; -webkit-mask: radial-gradient(circle 3px at 50% 0, transparent 98%, #000) top/9px 100% repeat-x; box-shadow:0 0 0 1px var(--paper-line); outline:1px solid var(--olive); outline-offset:-4px; }
+  .stamp .d { font-family:var(--mono); font-size:6.5px; letter-spacing:1px; color:var(--olive-deep); }
+  .pass { background:var(--paper-deep); border:1px solid var(--paper-line); border-radius:9px; position:relative; text-align:left; overflow:hidden; }
+  .pass .h { padding:9px 12px 7px; border-bottom:1.4px dashed var(--olive-soft); display:flex; justify-content:space-between; }
+  .pass .b { padding:8px 12px 10px; font-size:12px; }
+  .route { position:absolute; left:34px; top:0; bottom:0; border-left:2px dotted var(--olive-soft); }
+  .stop { position:relative; padding:0 0 0 62px; min-height:104px; text-align:left; }
+  .pin { position:absolute; left:23px; top:6px; width:22px; height:22px; border-radius:50%; background:var(--paper); border:1.5px solid var(--olive); overflow:hidden; }
+  .pin img { width:100%; height:100%; object-fit:cover; opacity:.9; }
+  .tl-time { font-family:var(--mono); font-size:10px; color:var(--olive-deep); letter-spacing:1.4px; }
+  .lam { font-family:var(--mono); font-size:8.5px; letter-spacing:1.4px; color:var(--olive-deep); text-transform:uppercase; }
+  .latin { font-style:italic; font-size:13px; color:var(--ink-soft); }
+  .note { position:absolute; bottom:8px; right:12px; }
+</style>
+</head>
+<body>
+
+<!-- 1. CATALOGO ORIGINALES -->
+<section class="page">
+  <h1>Más flores de primavera</h1>
+  <p class="lead">Once láminas nuevas para ampliar el catálogo, del mismo tipo que las de antes: grabados y litografías botánicas de los siglos XVIII y XIX, de dominio público. Aquí van tal como son, con su color.</p>
+  <div class="grid4">
+    <figure><div class="im"><img src="img/orig/narcissus-bessa.jpg"></div><figcaption><b>Narciso jonquilla</b><i>Narcissus tazetta</i><span>P. Bessa, Flore des jardiniers. Cleveland Museum of Art (CC0)</span><div class="tag ok">marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/narcissus-poeticus-batava.jpg"></div><figcaption><b>Narciso de los poetas</b><i>Narcissus poeticus</i><span>Jan Kops, Flora Batava, vol. 17</span><div class="tag ok">marzo–abril</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/redoute-narcissus.jpg"></div><figcaption><b>Narciso trompón</b><i>Narcissus pseudonarcissus</i><span>P. J. Redouté, Les Liliacées, t. 158</span><div class="tag ok">feb–marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/hyacinth-curtis.jpg"></div><figcaption><b>Jacinto rosa</b><i>Hyacinthus orientalis</i><span>The Botanical Magazine, 1806. Cleveland Museum of Art (CC0)</span><div class="tag ok">marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/hyacinth-botryoides-batava.jpg"></div><figcaption><b>Muscari</b><i>Muscari botryoides</i><span>Jan Kops, Flora Batava, vol. 5</span><div class="tag ok">marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/crocus-batava.jpg"></div><figcaption><b>Azafrán de primavera</b><i>Crocus vernus</i><span>Jan Kops, Flora Batava, vol. 6</span><div class="tag ok">feb–marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/anemone-apennina-batava.jpg"></div><figcaption><b>Anémona azul</b><i>Anemone apennina</i><span>Jan Kops, Flora Batava, vol. 14</span><div class="tag ok">marzo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/anemone-nemorosa-batava.jpg"></div><figcaption><b>Anémona de bosque</b><i>Anemone nemorosa</i><span>Jan Kops, Flora Batava, vol. 4</span><div class="tag ok">marzo–abril</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/wisteria-witte.jpg"></div><figcaption><b>Glicinia</b><i>Wisteria sinensis</i><span>H. Witte, Flora, 1868</span><div class="tag late">abril</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/convallaria-kohler.jpg"></div><figcaption><b>Muguete</b><i>Convallaria majalis</i><span>Köhler's Medizinal-Pflanzen, 1890 (recortado a la planta)</span><div class="tag late">abril–mayo</div></figcaption></figure>
+    <figure><div class="im"><img src="img/orig/malus-kohler.jpg"></div><figcaption><b>Flor de manzano</b><i>Malus domestica</i><span>Köhler's Medizinal-Pflanzen, 1890 (como el almendro: solo la rama)</span><div class="tag late">abril</div></figcaption></figure>
+  </div>
+  <p class="small" style="margin-top:18px"><b>De dónde salen.</b> Los museos grandes (Met, Art Institute of Chicago, Smithsonian, Rijksmuseum) no me dejaron consultar su API desde aquí (bloqueada, retirada o con límite de peticiones). Solo me sirvió el <b>Cleveland Museum of Art</b>, con licencia CC0, que da el narciso jonquilla y el jacinto. Las otras nueve son escaneos de libros de 1787 a 1890 (Flora Batava, Redouté, Köhler, Witte), de dominio público por antigüedad; los descargué de Wikimedia Commons porque es donde están alojados, pero la fuente original es el libro. Dejé fuera Europeana, porque casi todo son pliegos de herbario con licencia CC BY-SA, que no queremos en la web.</p>
+  <p class="small"><b>Pendiente:</b> el cerezo de Köhler, con fruto y disecciones como el almendro, no quedó limpio y no lo incluyo. Necesita un recorte a mano de la rama principal.</p>
+</section>
+
+<!-- 2. LINEA -->
+<section class="page">
+  <h1>Pasados al trazo de la web</h1>
+  <p class="lead">Mismo trazo gris oliva que los dibujos de la Hoja de ruta, sin color y con el borde difuminado. Las láminas con mucho detalle (manzano, muguete) van recortadas a la rama o planta principal.</p>
+  <div class="grid4">
+    <figure><div class="im line"><img src="img/line/narcissus-bessa.png"></div><figcaption><b>Narciso jonquilla</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/narcissus-poeticus-batava.png"></div><figcaption><b>Narciso de los poetas</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/redoute-narcissus.png"></div><figcaption><b>Narciso trompón</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/hyacinth-curtis.png"></div><figcaption><b>Jacinto</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/hyacinth-botryoides-batava.png"></div><figcaption><b>Muscari</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/crocus-batava.png"></div><figcaption><b>Azafrán</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/anemone-apennina-batava.png"></div><figcaption><b>Anémona azul</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/anemone-nemorosa-batava.png"></div><figcaption><b>Anémona de bosque</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/wisteria-witte.png"></div><figcaption><b>Glicinia</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/convallaria-kohler.png"></div><figcaption><b>Muguete</b></figcaption></figure>
+    <figure><div class="im line"><img src="img/line/malus-kohler.png"></div><figcaption><b>Manzano</b></figcaption></figure>
+  </div>
+  <h2 style="margin-top:26px">¿Y el 13 de marzo?</h2>
+  <p class="small">Madrid, floración habitual. Útil para elegir las que se ven en la boda de verdad.</p>
+  <table class="season">
+    <tr><th>Flor</th><th>Feb</th><th class="day">13 mar</th><th>Abr</th><th>May</th></tr>
+    <tr><td>Almendro (el de antes)</td><td class="peak"></td><td class="on day"></td><td></td><td></td></tr>
+    <tr><td>Narcisos</td><td class="on"></td><td class="peak day"></td><td class="on"></td><td></td></tr>
+    <tr><td>Azafrán, anémonas, jacinto, muscari</td><td class="on"></td><td class="peak day"></td><td class="on"></td><td></td></tr>
+    <tr><td>Manzano, glicinia</td><td></td><td class="day"></td><td class="peak"></td><td class="on"></td></tr>
+    <tr><td>Muguete</td><td></td><td class="day"></td><td class="on"></td><td class="peak"></td></tr>
+  </table>
+  <p class="small" style="margin-top:10px">Fechas aproximadas, de memoria; si alguna importa de verdad para el mensaje de la web, hay que contrastarla.</p>
+</section>
+
+<!-- 3. CONCEPTO A -->
+<section class="page">
+  <h1>A · Sellos y matasellos con flor</h1>
+  <p class="lead">Lo más literal del cuaderno de viaje: los objetos postales llevan la flor dentro, y la flor deja de ser decoración suelta.</p>
+  <div class="concept">
+    <div>
+      <ul class="bullets">
+        <li><b>El sello postal</b> del sobre y de la postal lleva una flor en vez del monograma "M & P": el narciso jonquilla, que además es de marzo.</li>
+        <li><b>El matasellos</b> del hero rodea una flor pequeña en el centro, con "13 MAR 2027" en el aro, en lugar del texto "NOS CASAMOS".</li>
+        <li><b>La tarjeta de embarque</b> del RSVP lleva en la esquina una segunda flor, la anémona azul, muy tenue, detrás de los datos.</li>
+        <li><b>Una sola flor por pantalla</b>, como pide la regla 1 del cuaderno. Cada sección tiene la suya, y así todas juntas forman el catálogo.</li>
+      </ul>
+      <div class="pros"><b>Lo bueno:</b> es el cambio más pequeño sobre lo que ya habéis visto del cuaderno, y no mete nada nuevo salvo la imagen dentro de cada pieza.<br><b>Lo malo:</b> las flores quedan pequeñas, así que los grabados con mucho detalle (manzano, wisteria) no se aprecian. Aquí funcionan las de trazo claro: narciso, muscari, crocus.</div>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="sec band-hero" style="height:200px;padding-top:44px">
+        <div class="cap">Nos casamos</div>
+        <div class="script" style="margin-top:8px;font-size:36px">Mª Ángeles &amp; Pablo</div>
+        <div style="font-size:13px;margin-top:6px">Sábado, 13 de marzo de 2027</div>
+        <div class="postmark" style="right:14px;top:14px;color:#f6f2e8"><span>MADRID<br>13 MAR<br>2027</span>
+          <img class="fl" src="img/line/crocus-batava.png" style="width:26px;left:26px;top:-8px;filter:invert(1) brightness(1.8);opacity:.85">
+        </div>
+      </div>
+      <div class="sec" style="height:178px">
+        <div class="cap" style="color:var(--olive-deep)">Itinerario</div>
+        <div class="script" style="color:var(--ink);margin-top:4px">Hoja de ruta</div>
+        <div style="font-size:12.5px;margin-top:8px;line-height:1.7"><span class="tl-time">12:30</span> Ceremonia<br><span class="tl-time">14:30</span> Convite<br><span class="tl-time">19:00</span> Fiesta</div>
+        <div class="stamp" style="right:16px;top:20px"><img src="img/line/narcissus-bessa.png" style="width:44px;height:56px;object-fit:contain"><div class="d">13·III·2027</div></div>
+      </div>
+      <div class="sec band-olive" style="height:224px;padding-top:14px">
+        <div class="script" style="margin-bottom:10px">¿Nos acompañas?</div>
+        <div class="pass" style="color:var(--ink)"><div class="h"><div><div class="mono" style="font-size:7px">Pasajero</div>Tu nombre</div><div><div class="mono" style="font-size:7px">Embarque</div>13 MAR</div></div>
+          <div class="b" style="height:86px;position:relative">Asistencia · Menú · Bus
+            <img class="fl" src="img/line/anemone-apennina-batava.png" style="width:78px;right:-6px;bottom:-14px;opacity:.55">
+          </div></div>
+        <div class="btn" style="margin-top:12px">Embarcar</div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- 4. CONCEPTO B -->
+<section class="page">
+  <h1>B · La ruta florida</h1>
+  <p class="lead">La ruta punteada del cuaderno de viaje se convierte en un camino en el que cada parada tiene su flor. Es lo que mejor casa con la Hoja de ruta ilustrada que ya está en la web.</p>
+  <div class="concept">
+    <div>
+      <ul class="bullets">
+        <li><b>Cada parada del itinerario, su flor.</b> Ceremonia: jacinto; Convite: narciso; Fiesta: anémona; Buses: azafrán. Mismo trazo que los cuatro dibujos de lugares (iglesia, convite…), así que parece una serie.</li>
+        <li><b>El pin de la ruta</b> es un círculo pequeño con la flor recortada dentro, en vez del punto liso del cuaderno.</li>
+        <li><b>La flor grande</b> sale del lado de la parada, a medio camino entre el pin y el dibujo del lugar, con el borde difuminado.</li>
+        <li>La ruta punteada es la misma del cuaderno (<span class="mono" style="font-size:9px">--olive-soft</span>, puntos redondos), solo cambia lo que va en cada parada.</li>
+      </ul>
+      <div class="pros"><b>Lo bueno:</b> aprovecha el trabajo que ya está hecho (Hoja de ruta, dibujos de lugares) y le da sentido a cada flor, ya que cada una marca un momento del día.<br><b>Lo malo:</b> las cuatro paradas fijan cuatro flores. Si luego cambia el programa (por ejemplo, otra parada para los buses), hay que elegir una más.</div>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="sec" style="padding-top:22px"><div class="cap" style="color:var(--olive-deep)">Itinerario</div><div class="script" style="color:var(--ink)">Hoja de ruta</div></div>
+      <div style="position:relative;padding-top:2px">
+        <div class="route" style="top:6px;bottom:14px"></div>
+        <div class="stop"><div class="pin"><img src="img/line/hyacinth-curtis.png"></div><div class="tl-time">12:30</div><div style="font-size:15px">Ceremonia</div><img class="fl" src="img/line/hyacinth-curtis.png" style="height:92px;right:14px;top:-4px;opacity:.9"></div>
+        <div class="stop"><div class="pin"><img src="img/line/narcissus-bessa.png"></div><div class="tl-time">14:30</div><div style="font-size:15px">Convite</div><img class="fl" src="img/line/narcissus-bessa.png" style="height:92px;right:10px;top:-4px;opacity:.9"></div>
+        <div class="stop"><div class="pin"><img src="img/line/anemone-apennina-batava.png"></div><div class="tl-time">19:00</div><div style="font-size:15px">Fiesta</div><img class="fl" src="img/line/anemone-apennina-batava.png" style="height:92px;right:14px;top:-4px;opacity:.9"></div>
+        <div class="stop"><div class="pin"><img src="img/line/crocus-batava.png"></div><div class="tl-time">23:00</div><div style="font-size:15px">Buses</div><img class="fl" src="img/line/crocus-batava.png" style="height:92px;right:20px;top:-4px;opacity:.9"></div>
+      </div>
+      <div class="sec band-olive" style="position:absolute;left:0;right:0;bottom:0;height:70px;padding-top:18px"><div class="script">¿Nos acompañas?</div></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- 5. CONCEPTO C -->
+<section class="page">
+  <h1>C · El cuaderno del naturalista</h1>
+  <p class="lead">La mezcla más atrevida: el viaje se cuenta como el cuaderno de campo de un botánico. Cada sección es una lámina numerada, y los billetes se vuelven etiquetas de herbario.</p>
+  <div class="concept">
+    <div>
+      <ul class="bullets">
+        <li><b>Cada sección es una lámina</b>: "Lám. I", "Lám. II"… en la máquina de escribir del cuaderno de viaje, con la flor grande y su nombre en latín, en cursiva, debajo.</li>
+        <li><b>El pie de lámina cuenta el dato práctico</b>: "<i>Narcissus tazetta</i> · Convite, 14:30". Así las horas se leen como una leyenda botánica y no como una lista.</li>
+        <li><b>La tarjeta de embarque pasa a etiqueta de herbario</b>: Ejemplar (tu nombre), Hábitat (Madrid), Recolectado (13 · III · 2027). El código de barras desaparece; el matasellos queda.</li>
+        <li>Es la única opción que <b>necesita textos nuevos</b> (los nombres en latín, los pies), y esos los tiene que escribir o aprobar la pareja.</li>
+      </ul>
+      <div class="pros"><b>Lo bueno:</b> las láminas grandes dejan lucir los grabados con detalle (glicinia, manzano, jacinto), que en las otras opciones se pierden.<br><b>Lo malo:</b> es un cambio de concepto, no de decoración. Cambia nombres de sección y textos, y hay más trabajo que en A o B.</div>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="sec" style="padding-top:20px;height:330px">
+        <div class="lam">Lám. I · Primavera</div>
+        <img src="img/line/narcissus-bessa.png" style="height:230px;margin-top:6px">
+        <div class="latin" style="margin-top:2px">Narcissus tazetta L.</div>
+        <div class="tl-time" style="margin-top:3px">Convite · 14:30</div>
+      </div>
+      <div class="sec" style="padding-top:0">
+        <div class="lam">Lám. II · Hoja de ruta</div>
+        <div style="font-size:12.5px;line-height:1.75;margin-top:6px"><span class="tl-time">12:30</span> Ceremonia · <i>Hyacinthus orientalis</i><br><span class="tl-time">14:30</span> Convite · <i>Narcissus tazetta</i><br><span class="tl-time">19:00</span> Fiesta · <i>Anemone apennina</i></div>
+      </div>
+      <div class="sec band-olive" style="position:absolute;left:0;right:0;bottom:0;height:162px;padding-top:12px">
+        <div class="lam" style="color:var(--cream)">Lám. III · Confirmación</div>
+        <div class="pass" style="color:var(--ink);margin-top:8px"><div class="h" style="border-bottom-color:var(--olive)"><div class="mono" style="font-size:8px">Etiqueta de ejemplar</div><div class="mono" style="font-size:8px">N.º 0001</div></div>
+          <div class="b" style="line-height:1.55;font-size:11.5px"><span class="mono" style="font-size:7.5px">Ejemplar</span> ____________<br><span class="mono" style="font-size:7.5px">Hábitat</span> Madrid<br><span class="mono" style="font-size:7.5px">Recolectado</span> 13 · III · 2027
+            <img class="fl" src="img/line/crocus-batava.png" style="height:54px;right:10px;bottom:2px;opacity:.7"></div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- 6. COMPARACION -->
+<section class="page">
+  <h1>Cuál elegir</h1>
+  <p class="lead">Las tres comparten lo mismo: dibujos de línea en un solo color, una flor por pantalla, y la paleta del cuaderno. Cambia cuánto toca.</p>
+  <table class="season" style="font-size:15px;margin-top:22px">
+    <tr><th></th><th>A · Sellos</th><th>B · Ruta florida</th><th>C · Naturalista</th></tr>
+    <tr><td><b>Cuánto cambia</b></td><td>Poco: piezas pequeñas</td><td>Medio: la Hoja de ruta</td><td>Mucho: secciones y textos</td></tr>
+    <tr><td><b>Flores que usa</b></td><td>3 (narciso, azafrán, anémona)</td><td>4, una por parada</td><td>Las que queráis, 1 por lámina</td></tr>
+    <tr><td><b>Textos nuevos</b></td><td>Casi ninguno</td><td>Ninguno</td><td>Nombres en latín y pies</td></tr>
+    <tr><td><b>Grabados con detalle</b></td><td>Se pierden</td><td>Se ven bien, en grande</td><td>Brillan</td></tr>
+    <tr><td><b>Encaja con lo ya hecho</b></td><td>Sí</td><td>Muy bien (Hoja de ruta)</td><td>Regular</td></tr>
+  </table>
+  <h2 style="margin-top:34px">Mi recomendación</h2>
+  <p><b>B como base</b>, con un toque de <b>A</b> en el sello del sobre: ya tenéis la Hoja de ruta ilustrada y esto la completa sin reescribir nada. C solo la haría si la pareja quiere un tono más juguetón de verdad.</p>
+  <h2 style="margin-top:20px">Lo que decide la pareja</h2>
+  <ul class="bullets">
+    <li>Cuál de las tres ideas (o una mezcla de A y B).</li>
+    <li>Qué flores concretas, mirando también la tabla de floración del 13 de marzo.</li>
+    <li>Si le gusta el cerezo y el manzano: necesito recortar bien la rama principal a mano para que queden limpios.</li>
+  </ul>
+  <p class="small" style="margin-top:20px">Los mockups son maquetas aproximadas en HTML, no la web real. Los dibujos de línea se generan con <span class="mono" style="font-size:9px">tools/lineart.py</span> y se pueden repetir con otros recortes.</p>
+</section>
+</body>
+</html>

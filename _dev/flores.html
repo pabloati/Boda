@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Editor de la web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Flower editor: place, move and resize the botanical plates on the real page.
+  Run `python3 _dev/serve.py` and open http://localhost:8000/_dev/flores.html
+  The page below is index.html itself, so what you see is what guests see.
+  "Guardar" writes js/flores-layout.js through the dev server; assets come from assets/flores/.
+  Not published: GitHub Pages skips _dev/.
+-->
+<style>
+  :root { --ink:#26261f; --soft:#6c6c60; --line:#d9d6cc; --bg:#eeece6; --panel:#fbfaf7; --acc:#c83c78; --accd:#a32a5e; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  /* Side panels resize like VS Code's: drag the gutters, double-click to reset, drag to the edge to close. */
+  body { --libW: 220px; --propW: 250px; font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 46px 1fr; grid-template-columns: var(--libW) 5px 1fr 5px var(--propW); grid-template-areas: "bar bar bar bar bar" "lib gl stage gr props"; }
+  .gutter { background: var(--line); cursor: col-resize; position: relative; z-index: 3; touch-action: none; }
+  .gutter::after { content: ''; position: absolute; inset: 0 -4px; }   /* wider grab area */
+  .gutter:hover, .gutter.drag { background: var(--acc); }
+  #gl { grid-area: gl; } #gr { grid-area: gr; }
+  body.resizing, body.resizing * { cursor: col-resize !important; user-select: none; }
+  body.resizing #f { pointer-events: none; }   /* the iframe would swallow the pointer while dragging */
+  .closed { display: none; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: -4px 0 12px; }
+  .tabs button { padding: 4px 9px; border-radius: 999px; font-size: .9em; } .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .bar-f { display: inline-flex; align-items: center; gap: 5px; color: var(--soft); } #branch { max-width: 170px; } #who { padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; }
+  textarea { width: 100%; min-height: 4.5em; font: inherit; padding: 6px; border: 1px solid var(--line); border-radius: 5px; resize: vertical; background: #fff; }
+  .t-item { display: block; width: 100%; text-align: left; margin-bottom: 3px; font-size: .92em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-item.on { border-color: var(--acc); color: var(--accd); background: #fff4f8; } .t-item.mod::before { content: '● '; color: var(--acc); }
+  .search { width: 100%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; margin-bottom: 8px; }
+  .sw-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .sw-row .hex { width: 5.6em; font: 11px monospace; padding: 3px 4px; border: 1px solid var(--line); border-radius: 4px; } .sw-row .hex.bad { border-color: #c33; color: #c33; }
+  .pal-row { display: flex; gap: 3px; align-items: stretch; } .pal-row .preset { flex: 1; min-width: 0; } .pal-row .preset b { width: 9px; } .pal-row > button:not(.preset) { padding: 0 5px; margin-bottom: 5px; font-size: 12px; } .sw-row input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
+  .preset { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 5px; text-align: left; } .preset i { display: flex; gap: 2px; } .preset b { width: 12px; height: 18px; border-radius: 2px; }
+  .preset.on { border-color: var(--acc); }
+  .font-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; width: 100%; margin-bottom: 4px; text-align: left; padding: 4px 9px; }
+  .font-row span { font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .font-row em { font: normal 10px system-ui, sans-serif; color: var(--soft); flex: none; }
+  .font-row.on { border-color: var(--acc); background: #fff4f8; color: var(--accd); }
+  .ph-slot { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 12px; background: #fff; }
+  .ph-slot img { width: 100%; max-height: 160px; object-fit: contain; background: #eee; border-radius: 4px; display: block; margin-bottom: 6px; }
+.fake-btn { display: inline-block; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  .ph-slot.drop { border-color: var(--acc); background: #fdf0f6; }
+  .sec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; background: #fff; cursor: grab; }
+  .sec-row.off { opacity: .5; } .sec-row.over { border-color: var(--acc); } .sec-row span { flex: 1; } .sec-row button { padding: 1px 7px; }
+  .sec-opts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .88em; color: var(--soft); cursor: default; }
+  .sec-opts label { display: inline-flex; align-items: center; gap: 3px; } .sec-opts [data-rs] { margin-left: auto; } .sec-opts select { font-size: inherit; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
+  button.panel-t.on { background: #fff; color: var(--ink); border-color: var(--line); } button.panel-t:not(.on) { color: var(--soft); background: transparent; text-decoration: line-through; }
+  #bar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  #bar h1 { font-size: 14px; margin: 0 8px 0 0; white-space: nowrap; }
+  #bar { overflow-x: auto; } #bar > * { flex: none; } #bar label, #bar button { white-space: nowrap; }
+  #bar .sp { flex: 1; }
+  #bar .grp.panels { margin-left: 4px; }
+  button, select, input[type=number] { font: inherit; color: inherit; }
+  button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button:hover { border-color: #b9b5a8; } button:disabled { opacity: .4; cursor: default; }
+  button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  button.primary { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 600; } button.primary:hover { background: var(--accd); }
+  button.danger { color: #a22; }
+  .grp { display: flex; gap: 0; } .grp button { border-radius: 0; margin-left: -1px; } .grp button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .grp button:last-child { border-radius: 0 6px 6px 0; }
+  #status { color: var(--soft); min-width: 170px; text-align: right; } #status.dirty { color: var(--accd); font-weight: 600; }
+  /* panel contents scale with the panel: text a little, thumbnails and columns a lot */
+  aside { background: var(--panel); overflow: auto; padding: 12px; container-type: inline-size; }
+  aside > * { font-size: clamp(12.5px, 5.2cqw, 16px); }   /* cqw = the panel's width (a container cannot size itself) */
+  #lib { grid-area: lib; border-right: 1px solid var(--line); }
+  #props { grid-area: props; border-left: 1px solid var(--line); }
+  aside h2 { font-size: clamp(10.5px, 4cqw, 13px); text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
+  #libGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(max(92px, 29cqw), 1fr)); gap: 8px; }   /* thumbnails grow with the panel, columns come and go */
+  .th { border: 1px solid var(--line); border-radius: 6px; background: #f3eee3; padding: 4px; cursor: pointer; text-align: center; }
+  .th:hover { border-color: var(--acc); }
+  .th .im { aspect-ratio: 1 / 0.95; display: flex; align-items: flex-end; justify-content: center; } .th img { max-width: 100%; max-height: 100%; }
+  .th span { display: block; font-size: .85em; margin-top: 3px; }
+  #stage { grid-area: stage; overflow: auto; padding: 14px; display: flex; justify-content: center; align-items: flex-start; }
+  #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; }
+  #f { border: 0; display: block; transform-origin: 0 0; background: #fff; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 6.2em; color: var(--soft); flex: none; }
+  .row input[type=number], .row select { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .placed { display: grid; gap: 3px; max-height: 260px; overflow-y: auto; }
+  .pl-sec { font: 600 10px monospace; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); margin-top: 6px; }
+  .pl { display: flex; justify-content: space-between; gap: 8px; text-align: left; }
+  .pl span { color: var(--soft); font-size: 11px; } .pl.on { border-color: #c83c78; color: #c83c78; } .pl em { font-style: normal; font-size: 10px; color: var(--soft); }
+  .pl-lay { font-size: 10px; color: var(--soft); margin: 2px 0 0 2px; font-style: italic; }
+  .grp2 { display: flex; margin-bottom: 8px; } .grp2 button { flex: 1; border-radius: 0; margin-left: -1px; } .grp2 button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .grp2 button:last-child { border-radius: 0 6px 6px 0; }
+  .row input[type=range] { flex: 1; min-width: 0; } .val { width: 38px; text-align: right; color: var(--soft); }
+  .note.own { background: #eaf3ea; border-color: #b8d4b8; } .note button { margin-top: 6px; }
+  button:disabled { opacity: .45; cursor: default; }
+  .note { background: #fff4d6; border: 1px solid #ecd48a; border-radius: 6px; padding: 7px 9px; margin: 8px 0; }
+  .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
+  #banners { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+  .bn { display: none; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; gap: 10px; align-items: center; pointer-events: auto; max-width: 70vw; }
+  .bn.show { display: flex; } .bn button { padding: 3px 9px; color: var(--ink); }
+  /* Historial tab */
+  .h-row { border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; margin-bottom: 5px; background: #fff; font-size: .92em; }
+  .h-row.ed { border-left: 3px solid var(--acc); } .h-row.on { border-color: var(--acc); background: #fff4f8; }
+  .h-top { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; color: var(--soft); font-size: .9em; } .h-top code { color: var(--ink); }
+  .h-tag { font: 600 9px monospace; text-transform: uppercase; background: var(--acc); color: #fff; border-radius: 3px; padding: 0 4px; }
+  .h-tag.now { background: var(--ink); }
+  .h-sub { margin: 2px 0; overflow-wrap: anywhere; } .h-files { color: var(--soft); font: 10px monospace; overflow-wrap: anywhere; }
+  .h-row button { margin-top: 4px; padding: 2px 8px; font-size: .9em; }
+  /* "Ver en mi móvil": link + QR popover under the bar; "Publicar": confirmation in the right panel */
+  #sharePop { position: fixed; z-index: 20; width: 300px; max-width: calc(100vw - 16px); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px; }
+  #sharePop h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0 0 8px; }
+  #sharePop .qr svg { display: block; width: 220px; height: 220px; margin: 0 auto 8px; }
+  #sharePop .hint { margin: 0 0 8px; } #sharePop .btns { margin-bottom: 8px; }
+  .share-url { font: 11px/1.4 monospace; word-break: break-all; background: #fff; border: 1px solid var(--line); border-radius: 5px; padding: 5px 7px; margin-bottom: 8px; }
+  .share-url a { color: var(--accd); }
+  .note.warn { background: #fde8ee; border-color: #eaa9bd; }
+  .pub-list { display: grid; gap: 4px; max-height: 45vh; overflow-y: auto; margin-bottom: 10px; }
+  .pub-c { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 5px 7px; font-size: .92em; }
+  .pub-c code { font: 11px monospace; color: var(--accd); } .pub-c span { color: var(--soft); } .pub-c div { margin-top: 2px; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header id="bar">
+  <h1>Editor de la web</h1>
+  <div class="grp"><button id="devM" class="on">Móvil</button><button id="devD">Escritorio</button></div>
+  <select id="goto" title="Ir a una sección"></select>
+  <label><input type="checkbox" id="guides" checked> Ver secciones</label>
+  <div class="grp"><button id="undo" title="Ctrl+Z">Deshacer</button><button id="redo" title="Ctrl+Mayús+Z">Rehacer</button></div>
+  <button id="reload" title="Vuelve a cargar la web, conserva las flores">Recargar web</button>
+  <div class="grp panels"><button id="tLib" class="panel-t on" title="Mostrar u ocultar la biblioteca">Flores</button><button id="tProps" class="panel-t on" title="Mostrar u ocultar las propiedades">Propiedades</button></div>
+  <button id="share" title="Enlace y código QR de esta rama, para abrirla en el móvil">Ver en mi móvil</button>
+  <span class="sp"></span>
+  <label class="bar-f" title="Rama de git en la que se guardan los cambios">Rama <select id="branch"></select></label>
+  <input id="who" class="bar-f" placeholder="Tu nombre" title="Aparece en el commit" size="9">
+  <label class="bar-f" title="Después de guardar, sube la rama a GitHub"><input type="checkbox" id="push" checked> Subir</label>
+  <span id="status">Sin cambios</span>
+  <button id="save" class="primary" title="Ctrl+S">Guardar</button>
+  <button id="publish" title="Une esta rama a main: cambia la web que ven los invitados">Publicar</button>
+</header>
+<div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
+<aside id="lib">
+  <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fuentes">Fuentes</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button><button data-tab="historial">Historial</button></nav>
+  <section class="tab" id="tab-flores"><h2>Flores</h2><div id="libGrid"></div>
+    <p class="hint" style="margin-top:12px">Haz clic en una flor para añadirla a la sección que estás viendo.</p></section>
+  <section class="tab" id="tab-textos" hidden></section>
+  <section class="tab" id="tab-colores" hidden></section>
+  <section class="tab" id="tab-fuentes" hidden></section>
+  <section class="tab" id="tab-fotos" hidden></section>
+  <section class="tab" id="tab-secciones" hidden></section>
+  <section class="tab" id="tab-historial" hidden></section>
+</aside>
+<main id="stage"><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
+<div class="gutter" id="gr" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
+<aside id="props"></aside>
+<div id="banners">
+  <div id="banner" class="bn"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
+  <div id="remote" class="bn"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
+  const SNAP = 6;
+  let DRAFT = 'flores-draft';
+  let pendingDraft = null;   // a flower draft from another session ({ items, base, head }), until the banner (editor-site.js) restores or drops it
+  const frame = $('f');
+  let LIB = [], items = [], sel = null, win = null, doc = null, dev = 'm', saved = '[]';
+  let BASE = '/', MODE = 'flores', FLORES_OK = false;   // BASE: URL prefix of the branch's worktree
+  let undoSt = [], redoSt = [];
+  let clip = null, fmt = null;   // Ctrl+C copies a plate; Ctrl+Mayús+C copies its size and turn
+  let multi = new Set();         // Mayús+clic: several plates selected; sel is the last one clicked
+  let tpos = {}, tsel = null;    // moved texts: key → { x, y, z, size?, color?, align?, font?, d? } (saved by the site module in the look); the selected text's key
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const lib = id => LIB.find(l => l.id === id);
+  const get = id => items.find(i => i.id === id);
+  const r1 = v => Math.round(v * 2) / 2;
+
+  // ---------- model ↔ geometry ----------
+  const secEl = key => win.Flores.host(doc, key);
+  // Placement = w, x, y, rot. The phone one lives on the item; in the "Escritorio" view a plate can
+  // have its own (it.d), created the first time it is moved, resized or turned there.
+  const DESK = () => dev === 'd';
+  const view = it => DESK() && it.d ? it.d : it;
+  function ed(it) {
+    if (!DESK()) return it;
+    if (!it.d) it.d = { w: it.w, x: clone(it.x), y: clone(it.y), rot: it.rot || 0 };
+    return it.d;
+  }
+  function geom(it) {
+    const v = view(it), el = secEl(it.sec), l = lib(it.img), w = v.w, h = w * l.h / l.w;
+    const sw = el.offsetWidth, sh = el.offsetHeight;
+    return { w, h, sw, sh, rot: v.rot || 0,
+      left: v.x.a === 'l' ? v.x.v : sw - v.x.v - w,
+      top: v.y.a === 't' ? v.y.v : sh - v.y.v - h };
+  }
+  // Anchors to the nearest edge, so a plate flush with an edge stays flush at any width.
+  function setPos(it, left, top, target) {
+    const g = geom(it), p = target || ed(it);
+    p.x = (left + g.w / 2) < g.sw / 2 ? { a: 'l', v: r1(left) } : { a: 'r', v: r1(g.sw - left - g.w) };
+    p.y = (top + g.h / 2) < g.sh / 2 ? { a: 't', v: r1(top) } : { a: 'b', v: r1(g.sh - top - g.h) };
+  }
+
+  // ---------- history / persistence ----------
+  const state = () => JSON.stringify({ i: items, t: tpos });
+  function restore(js) { const o = JSON.parse(js); items = o.i; tpos = o.t || {}; if (!get(sel)) sel = null; }
+  function snapshot() { undoSt.push(state()); if (undoSt.length > 100) undoSt.shift(); redoSt = []; }
+  function changed() {
+    // the draft keeps the layout it started from (base) and the branch commit (head), so restoring it after
+    // another computer saved only re-applies this session's own changes (mergeFlores)
+    if (!pendingDraft) try { localStorage.setItem(DRAFT, JSON.stringify({ items, base: saved, head: window.SITE ? window.SITE.head() : null })); } catch (e) {}
+    if (window.SITE) { window.SITE.textChanged(); window.SITE.status(); }
+    $('undo').disabled = !undoSt.length; $('redo').disabled = !redoSt.length;
+    renderAll();
+  }
+  function undo() { if (!undoSt.length) return; redoSt.push(state()); restore(undoSt.pop()); changed(); }
+  function redo() { if (!redoSt.length) return; undoSt.push(state()); restore(redoSt.pop()); changed(); }
+  function save() { if (window.SITE) window.SITE.save(); }
+  // after a successful save of everything
+  function markSaved() { saved = JSON.stringify(items); try { localStorage.removeItem(DRAFT); } catch (e) {} changed(); }
+
+  // ---------- rendering inside the page ----------
+  const EDIT_CSS = `
+    #envelope-overlay { display: none !important; }
+    .ed-sec { position: relative; overflow: hidden; isolation: isolate; }
+    .ed-guides .ed-sec { outline: 1px dashed rgba(200,60,120,.6); outline-offset: -1px; }
+    .ed-label { position: absolute; top: 3px; right: 4px; z-index: 70; font: 10px monospace; background: rgba(200,60,120,.88); color: #fff; padding: 1px 6px; border-radius: 3px; pointer-events: none; display: none; }
+    .ed-guides .ed-label { display: block; }
+    #ed-box { position: absolute; border: 1.5px solid #c83c78; z-index: 60; pointer-events: none; }
+    .ed-h { position: absolute; width: 11px; height: 11px; background: #fff; border: 1.5px solid #c83c78; border-radius: 2px; pointer-events: auto; z-index: 61; }
+    .ed-h[data-c=nw] { left: -6px; top: -6px; cursor: nwse-resize; } .ed-h[data-c=ne] { right: -6px; top: -6px; cursor: nesw-resize; }
+    .ed-h[data-c=sw] { left: -6px; bottom: -6px; cursor: nesw-resize; } .ed-h[data-c=se] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+    .ed-rot { position: absolute; left: 50%; top: -30px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: #fff; border: 1.5px solid #c83c78; cursor: grab; pointer-events: auto; z-index: 61; }
+    .ed-rot::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1.5px; height: 15px; margin-left: -.75px; background: #c83c78; }
+    #ed-box.many { border-style: dashed; }
+    #ed-box.text { border-color: #3a7bd5; }
+    .ed-mode-flores .ed-tmove:hover { outline: 1px dashed rgba(58,123,213,.65); outline-offset: 2px; cursor: move; }
+    #ed-box.locked { border-style: dotted; border-color: #8a8577; }
+    .ed-lock { position: absolute; left: 0; top: -17px; font: 10px monospace; background: #8a8577; color: #fff; padding: 1px 5px; border-radius: 3px; }
+    .ed-g { position: absolute; background: #e8358a; z-index: 65; pointer-events: none; }
+    .ed-g.v { width: 1px; top: 0; bottom: 0; } .ed-g.h { height: 1px; left: 0; right: 0; }
+  `;
+  function renderAll() {
+    if (!win || !win.Flores || !doc) return;
+    win.Flores.render(doc, items);
+    doc.querySelectorAll('.flor').forEach(img => { const it = get(img.dataset.id); if (it) img.style.height = (geom(it).h) + 'px'; });
+    drawSel(); drawProps();
+  }
+  const selected = () => (multi.size > 1 ? [...multi].map(get) : [get(sel)]).filter(Boolean);
+  function drawSel() {
+    doc.querySelectorAll('#ed-box').forEach(b => b.remove());
+    const list = selected(), one = list.length === 1;
+    list.forEach(it => {
+      const g = geom(it), box = doc.createElement('div');
+      box.id = 'ed-box'; if (!one) box.classList.add('many'); if (it.lock) box.classList.add('locked');
+      box.style.cssText = `left:${g.left}px;top:${g.top}px;width:${g.w}px;height:${g.h}px;transform:rotate(${g.rot}deg)`;
+      if (one && !it.lock) {
+        const rh = doc.createElement('div'); rh.className = 'ed-rot'; rh.title = 'Girar (Mayús: de 15 en 15°)'; box.appendChild(rh);
+        ['nw', 'ne', 'sw', 'se'].forEach(c => { const h = doc.createElement('div'); h.className = 'ed-h'; h.dataset.c = c; box.appendChild(h); });
+      }
+      if (it.lock) { const lk = doc.createElement('div'); lk.className = 'ed-lock'; lk.textContent = 'bloqueada'; box.appendChild(lk); }
+      secEl(it.sec).appendChild(box);
+    });
+    if (tsel) {
+      const el = textEl(tsel); if (!el) { tsel = null; return; }
+      const g = tgeom(el), box = doc.createElement('div');
+      box.id = 'ed-box'; box.classList.add('text');
+      box.style.cssText = `left:${g.left}px;top:${g.top}px;width:${g.w}px;height:${g.h}px`;
+      g.sec.appendChild(box);
+    }
+  }
+  function select(id) { sel = id; tsel = null; multi = new Set(id ? [id] : []); drawSel(); drawProps(); }
+  function selectText(k) { sel = null; multi = new Set(); tsel = k; drawSel(); drawProps(); }
+
+  // ---------- texts: headings and paragraphs can be moved and layered like plates ----------
+  // The text keeps its place in the flow (nothing else moves); the offset is a CSS transform
+  // written by the site module into css/editor.css. Keys: the data-i18n key, or #id.
+  const TEXT_SEL = 'h1, h2, h3, h4, h5, h6, p, blockquote, #countdown-clock';
+  const textKey = el => el.dataset.i18n || (el.id ? '#' + el.id : null);
+  const secKeyOf = el => { const s = el.closest('main > *'); return s && (s.id || (s.classList.contains('footer-section') ? 'footer' : '')); };
+  function textAt(target) {
+    const el = target && target.closest && target.closest(TEXT_SEL);
+    if (!el || !textKey(el) || el.closest('form, label, details, #envelope-overlay, .rsvp-modal')) return null;
+    const k = secKeyOf(el); return k && SECS.includes(k) && secEl(k) ? el : null;
+  }
+  const textEl = k => { const el = doc.querySelector(k.startsWith('#') ? 'main ' + k : `main [data-i18n="${k}"]`); return el && textAt(el) === el ? el : null; };
+  const tview = t => DESK() && t.d ? t.d : t;
+  const tget = k => tpos[k] || { x: 0, y: 0, z: '' };
+  // the desktop variant starts as a copy of the phone one (move, layer and style)
+  function ted(k) { const t = tpos[k] = tpos[k] || { x: 0, y: 0, z: '' }; if (!DESK()) return t; if (!t.d) { const c = clone(t); delete c.d; t.d = c; } return t.d; }
+  // a text's own style: size (px, absolute), colour (hex), alignment, font role; absent = as in styles.css
+  const TSTYLE = ['size', 'color', 'align', 'font'];
+  const moveRest = v => !v.x && !v.y && !v.z, styleRest = v => TSTYLE.every(s => v[s] == null);
+  const atRest = v => moveRest(v) && styleRest(v);
+  function tclean(k) { const t = tpos[k]; if (!t) return; if (t.d && atRest(t.d) && atRest(t)) delete t.d; if (atRest(t) && !t.d) delete tpos[k]; }
+  function tgeom(el) { const sec = el.closest('main > *'), r = el.getBoundingClientRect(), p = sec.getBoundingClientRect(); return { left: r.left - p.left, top: r.top - p.top, w: r.width, h: r.height, sec }; }
+  const tlabel = el => (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48);
+  function startTextDrag(e, el) {
+    const k = textKey(el), st = { px: e.pageX, py: e.pageY }, v0 = tview(tget(k));
+    let moved = false, x = v0.x || 0, y = v0.y || 0;
+    const move = ev => {
+      if (!moved && Math.abs(ev.pageX - st.px) + Math.abs(ev.pageY - st.py) < 3) return;
+      if (!moved) { moved = true; snapshot(); drawSelHide(); }
+      x = Math.round((v0.x || 0) + ev.pageX - st.px); y = Math.round((v0.y || 0) + ev.pageY - st.py);
+      if (ev.shiftKey) { if (Math.abs(x - (v0.x || 0)) > Math.abs(y - (v0.y || 0))) y = v0.y || 0; else x = v0.x || 0; }
+      el.style.transform = `translate(${x}px, ${y}px)`; autoScroll(ev);
+    };
+    const up = () => {
+      doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); el.style.transform = '';
+      if (moved) { const t = ted(k); t.x = x; t.y = y; tclean(k); changed(); } else drawSel();
+    };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+  function tnudge(k, dx, dy) { snapshot(); const t = ted(k); t.x = (t.x || 0) + dx; t.y = (t.y || 0) + dy; tclean(k); changed(); }
+  // patch: a style key set to null goes back to the site's own
+  // (a patch that changes nothing, like a second "change" from a box the panel just replaced, is no undo step)
+  function tset(k, patch) {
+    const cur = tview(tget(k)), norm = v => (v == null || v === '' ? null : v);
+    if (Object.entries(patch).every(([a, v]) => TSTYLE.includes(a) ? norm(cur[a]) === norm(v) : (cur[a] || (a === 'z' ? '' : 0)) === v)) return;
+    snapshot(); const t = ted(k); Object.entries(patch).forEach(([a, v]) => { if (TSTYLE.includes(a) && (v == null || v === '')) delete t[a]; else t[a] = v; }); tclean(k); changed(); }
+  // "Dejar en su sitio" undoes the move and layer, "Quitar estilo" the style. On the phone view both
+  // placements go back; on the desktop view, only the desktop one.
+  function tback(k, fn) { snapshot(); const t = DESK() ? ted(k) : tpos[k]; if (t) { fn(t); if (!DESK() && t.d) fn(t.d); } tclean(k); changed(); }
+  const treset = k => tback(k, t => { t.x = 0; t.y = 0; t.z = ''; });
+  const tunstyle = k => tback(k, t => TSTYLE.forEach(s => delete t[s]));
+  const rgbHex = c => { const m = String(c).match(/\d+(\.\d+)?/g); return m && m.length >= 3 ? '#' + m.slice(0, 3).map(v => Math.round(+v).toString(16).padStart(2, '0')).join('') : '#000000'; };
+  const FONT_ROLES = [['', 'Sin cambio'], ['serif', 'Texto'], ['script', 'Títulos'], ['hand', 'Manuscrita']];
+  function goToText(k) { const el = textEl(k); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); selectText(k); }
+  function drawTextProps(p, k) {
+    const el = textEl(k); if (!el) { tsel = null; return drawProps(); }
+    const t = tget(k), v = tview(t), S = window.SITE, cs = win.getComputedStyle(el);
+    const size = v.size != null ? v.size : Math.round(parseFloat(cs.fontSize) || 16), col = (S && S.normHex(v.color)) || rgbHex(cs.color);
+    const deskNote = DESK() ? `<div class="note${t.d ? ' own' : ''}">${t.d ? 'En escritorio tiene su <b>propio desplazamiento, capa y estilo</b>.' : 'En escritorio usa <b>lo mismo que en el móvil</b>. Si lo mueves o le cambias el estilo aquí, tendrá lo suyo.'}${t.d ? ' <button id="tUseM">Usar lo del móvil</button>' : ''}</div>` : '';
+    const AL = [['left', 'Izquierda'], ['center', 'Centro'], ['right', 'Derecha']];
+    const styleBox = `<h2 style="margin-top:14px">Estilo</h2>
+      <div class="row"><label>Tamaño (px)</label><input type="range" id="tSize" min="8" max="200" step="1" value="${size}"><input type="number" id="tSizeN" min="8" max="200" step="1" value="${size}" style="width:4.6em;flex:none"></div>
+      ${S && S.colourRow ? S.colourRow('tcolor', 'Color' + (v.color ? '' : ' (el de la web)'), col, v.color ? '<button id="tColR" title="Volver al de la web">↺</button>' : '') : ''}
+      <div class="grp2">${AL.map(([a, l]) => `<button data-ta="${a}" class="${v.align === a ? 'on' : ''}" title="${v.align === a ? 'Pulsa otra vez para quitarlo' : ''}">${l}</button>`).join('')}</div>
+      <div class="row"><label>Letra</label><select id="tFont">${FONT_ROLES.map(([f, l]) => `<option value="${f}"${(v.font || '') === f ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="btns"><button id="tUnstyle"${styleRest(v) ? ' disabled' : ''}>Quitar estilo</button></div>`;
+    p.innerHTML = `<h2>Texto</h2><p class="hint" style="font-style:italic">«${esc(tlabel(el))}»</p>${deskNote}
+      <p class="hint">Arrastra el texto para moverlo (<kbd>Mayús</kbd>: solo en una dirección). <kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px). El texto sigue ocupando su hueco: lo que cambia es dónde se pinta.</p>
+      <div class="row"><label>Horizontal</label><input type="number" id="tX" step="1" value="${v.x || 0}"></div>
+      <div class="row"><label>Vertical</label><input type="number" id="tY" step="1" value="${v.y || 0}"></div>
+      <h2 style="margin-top:14px">Capa</h2>
+      <div class="grp2"><button data-tz="back" class="${v.z === 'back' ? 'on' : ''}">Bajo las flores</button><button data-tz="" class="${!v.z ? 'on' : ''}">Normal</button><button data-tz="front" class="${v.z === 'front' ? 'on' : ''}">Sobre las flores</button></div>
+      <p class="hint" style="margin:-4px 0 10px">Normal: entre las flores de detrás y las de delante.</p>
+      <div class="btns"><button id="tReset" title="Supr"${moveRest(v) ? ' disabled' : ''}>Dejar en su sitio</button></div>
+      ${styleBox}
+      <p class="hint">Para cambiar lo que dice, usa la pestaña Textos.</p>
+      ${placedList()}`;
+    wirePlaced(p);
+    $('tX').onchange = e => tset(k, { x: Math.round(+e.target.value || 0) });
+    $('tY').onchange = e => tset(k, { y: Math.round(+e.target.value || 0) });
+    p.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => tset(k, { z: b.dataset.tz }));
+    $('tReset').onclick = () => treset(k);
+    // size: the slider previews on the element, the value is stored when it is let go
+    const sz = n => Math.max(8, Math.min(200, Math.round(+n || size)));
+    $('tSize').oninput = e => { $('tSizeN').value = e.target.value; el.style.fontSize = e.target.value + 'px'; drawSel(); };
+    $('tSize').onchange = e => { el.style.fontSize = ''; tset(k, { size: sz(e.target.value) }); };
+    $('tSizeN').onchange = e => tset(k, { size: sz(e.target.value) });
+    if (S && S.wireColourRows) S.wireColourRows(p, (_, h, live) => { if (live) el.style.color = h; else { el.style.color = ''; tset(k, { color: h }); } });
+    if ($('tColR')) $('tColR').onclick = () => tset(k, { color: null });
+    p.querySelectorAll('[data-ta]').forEach(b => b.onclick = () => tset(k, { align: v.align === b.dataset.ta ? null : b.dataset.ta }));
+    $('tFont').onchange = e => tset(k, { font: e.target.value || null });
+    $('tUnstyle').onclick = () => tunstyle(k);
+    if ($('tUseM')) $('tUseM').onclick = () => { snapshot(); delete tpos[k].d; tclean(k); changed(); };
+  }
+  function toggleSel(id) {
+    if (multi.has(id)) { multi.delete(id); sel = [...multi].pop() || null; }
+    else { if (sel && !multi.size) multi.add(sel); multi.add(id); sel = id; }
+    drawSel(); drawProps();
+  }
+
+  // ---------- pointer: move and resize ----------
+  const docPos = el => { const r = el.getBoundingClientRect(); return { x: r.left + win.scrollX, y: r.top + win.scrollY }; };
+  const sections = () => SECS.map(k => ({ key: k, el: secEl(k) })).filter(s => s.el);
+  function sectionAt(px, py) {
+    return sections().find(s => { const p = docPos(s.el); return px >= p.x && px <= p.x + s.el.offsetWidth && py >= p.y && py <= p.y + s.el.offsetHeight; });
+  }
+  // Smart guides: the plate's edges and centre against the section's edges and centre and the other plates'.
+  function snap(box, sec, skipId, off) {
+    const sw = sec.el.offsetWidth, sh = sec.el.offsetHeight, xs = [0, sw / 2, sw], ys = [0, sh / 2, sh];
+    items.filter(o => o.sec === sec.key && o.id !== skipId).forEach(o => {
+      const g = geom(o); xs.push(g.left, g.left + g.w / 2, g.left + g.w); ys.push(g.top, g.top + g.h / 2, g.top + g.h);
+    });
+    const best = (mine, cands) => { let b = null; mine.forEach(m => cands.forEach(c => { const d = c - m; if (Math.abs(d) <= SNAP && (!b || Math.abs(d) < Math.abs(b.d))) b = { d, at: c }; })); return b; };
+    const bx = off ? null : best([box.left, box.left + box.w / 2, box.left + box.w], xs);
+    const by = off ? null : best([box.top, box.top + box.h / 2, box.top + box.h], ys);
+    return { dx: bx ? bx.d : 0, dy: by ? by.d : 0, gx: bx && bx.at, gy: by && by.at };
+  }
+  function showGuides(sec, gx, gy) {
+    doc.querySelectorAll('.ed-g').forEach(g => g.remove());
+    if (!sec) return;
+    if (gx != null) { const g = doc.createElement('div'); g.className = 'ed-g v'; g.style.left = gx + 'px'; sec.el.appendChild(g); }
+    if (gy != null) { const g = doc.createElement('div'); g.className = 'ed-g h'; g.style.top = gy + 'px'; sec.el.appendChild(g); }
+  }
+
+  // Plates sit behind the text, so the browser would hand the click to the text: find the plate by position.
+  function hit(px, py) {
+    const inside = it => {
+      const el = secEl(it.sec); if (!el) return false;
+      const p = docPos(el), g = geom(it), a = -g.rot * Math.PI / 180;
+      const dx = px - (p.x + g.left + g.w / 2), dy = py - (p.y + g.top + g.h / 2);
+      const lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
+      return Math.abs(lx) <= g.w / 2 && Math.abs(ly) <= g.h / 2;
+    };
+    const rev = [...items].reverse();   // last drawn = on top
+    return rev.find(it => !it.lock && inside(it)) || rev.find(it => it.lock && inside(it)) || null;
+  }
+
+  // Several plates selected: they move together, each within its own section; the guides follow the one clicked.
+  function startGroupDrag(e, lead) {
+    const list = selected().filter(o => !o.lock), st = { px: e.pageX, py: e.pageY }, g0 = new Map(list.map(o => [o.id, geom(o)]));
+    let moved = false, dx = 0, dy = 0;
+    const move = ev => {
+      if (!moved && Math.abs(ev.pageX - st.px) + Math.abs(ev.pageY - st.py) < 3) return;
+      if (!moved) { moved = true; snapshot(); drawSelHide(); }
+      dx = ev.pageX - st.px; dy = ev.pageY - st.py;
+      if (g0.has(lead.id)) { const g = g0.get(lead.id), s = snap({ left: g.left + dx, top: g.top + dy, w: g.w, h: g.h }, { key: lead.sec, el: secEl(lead.sec) }, lead.id, ev.altKey); dx += s.dx; dy += s.dy; showGuides({ el: secEl(lead.sec) }, s.gx, s.gy); }
+      list.forEach(o => { const img = doc.querySelector('.flor[data-id="' + o.id + '"]'), g = g0.get(o.id); if (img) { img.style.left = g.left + dx + 'px'; img.style.top = g.top + dy + 'px'; img.style.right = 'auto'; img.style.bottom = 'auto'; } });
+      autoScroll(ev);
+    };
+    const up = () => {
+      doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); showGuides(null);
+      if (moved) { list.forEach(o => { const g = g0.get(o.id); setPos(o, g.left + dx, g.top + dy); }); changed(); }
+    };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+
+  function startDrag(e, it) {
+    if (it.lock) return;
+    const g0 = geom(it), sp = docPos(secEl(it.sec)), st = { px: e.pageX, py: e.pageY, ax: sp.x + g0.left, ay: sp.y + g0.top };
+    let moved = false, tgt = { key: it.sec, el: secEl(it.sec) }, left = g0.left, top = g0.top;
+    const img = doc.querySelector('.flor[data-id="' + it.id + '"]');
+    const move = ev => {
+      if (!moved && Math.abs(ev.pageX - st.px) + Math.abs(ev.pageY - st.py) < 3) return;
+      if (!moved) { moved = true; snapshot(); }
+      const ax = st.ax + ev.pageX - st.px, ay = st.ay + ev.pageY - st.py;
+      tgt = sectionAt(ev.pageX, ev.pageY) || tgt;
+      const tp = docPos(tgt.el);
+      left = ax - tp.x; top = ay - tp.y;
+      const s = snap({ left, top, w: g0.w, h: g0.h }, tgt, it.id, ev.altKey);
+      left += s.dx; top += s.dy;
+      if (img.parentNode !== tgt.el) { tgt.el.appendChild(img); drawSelHide(); }
+      img.style.left = left + 'px'; img.style.top = top + 'px'; img.style.right = 'auto'; img.style.bottom = 'auto';
+      showGuides(tgt, s.gx, s.gy);
+      autoScroll(ev);
+    };
+    const up = () => {
+      doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); showGuides(null);
+      if (moved) { it.sec = tgt.key; setPos(it, left, top); changed(); }
+    };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+  const drawSelHide = () => doc.querySelectorAll('#ed-box').forEach(b => b.remove());
+  function autoScroll(ev) { const m = 40, y = ev.clientY; if (y < m) win.scrollBy(0, -14); else if (y > win.innerHeight - m) win.scrollBy(0, 14); }
+
+  function startResize(e, it, corner) {
+    const g0 = geom(it), sp = docPos(secEl(it.sec)), ratio = g0.h / g0.w, rotated = !!g0.rot, pl = ed(it);
+    const cx = sp.x + g0.left + g0.w / 2, cy = sp.y + g0.top + g0.h / 2, d0 = Math.hypot(e.pageX - cx, e.pageY - cy) || 1;
+    const fx = corner.includes('w') ? g0.left + g0.w : g0.left, fy = corner.includes('n') ? g0.top + g0.h : g0.top;
+    let first = true;
+    const move = ev => {
+      if (first) { first = false; snapshot(); }
+      let w, left, top;
+      if (rotated) { w = Math.max(24, g0.w * Math.hypot(ev.pageX - cx, ev.pageY - cy) / d0); left = g0.left + g0.w / 2 - w / 2; top = g0.top + g0.h / 2 - w * ratio / 2; }
+      else { w = Math.max(24, Math.abs(ev.pageX - sp.x - fx)); left = corner.includes('w') ? fx - w : fx; top = corner.includes('n') ? fy - w * ratio : fy; }
+      pl.w = r1(w); pl.x = { a: 'l', v: left }; pl.y = { a: 't', v: top };
+      renderAll();
+    };
+    const up = () => { doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); setPos(it, pl.x.v, pl.y.v); changed(); };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+
+  // Rotate around the plate's centre; Shift snaps to 15°.
+  function startRotate(e, it) {
+    const g = geom(it), sp = docPos(secEl(it.sec)), cx = sp.x + g.left + g.w / 2, cy = sp.y + g.top + g.h / 2;
+    const ang = ev => Math.atan2(ev.pageY - cy, ev.pageX - cx) * 180 / Math.PI, a0 = ang(e), r0 = g.rot, pl = ed(it);
+    let first = true;
+    const move = ev => {
+      if (first) { first = false; snapshot(); }
+      let r = r0 + ang(ev) - a0;
+      if (ev.shiftKey) r = Math.round(r / 15) * 15;
+      pl.rot = Math.round((((r + 540) % 360) - 180) * 10) / 10;
+      renderAll();
+    };
+    const up = () => { doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); changed(); };
+    doc.addEventListener('pointermove', move); doc.addEventListener('pointerup', up);
+  }
+
+  // ---------- editing actions ----------
+  function mostVisibleSection() {
+    let best = null, bv = -1; const top = win.scrollY, bot = top + win.innerHeight;
+    sections().forEach(s => { const p = docPos(s.el), v = Math.min(bot, p.y + s.el.offsetHeight) - Math.max(top, p.y); if (v > bv) { bv = v; best = s; } });
+    return best;
+  }
+  function add(libId) {
+    const s = mostVisibleSection(); if (!s) return;
+    const l = lib(libId), sw = s.el.offsetWidth, w = Math.round(Math.min(170, sw * 0.4)), h = w * l.h / l.w, p = docPos(s.el);
+    const vTop = Math.max(win.scrollY, p.y), vBot = Math.min(win.scrollY + win.innerHeight, p.y + s.el.offsetHeight);
+    const it = { id: 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1), sec: s.key, img: libId, w, x: { a: 'l', v: 0 }, y: { a: 't', v: 0 }, flip: false, flipY: false, rot: 0, front: false, hide: '' };
+    snapshot(); items.push(it); sel = it.id; multi = new Set([it.id]);
+    setPos(it, sw / 2 - w / 2, Math.min(Math.max(0, (vTop + vBot) / 2 - p.y - h / 2), s.el.offsetHeight - h), it);
+    changed();
+  }
+  const dup = it => { snapshot(); const c = clone(it); c.id = nextId(); c.lock = false; const g = geom(it); items.push(c); sel = c.id; multi = new Set([c.id]); setPos(c, g.left + 14, g.top + 14); changed(); };
+  const del = it => { snapshot(); const gone = new Set(selected().includes(it) ? selected().map(o => o.id) : [it.id]); items = items.filter(o => !gone.has(o.id)); sel = null; multi = new Set(); changed(); };
+  function flush(it, side) {
+    if (it.lock) return;
+    snapshot(); const g = geom(it);
+    let { left, top } = g;
+    if (side === 'l') left = 0; if (side === 'r') left = g.sw - g.w; if (side === 't') top = 0; if (side === 'b') top = g.sh - g.h; if (side === 'c') left = (g.sw - g.w) / 2;
+    setPos(it, left, top); changed();
+  }
+  function nudge(it, dx, dy) { const list = selected().filter(o => !o.lock); if (!list.length) return; snapshot(); list.forEach(o => { const g = geom(o); setPos(o, g.left + dx, g.top + dy); }); changed(); }
+  const nextId = () => 'f' + (items.reduce((m, o) => Math.max(m, +o.id.slice(1) || 0), 0) + 1);
+  const toast = msg => { $('status').textContent = msg; $('status').classList.remove('dirty'); setTimeout(changed, 1600); };
+  // Copy / paste a whole plate. It lands in the section in view, at the same place (or 14 px off if
+  // that is where the original is), with the same size, turn and flips.
+  function copy(it) { clip = clone(it); toast('Copiada: ' + lib(it.img).label); }
+  function paste() {
+    if (!clip) return;
+    const s = mostVisibleSection(); if (!s) return;
+    const src = get(clip.id), g = src ? geom(src) : null;
+    const c = clone(clip); c.id = nextId(); c.sec = s.key; c.lock = false;
+    snapshot(); items.push(c); sel = c.id; multi = new Set([c.id]);
+    const gc = geom(c), same = src && src.sec === s.key;
+    const left = g ? g.left + (same ? 14 : 0) : (gc.sw - gc.w) / 2, top = g ? g.top + (same ? 14 : 0) : 0;
+    setPos(c, Math.min(Math.max(-gc.w / 2, left), gc.sw - gc.w / 2), Math.min(Math.max(-gc.h / 2, top), gc.sh - gc.h / 2));
+    changed(); select(c.id);
+  }
+  // Size format: the plate's height (plates have different shapes, so the same height is what reads
+  // as "the same size"), turn and flips. Pasting keeps the target's centre.
+  function copyFmt(it) { const g = geom(it); fmt = { h: g.h, rot: g.rot, flip: !!it.flip, flipY: !!it.flipY }; toast('Tamaño copiado: ' + Math.round(g.h) + ' px de alto'); }
+  function pasteFmt(it) {
+    if (!fmt) return;
+    const list = selected().includes(it) ? selected() : [it];
+    snapshot();
+    list.filter(o => !o.lock).forEach(o => {
+      const g = geom(o), cx = g.left + g.w / 2, cy = g.top + g.h / 2, l = lib(o.img), pl = ed(o);
+      pl.w = r1(fmt.h * l.w / l.h); pl.rot = fmt.rot; o.flip = fmt.flip; o.flipY = fmt.flipY;
+      const g2 = geom(o); setPos(o, cx - g2.w / 2, cy - g2.h / 2);
+    });
+    changed();
+  }
+  // Swap the engraving, keeping height, centre, turn and flips.
+  // Both placements (phone and own wide-screen) keep their height and their centre.
+  function swap(it, libId) {
+    const lo = lib(it.img), ln = lib(libId);
+    snapshot();
+    [it, it.d].filter(Boolean).forEach(pl => {
+      const h = pl.w * lo.h / lo.w, nw = r1(h * ln.w / ln.h);
+      pl.x = { a: pl.x.a, v: r1(pl.x.v + (pl.w - nw) / 2) }; pl.w = nw;
+    });
+    it.img = libId; changed();
+  }
+  function setHeight(it, h) { const l = lib(it.img); snapshot(); const g = geom(it); ed(it).w = Math.max(24, r1(h * l.w / l.h)); setPos(it, g.left, g.top); changed(); }
+  // Mirrored twin on the other side of the section, for symmetric corners.
+  function mirror(it) {
+    snapshot(); const g = geom(it), c = clone(it); c.id = nextId(); c.flip = !it.flip; c.lock = false; c.rot = -(it.rot || 0); if (c.d) c.d.rot = -(c.d.rot || 0);
+    items.push(c); sel = c.id; multi = new Set([c.id]); setPos(c, g.sw - g.left - g.w, g.top); changed();
+  }
+  function goTo(it, add) { const el = secEl(it.sec); if (!el) return; const g = geom(it), p = docPos(el); win.scrollTo({ top: p.y + g.top + g.h / 2 - win.innerHeight / 2, behavior: 'smooth' }); add ? toggleSel(it.id) : select(it.id); }
+
+  // ---------- layers ----------
+  // Two layers per section: behind the text (default) and in front of it. Within a layer, the
+  // order of the items is the stacking order (last = on top).
+  const peers = it => items.filter(o => o.sec === it.sec && !!o.front === !!it.front);
+  function restack(it, where) {
+    const ps = peers(it), i = ps.indexOf(it);
+    let anchor = null, after = true;
+    if (where === 'up' && i < ps.length - 1) anchor = ps[i + 1];
+    else if (where === 'down' && i > 0) { anchor = ps[i - 1]; after = false; }
+    else if (where === 'top' && i < ps.length - 1) anchor = ps[ps.length - 1];
+    else if (where === 'bottom' && i > 0) { anchor = ps[0]; after = false; }
+    if (!anchor) return;
+    snapshot(); items.splice(items.indexOf(it), 1);
+    items.splice(items.indexOf(anchor) + (after ? 1 : 0), 0, it); changed();
+  }
+  function setFront(list, front) { snapshot(); [...list].sort((a, b) => items.indexOf(a) - items.indexOf(b)).forEach(o => { if (!!o.front !== front) { items.splice(items.indexOf(o), 1); o.front = front; items.push(o); } }); changed(); }
+  function setLock(list, lock) { snapshot(); list.forEach(o => { o.lock = lock; }); changed(); }
+  function setOp(list, op, live) {
+    list.forEach(o => { o.op = op >= 1 ? undefined : op; });
+    if (live) list.forEach(o => { const img = doc.querySelector('.flor[data-id="' + o.id + '"]'); if (img) img.style.opacity = op >= 1 ? '' : op; });
+    else changed();
+  }
+  // Align the selected plates; each section's plates align to that section's group box.
+  function align(kind) {
+    const list = selected().filter(o => !o.lock); if (list.length < 2) return;
+    snapshot();
+    [...new Set(list.map(o => o.sec))].forEach(sec => {
+      const grp = list.filter(o => o.sec === sec), gs = grp.map(geom);
+      const L = Math.min(...gs.map(g => g.left)), R = Math.max(...gs.map(g => g.left + g.w)), T = Math.min(...gs.map(g => g.top)), B = Math.max(...gs.map(g => g.top + g.h));
+      grp.forEach((o, i) => { const g = gs[i]; let { left, top } = g;
+        if (kind === 'l') left = L; if (kind === 'r') left = R - g.w; if (kind === 'cx') left = (L + R) / 2 - g.w / 2;
+        if (kind === 't') top = T; if (kind === 'b') top = B - g.h; if (kind === 'cy') top = (T + B) / 2 - g.h / 2;
+        setPos(o, left, top); });
+    });
+    changed();
+  }
+  function sameHeight(lead) { const h = geom(lead).h; const list = selected().filter(o => o !== lead && !o.lock); if (!list.length) return; snapshot(); list.forEach(o => { const g = geom(o), l = lib(o.img); ed(o).w = r1(h * l.w / l.h); const g2 = geom(o); setPos(o, g.left + g.w / 2 - g2.w / 2, g.top + g.h / 2 - g2.h / 2); }); changed(); }
+  // Placed plates by section, top layer first, as they stack: front of the text, then behind it.
+  function placedList() {
+    if (!items.length) return movedTexts();
+    const row = i => `<button class="pl${multi.has(i.id) || i.id === sel ? ' on' : ''}" data-go="${i.id}">${lib(i.img).label}${i.lock ? ' <em>bloq.</em>' : ''}${i.op && i.op < 1 ? ' <em>' + Math.round(i.op * 100) + '%</em>' : ''}${DESK() && i.d ? ' <em>esc.</em>' : ''} <span>${Math.round(geom(i).h)} px</span></button>`;
+    return `<h2 style="margin-top:14px">En la web (${items.length})</h2><div class="placed">` + SECS.filter(k => items.some(i => i.sec === k)).map(k => {
+      const sec = items.filter(i => i.sec === k), fr = sec.filter(i => i.front).reverse(), bk = sec.filter(i => !i.front).reverse();
+      return `<div class="pl-sec">${k}</div>` + (fr.length ? '<div class="pl-lay">delante del texto</div>' + fr.map(row).join('') : '') + (bk.length ? '<div class="pl-lay">detrás del texto</div>' + bk.map(row).join('') : '');
+    }).join('') + '</div><p class="hint" style="margin-top:6px">Clic: ir a la flor · Mayús+clic: añadir a la selección.</p>' + movedTexts();
+  }
+  function movedTexts() {
+    const ks = Object.keys(tpos).filter(textEl); if (!ks.length) return '';
+    const Z = { back: 'bajo', front: 'sobre' }, F = { serif: 'texto', script: 'títulos', hand: 'manuscrita' };
+    const info = v => [(v.x || v.y) && `${v.x || 0}, ${v.y || 0}`, Z[v.z], v.size != null && v.size + ' px', v.color && 'color', v.align && { left: 'izq.', center: 'centro', right: 'der.' }[v.align], F[v.font]].filter(Boolean).join(' · ') || '0, 0';
+    return `<h2 style="margin-top:14px">Textos movidos (${ks.length})</h2><div class="placed">` + ks.map(k => { const v = tview(tget(k)); return `<button class="pl${k === tsel ? ' on' : ''}" data-gt="${esc(k)}">${esc(tlabel(textEl(k)))} <span>${esc(info(v))}</span></button>`; }).join('') + '</div>';
+  }
+  const wirePlaced = p => { p.querySelectorAll('[data-go]').forEach(b => b.onclick = ev => goTo(get(b.dataset.go), ev.shiftKey)); p.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => goToText(b.dataset.gt)); };
+
+  // ---------- panels ----------
+  function buildLib() {
+    $('libGrid').innerHTML = LIB.map(l => `<div class="th" data-id="${l.id}" title="Añadir ${l.label}"><div class="im"><img src="${BASE}assets/flores/${l.id}.png" alt=""></div><span>${l.label}</span></div>`).join('');
+    if (!buildLib.wired) { $('libGrid').addEventListener('click', e => { const t = e.target.closest('.th'); if (t) add(t.dataset.id); }); buildLib.wired = true; }
+    $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECS.map(k => `<option>${k}</option>`).join('');
+  }
+  function warnings(it) {
+    if (geom(it).rot) return [];
+    const l = lib(it.img), g = geom(it), w = [], T = 2, cut = { ...l.cut };
+    if (it.flip) { const t = cut.left; cut.left = cut.right; cut.right = t; }
+    if (it.flipY) { const t = cut.top; cut.top = cut.bottom; cut.bottom = t; }
+    if (cut.left && Math.abs(g.left) > T) w.push('izquierdo');
+    if (cut.right && Math.abs(g.sw - g.left - g.w) > T) w.push('derecho');
+    if (cut.top && Math.abs(g.top) > T) w.push('superior');
+    if (cut.bottom && Math.abs(g.sh - g.top - g.h) > T) w.push('inferior');
+    return w;
+  }
+  function drawMulti(p, list, lead) {
+    const anyLock = list.some(o => o.lock), op = Math.round((list[0].op || 1) * 100);
+    p.innerHTML = `<h2>${list.length} flores seleccionadas</h2>
+      <p class="hint">Arrastra una para moverlas todas. <kbd>Mayús</kbd>+clic quita o añade. <kbd>Esc</kbd>: ninguna.</p>
+      <h2 style="margin-top:12px">Alinear</h2>
+      <div class="btns"><button data-al="l">Izquierda</button><button data-al="cx">Centro</button><button data-al="r">Derecha</button></div>
+      <div class="btns"><button data-al="t">Arriba</button><button data-al="cy">Medio</button><button data-al="b">Abajo</button></div>
+      <h2 style="margin-top:12px">Tamaño</h2>
+      <div class="btns"><button id="mSame">Mismo alto que ${lead ? lib(lead.img).label : 'la última'} (${lead ? Math.round(geom(lead).h) : ''} px)</button>${fmt ? `<button id="mFmt">Aplicar tamaño copiado (${Math.round(fmt.h)} px)</button>` : ''}</div>
+      <h2 style="margin-top:12px">Capa</h2>
+      <div class="btns"><button id="mBack">Todas detrás del texto</button><button id="mFront">Todas delante</button></div>
+      <div class="row"><label>Opacidad</label><input type="range" id="mOp" min="15" max="100" step="5" value="${op}"><span id="mOpV" class="val">${op}%</span></div>
+      <div class="btns"><button id="mLock">${anyLock ? 'Desbloquear todas' : 'Bloquear todas'}</button><button id="mDel" class="danger">Eliminar ${list.length}</button></div>
+      ${placedList()}`;
+    wirePlaced(p);
+    p.querySelectorAll('[data-al]').forEach(b => b.onclick = () => align(b.dataset.al));
+    $('mSame').onclick = () => lead && sameHeight(lead); if ($('mFmt')) $('mFmt').onclick = () => pasteFmt(lead);
+    $('mBack').onclick = () => setFront(list, false); $('mFront').onclick = () => setFront(list, true);
+    $('mOp').onpointerdown = () => snapshot();
+    $('mOp').oninput = e => { $('mOpV').textContent = e.target.value + '%'; setOp(list, e.target.value / 100, true); };
+    $('mOp').onchange = e => setOp(list, e.target.value / 100, false);
+    $('mLock').onclick = () => setLock(list, !anyLock); $('mDel').onclick = () => del(lead);
+  }
+  function drawProps() {
+    if (window.SITE && window.SITE.overlay && window.SITE.overlay($('props'))) return;   // e.g. the Publicar confirmation, in any tab
+    // other tabs draw their own panel; so does the site module while it asks something (a save that met a newer branch)
+    if (MODE !== 'flores' || (window.SITE && window.SITE.asking())) { if (window.SITE) window.SITE.drawProps($('props')); return; }
+    const p = $('props'), it = get(sel), list = selected();
+    if (tsel && !it) return drawTextProps(p, tsel);
+    if (list.length > 1) return drawMulti(p, list, it);
+    if (!it) {
+      p.innerHTML = `<h2>Propiedades</h2><div class="hint"><p>Haz clic en una flor para seleccionarla.</p><p><b>Arrastrar</b>: mover, también a otra sección.<br><b>Esquinas</b>: cambiar tamaño.<br><b>Círculo de arriba</b>: girar (<kbd>Mayús</kbd>: de 15 en 15°).<br><kbd>Alt</kbd> mientras arrastras: sin imán.<br><kbd>Flechas</kbd>: 1 px (con <kbd>Mayús</kbd>, 10 px).<br><kbd>Supr</kbd> borrar · <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicar.<br><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y pegar una flor (se pega en la sección que ves).<br><kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>C</kbd> / <kbd>V</kbd>: copiar y aplicar el tamaño (alto), giro y volteo.<br><kbd>Mayús</kbd>+clic: seleccionar varias.<br><kbd>Ctrl</kbd>+<kbd>]</kbd> / <kbd>[</kbd>: subir / bajar capa (con <kbd>Mayús</kbd>: al frente / al fondo).<br><kbd>Ctrl</kbd>+<kbd>L</kbd>: bloquear.</p><p><b>Textos</b>: los títulos y párrafos también se arrastran, y se pueden poner bajo o sobre las flores.</p>${DESK() ? '<p><b>Vista escritorio.</b> Lo que muevas, escales o gires aquí solo cambia en pantallas anchas; el móvil se queda como está.</p>' : ''}${clip ? `<p><button id="pPaste">Pegar ${lib(clip.img).label}</button></p>` : ''}</div>${placedList()}`;
+      if ($('pPaste')) $('pPaste').onclick = paste;
+      wirePlaced(p);
+      return;
+    }
+    const l = lib(it.img), w = warnings(it), g = geom(it), ps = peers(it), pos = ps.indexOf(it) + 1, op = Math.round((it.op || 1) * 100);
+    const deskNote = DESK() ? `<div class="note${it.d ? ' own' : ''}">${it.d ? 'En escritorio tiene su <b>propia posición y tamaño</b>.' : 'En escritorio usa la <b>misma posición que en el móvil</b>. Si la mueves, escalas o giras aquí, tendrá la suya propia.'}${it.d ? ' <button id="pUseM">Usar la del móvil</button>' : ''}</div>` : '';
+    p.innerHTML = `<h2>${l.label}${it.lock ? ' · bloqueada' : ''}</h2>${deskNote}
+      <div class="row"><label>Sección</label><select id="pSec">${SECS.filter(k => secEl(k)).map(k => `<option${k === it.sec ? ' selected' : ''}>${k}</option>`).join('')}</select></div>
+      <div class="row"><label>Grabado</label><select id="pImg">${LIB.map(o => `<option value="${o.id}"${o.id === it.img ? ' selected' : ''}>${o.label}</option>`).join('')}</select></div>
+      <div class="row"><label>Ancho (px)</label><input type="number" id="pW" min="24" max="1400" step="1" value="${Math.round(g.w)}"></div>
+      <div class="row"><label>Alto (px)</label><input type="number" id="pH" min="24" max="2400" step="1" value="${Math.round(g.h)}"></div>
+      <div class="row"><label>Giro (°)</label><input type="number" id="pRot" min="-180" max="180" step="1" value="${g.rot}"></div>
+      <div class="row"><label>Opacidad</label><input type="range" id="pOp" min="15" max="100" step="5" value="${op}"><span id="pOpV" class="val">${op}%</span></div>
+      <h2 style="margin-top:14px">Capa</h2>
+      <div class="grp2"><button id="pBack" class="${it.front ? '' : 'on'}">Detrás del texto</button><button id="pFrontB" class="${it.front ? 'on' : ''}">Delante del texto</button></div>
+      <div class="btns"><button data-z="top" title="Ctrl+Mayús+]">Al frente</button><button data-z="up" title="Ctrl+]">Subir</button><button data-z="down" title="Ctrl+[">Bajar</button><button data-z="bottom" title="Ctrl+Mayús+[">Al fondo</button></div>
+      <p class="hint" style="margin:-4px 0 10px">Posición ${ps.length - pos + 1} de ${ps.length} en esta capa (1 = encima).</p>
+      <div class="row"><label>Ocultar en</label><select id="pHide"><option value=""${it.hide ? '' : ' selected'}>Ningún sitio</option><option value="m"${it.hide === 'm' ? ' selected' : ''}>Móvil</option><option value="d"${it.hide === 'd' ? ' selected' : ''}>Escritorio</option></select></div>
+      <h2 style="margin-top:14px">Pegar a</h2>
+      <div class="btns"><button data-f="l">Izquierda</button><button data-f="r">Derecha</button><button data-f="t">Arriba</button><button data-f="b">Abajo</button><button data-f="c">Centrar</button></div>
+      <h2 style="margin-top:14px">Girar</h2>
+      <div class="btns"><button id="pFlip" title="Espejo izquierda-derecha">Voltear ↔</button><button id="pFlipY" title="Espejo arriba-abajo">Voltear ↕</button><button id="pR90">+90°</button><button id="pR0">Sin giro</button></div>
+      <h2 style="margin-top:14px">Copiar</h2>
+      <div class="btns"><button id="pCopy" title="Ctrl+C">Copiar</button><button id="pPasteHere" title="Ctrl+V"${clip ? '' : ' disabled'}>Pegar</button><button id="pFmt" title="Ctrl+Mayús+C">Copiar tamaño</button><button id="pFmtApply" title="Ctrl+Mayús+V"${fmt ? '' : ' disabled'}>Aplicar tamaño${fmt ? ' (' + Math.round(fmt.h) + ' px)' : ''}</button></div>
+      <div class="btns"><button id="pDup">Duplicar</button><button id="pMirror" title="Copia volteada en el lado opuesto">Duplicar en espejo</button><button id="pLock" title="Ctrl+L">${it.lock ? 'Desbloquear' : 'Bloquear'}</button><button id="pDel" class="danger">Eliminar</button></div>
+      ${w.length ? `<div class="note">El lado ${w.join(' y ')} de esta lámina salió cortado y se ve recto, sin tocar el borde. Pégalo a un borde si no quieres que se note el corte.</div>` : ''}
+      ${placedList()}`;
+    wirePlaced(p);
+    $('pImg').onchange = e => swap(it, e.target.value);
+    $('pH').onchange = e => setHeight(it, +e.target.value || geom(it).h);
+    $('pCopy').onclick = () => copy(it); $('pPasteHere').onclick = paste;
+    $('pFmt').onclick = () => { copyFmt(it); drawProps(); }; $('pFmtApply').onclick = () => pasteFmt(it);
+    $('pMirror').onclick = () => mirror(it);
+    $('pSec').onchange = e => { snapshot(); const g = geom(it); it.sec = e.target.value; setPos(it, Math.max(0, g.left), 0); changed(); };
+    $('pW').onchange = e => { snapshot(); const g = geom(it); ed(it).w = Math.max(24, +e.target.value || g.w); setPos(it, g.left, g.top); changed(); };
+    $('pRot').onchange = e => { snapshot(); ed(it).rot = +e.target.value || 0; changed(); };
+    $('pOp').onpointerdown = () => snapshot();
+    $('pOp').oninput = e => { $('pOpV').textContent = e.target.value + '%'; setOp([it], e.target.value / 100, true); };
+    $('pOp').onchange = e => setOp([it], e.target.value / 100, false);
+    $('pBack').onclick = () => setFront([it], false); $('pFrontB').onclick = () => setFront([it], true);
+    p.querySelectorAll('[data-z]').forEach(b => b.onclick = () => restack(it, b.dataset.z));
+    $('pLock').onclick = () => setLock([it], !it.lock);
+    if ($('pUseM')) $('pUseM').onclick = () => { snapshot(); delete it.d; changed(); };
+    $('pHide').onchange = e => { snapshot(); it.hide = e.target.value; changed(); };
+    p.querySelectorAll('[data-f]').forEach(b => b.onclick = () => flush(it, b.dataset.f));
+    $('pFlip').onclick = () => { snapshot(); it.flip = !it.flip; changed(); };
+    $('pFlipY').onclick = () => { snapshot(); it.flipY = !it.flipY; changed(); };
+    $('pR90').onclick = () => { snapshot(); const pl = ed(it); pl.rot = (((pl.rot || 0) + 90 + 540) % 360) - 180; changed(); };
+    $('pR0').onclick = () => { snapshot(); ed(it).rot = 0; changed(); };
+    $('pDup').onclick = () => dup(it); $('pDel').onclick = () => del(it);
+  }
+
+  // ---------- frame ----------
+  function fit() {
+    const st = $('stage'), vw = dev === 'm' ? 390 : 1200, avail = st.clientWidth - 28, sc = Math.min(1, avail / vw), h = (st.clientHeight - 28) / sc;
+    frame.style.width = vw + 'px'; frame.style.height = h + 'px'; frame.style.transform = 'scale(' + sc + ')';
+    $('wrap').style.width = vw * sc + 'px'; $('wrap').style.height = h * sc + 'px';
+    setTimeout(renderAll, 60);
+  }
+  function setDev(d) { dev = d; $('devM').classList.toggle('on', d === 'm'); $('devD').classList.toggle('on', d === 'd'); fit(); drawProps(); }
+
+  function onLoad() {
+    if (!frame.getAttribute('src')) return;   // the empty frame before a branch is opened
+    win = frame.contentWindow; doc = frame.contentDocument;
+    if (!doc || !doc.body) return;
+    FLORES_OK = !!win.Flores;
+    doc.addEventListener('click', e => { if (e.target.closest('a, button, label')) e.preventDefault(); }, true);
+    doc.addEventListener('keydown', onKey);
+    if (window.SITE) window.SITE.onFrame(win, doc);
+    if (!FLORES_OK) { $('libGrid').innerHTML = '<p class="hint">Esta rama no tiene las flores (js/flores.js). Usa otra rama para colocarlas.</p>'; fit(); if (window.SITE) window.SITE.offerDraft(); return; }
+    const st = doc.createElement('style'); st.textContent = EDIT_CSS; doc.head.appendChild(st);
+    doc.documentElement.classList.add('ed-guides');
+    sections().forEach(s => { s.el.classList.add('ed-sec', 'has-flores'); const lb = doc.createElement('div'); lb.className = 'ed-label'; lb.textContent = s.key; s.el.appendChild(lb); });
+    doc.querySelectorAll(TEXT_SEL).forEach(el => { if (textAt(el) === el) el.classList.add('ed-tmove'); });
+    doc.documentElement.classList.toggle('ed-mode-flores', MODE === 'flores');
+    if (!items.length && !load.done) {
+      items = clone((win.FLORES_LAYOUT && win.FLORES_LAYOUT.items) || []); saved = JSON.stringify(items); load.done = true;
+      let draft = null; try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) {}
+      if (Array.isArray(draft)) draft = { items: draft };   // drafts written before they kept their base
+      const di = draft && Array.isArray(draft.items) ? JSON.stringify(draft.items) : '[]';
+      // offered together with the texts/colours draft, if it changed something (against its base, and against the branch now)
+      if (di !== '[]' && di !== saved && di !== draft.base) pendingDraft = draft;
+
+    }
+    doc.addEventListener('pointerdown', e => {
+      if (MODE !== 'flores') { if (window.SITE) window.SITE.onPointer(e); return; }
+      const h = e.target.closest('.ed-h'), rh = e.target.closest('.ed-rot'), t = hit(e.pageX, e.pageY);
+      const te = textAt(e.target), useText = te && !e.shiftKey && !(t && t.front);   // a plate in front of the text wins; the text wins over one behind it
+      if (rh) { e.preventDefault(); startRotate(e, get(sel)); }
+      else if (h) { e.preventDefault(); startResize(e, get(sel), h.dataset.c); }
+      else if (useText) { e.preventDefault(); selectText(textKey(te)); startTextDrag(e, te); }
+      else if (t && e.shiftKey) { e.preventDefault(); toggleSel(t.id); }
+      else if (t && multi.size > 1 && multi.has(t.id)) { e.preventDefault(); sel = t.id; drawProps(); startGroupDrag(e, t); }
+      else if (t) { e.preventDefault(); select(t.id); startDrag(e, t); }
+      else select(null);
+    });
+    doc.addEventListener('pointermove', e => { if (MODE === 'flores' && !e.buttons) { const t = hit(e.pageX, e.pageY), te = textAt(e.target); doc.documentElement.style.cursor = t ? (t.lock && !te ? 'default' : 'move') : ''; } });
+    renderAll(); changed();
+    if (window.SITE) window.SITE.offerDraft();
+  }
+  const load = {};
+
+  // A flower draft started on an older commit of the branch: keep the layout saved since (theirs) and
+  // re-apply on it only what the draft changed against its base: flowers it added (a new id if the
+  // other save used the same one), changed or removed. Order changes alone are not carried over.
+  function draftStale(d) {
+    const S = window.SITE, h = S && S.head();
+    return !!(d && d.head && h && !S.sameHead(d.head, h) && typeof d.base === 'string');
+  }
+  function mergeFlores(base, mine, theirs) {
+    const J = JSON.stringify, B = new Map(base.map(o => [o.id, o])), M = new Map(mine.map(o => [o.id, o]));
+    const out = theirs.filter(o => !(B.has(o.id) && !M.has(o.id)))
+      .map(o => { const m = M.get(o.id), b = B.get(o.id); return m && b && J(m) !== J(b) ? clone(m) : o; });
+    const ids = new Set(out.map(o => o.id));
+    let n = [...base, ...mine, ...theirs].reduce((x, o) => Math.max(x, +String(o.id).slice(1) || 0), 0);
+    mine.forEach(o => {
+      const b = B.get(o.id);
+      if (!b) { const c = clone(o); if (ids.has(c.id)) c.id = 'f' + (++n); out.push(c); ids.add(c.id); }
+      else if (!ids.has(o.id) && J(o) !== J(b)) { out.push(clone(o)); ids.add(o.id); }   // changed here, removed there: keep it
+    });
+    return out;
+  }
+
+  function onKey(e) {
+    if (e.target.closest && e.target.closest('input, select, textarea')) return;
+    const mod = e.ctrlKey || e.metaKey, it = get(sel);
+    if (mod && e.key.toLowerCase() === 'z' && MODE === 'flores') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (mod && e.key.toLowerCase() === 'y' && MODE === 'flores') { e.preventDefault(); redo(); }
+    else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    else if (mod && !e.shiftKey && e.key.toLowerCase() === 'v' && MODE === 'flores') { e.preventDefault(); paste(); }
+    else if (tsel && !it && MODE === 'flores') {
+      if (e.key === 'Escape') select(null);
+      else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); treset(tsel); }
+      else if (e.key.startsWith('Arrow')) { e.preventDefault(); const s = e.shiftKey ? 10 : 1; tnudge(tsel, e.key === 'ArrowLeft' ? -s : e.key === 'ArrowRight' ? s : 0, e.key === 'ArrowUp' ? -s : e.key === 'ArrowDown' ? s : 0); }
+    }
+    else if (!it || MODE !== 'flores') return;
+    else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); if (e.shiftKey) { copyFmt(it); drawProps(); } else copy(it); }
+    else if (mod && e.shiftKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteFmt(it); }
+    else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); dup(it); }
+    else if (mod && e.key.toLowerCase() === 'l') { e.preventDefault(); const l = selected(); setLock(l, !l.every(o => o.lock)); }
+    else if (mod && (e.key === ']' || e.key === '}' || e.code === 'BracketRight')) { e.preventDefault(); restack(it, e.shiftKey ? 'top' : 'up'); }
+    else if (mod && (e.key === '[' || e.key === '{' || e.code === 'BracketLeft')) { e.preventDefault(); restack(it, e.shiftKey ? 'bottom' : 'down'); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); del(it); }
+    else if (e.key === 'Escape') select(null);
+    else if (e.key.startsWith('Arrow')) { e.preventDefault(); const s = e.shiftKey ? 10 : 1; nudge(it, e.key === 'ArrowLeft' ? -s : e.key === 'ArrowRight' ? s : 0, e.key === 'ArrowUp' ? -s : e.key === 'ArrowDown' ? s : 0); }
+  }
+
+  // ---------- boot ----------
+  $('devM').onclick = () => setDev('m'); $('devD').onclick = () => setDev('d');
+  $('undo').onclick = undo; $('redo').onclick = redo; $('save').onclick = save;
+  $('reload').onclick = () => frame.contentWindow.location.reload();
+  $('guides').onchange = e => doc && doc.documentElement.classList.toggle('ed-guides', e.target.checked);
+  $('goto').onchange = e => { const s = e.target.value && secEl(e.target.value); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); e.target.value = ''; };
+  window.addEventListener('resize', fit);
+
+  // ---------- resizable side panels ----------
+  const PANELS = { lib: { v: '--libW', def: 220, g: 'gl', t: 'tLib', side: 'l' }, props: { v: '--propW', def: 250, g: 'gr', t: 'tProps', side: 'r' } };
+  const MIN = 160, CLOSE = 90;
+  let widths = { lib: 220, props: 250, libOpen: true, propsOpen: true };
+  try { Object.assign(widths, JSON.parse(localStorage.getItem('flores-panels') || '{}')); } catch (e) {}
+  let refit = 0;
+  function applyPanels() {
+    Object.entries(PANELS).forEach(([k, P]) => {
+      const open = widths[k + 'Open'];
+      document.body.style.setProperty(P.v, open ? widths[k] + 'px' : '0px');
+      $(k).classList.toggle('closed', !open); $(P.t).classList.toggle('on', open);
+    });
+    try { localStorage.setItem('flores-panels', JSON.stringify(widths)); } catch (e) {}
+    cancelAnimationFrame(refit); refit = requestAnimationFrame(fit);
+  }
+  Object.entries(PANELS).forEach(([k, P]) => {
+    const g = $(P.g);
+    g.addEventListener('pointerdown', e => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add('drag'); document.body.classList.add('resizing');
+      const startW = widths[k + 'Open'] ? widths[k] : P.def;   // closing keeps this width for when it reopens
+      const move = ev => {
+        const w = P.side === 'l' ? ev.clientX : window.innerWidth - ev.clientX, max = Math.round(window.innerWidth * 0.45);
+        if (w < CLOSE) { widths[k + 'Open'] = false; widths[k] = startW; }
+        else { widths[k + 'Open'] = true; widths[k] = Math.min(max, Math.max(MIN, Math.round(w))); }
+        applyPanels();
+      };
+      const up = () => { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.classList.remove('drag'); document.body.classList.remove('resizing'); fit(); };
+      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up);
+    });
+    g.addEventListener('dblclick', () => { widths[k] = P.def; widths[k + 'Open'] = true; applyPanels(); });
+    $(P.t).onclick = () => { widths[k + 'Open'] = !widths[k + 'Open']; applyPanels(); };
+  });
+  applyPanels();
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('beforeunload', e => { if (JSON.stringify(items) !== saved) { e.preventDefault(); e.returnValue = ''; } });
+  frame.addEventListener('load', onLoad);
+  // ---------- hooks for the site module (_dev/editor-site.js) ----------
+  window.ED = {
+    // load a branch: BASE is the URL of its worktree; flower state starts from its layout
+    open(base, branch) {
+      BASE = base; DRAFT = 'flores-draft:' + branch; pendingDraft = null; items = []; saved = '[]'; sel = null; tsel = null; tpos = {}; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
+      LIB = []; $('libGrid').innerHTML = '';
+      fetch(BASE + 'assets/flores/flores.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(l => { LIB = l; if (LIB.length) buildLib(); drawProps(); }).catch(() => {});
+      frame.src = BASE + 'index.html';
+    },
+    reloadFrame() { if (frame.contentWindow) frame.contentWindow.location.reload(); },
+    setMode(m) { MODE = m; sel = null; tsel = null; multi = new Set(); if (doc) { drawSel(); doc.documentElement.classList.toggle('ed-guides', m === 'flores' && $('guides').checked); doc.documentElement.classList.toggle('ed-mode-flores', m === 'flores'); } drawProps(); },
+    // moved texts: the site module keeps them in the look (saved into css/editor.css) and hands them over when a branch opens
+    textPos: () => clone(tpos),
+    setTextPos(t) { tpos = clone(t || {}); tsel = null; },
+    floresDirty: () => FLORES_OK && JSON.stringify(items) !== saved,
+    floresItems: () => clone(items),
+    markSaved, fit, renderAll, drawProps,
+    openProps() { if (!widths.propsOpen) { widths.propsOpen = true; applyPanels(); } },
+    // the flower draft left by another session (JSON) or null; restore or drop it (one banner for all drafts)
+    floresDraft: () => pendingDraft,
+    restoreFloresDraftStale: () => draftStale(pendingDraft),
+    restoreFloresDraft() {
+      if (!pendingDraft) return;
+      const d = pendingDraft; pendingDraft = null;
+      let base = null; if (draftStale(d)) try { base = JSON.parse(d.base); } catch (e) {}
+      items = Array.isArray(base) ? mergeFlores(base, d.items, items) : clone(d.items); changed();
+    },
+    dropFloresDraft() { pendingDraft = null; try { localStorage.removeItem(DRAFT); } catch (e) {} },
+    get doc() { return doc; }, get win() { return win; }, get dev() { return dev; }, get base() { return BASE; },
+  };
+})();
+</script>
+<script src="/_dev/qr.js"></script>
+<script src="/_dev/editor-site.js"></script>
+</body>
+</html>

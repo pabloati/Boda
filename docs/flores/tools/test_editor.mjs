@@ -1,0 +1,36 @@
+import { chromium } from '/home/pabloati/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.mjs';
+const b = await chromium.launch({ executablePath: '/home/pabloati/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome' });
+const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+const errs = []; p.on('response', r => { if (r.status() >= 400) errs.push('HTTP ' + r.status() + ' ' + r.url()); }); p.on('pageerror', e => errs.push('pageerror ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('console ' + m.text()); });
+await p.goto('http://127.0.0.1:8099/_dev/flores.html'); await p.waitForTimeout(2500);
+const fr = p.frames().find(f => f.url().endsWith('/index.html'));
+console.log('thumbs', await p.locator('.th').count(), 'envelope hidden', await fr.evaluate(() => getComputedStyle(document.getElementById('envelope-overlay')).display));
+console.log('scroll lock', await fr.evaluate(() => [getComputedStyle(document.body).overflow, getComputedStyle(document.documentElement).overflow]));
+await fr.evaluate(() => document.getElementById('rsvp').scrollIntoView());
+await p.waitForTimeout(400);
+await p.locator('.th[data-id="muscari"]').click(); await p.waitForTimeout(400);
+console.log('items after add', await p.evaluate(() => document.getElementById('status').textContent), await fr.locator('.flor').count());
+const box = await fr.locator('.flor').first().boundingBox();
+console.log('flower box', box);
+// drag it to the bottom-left corner of its section
+const sec = await fr.locator('#rsvp').boundingBox(); console.log('sec', sec);
+const iframeBox = await p.locator('#f').boundingBox();
+const sc = iframeBox.width / 390;
+const startX = box.x + box.width / 2, startY = box.y + box.height / 2;
+await p.mouse.move(startX, startY); await p.mouse.down();
+const endX = sec.x + box.width / 2 + 3, endY = Math.min(sec.y + sec.height, iframeBox.y + iframeBox.height - 4) - box.height / 2 - 4;
+await p.mouse.move((startX + endX) / 2, (startY + endY) / 2, { steps: 5 }); await p.mouse.move(endX, endY, { steps: 5 });
+console.log('guides while dragging', await fr.locator('.ed-g').count());
+await p.mouse.up(); await p.waitForTimeout(300);
+const model = await p.evaluate(() => localStorage.getItem('flores-draft')); console.log('model', model);
+await p.screenshot({ path: process.argv[2] + '/ed1.png' });
+await p.click('#save'); await p.waitForTimeout(600);
+console.log('status', await p.evaluate(() => document.getElementById('status').textContent));
+// the real page, mobile size, no editor
+const m = await b.newPage({ viewport: { width: 390, height: 800 } });
+await m.goto('http://127.0.0.1:8099/index.html'); await m.waitForTimeout(800);
+await m.addStyleTag({ content: '#envelope-overlay{display:none!important}' });
+console.log('real page flowers', await m.locator('.flor').count());
+await m.evaluate(() => document.getElementById('rsvp').scrollIntoView()); await m.waitForTimeout(500);
+await m.screenshot({ path: process.argv[2] + '/real1.png' });
+console.log('ERRS:\n' + (errs.join('\n') || 'none')); await b.close();
