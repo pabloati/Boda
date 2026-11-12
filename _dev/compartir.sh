@@ -19,15 +19,17 @@ if [ ! -x "$CF" ]; then
   chmod +x "$CF"
 fi
 LOG=$(mktemp)
-BODA_EDITOR_PASSWORD_FILE="$PWF" python3 _dev/serve.py "$PORT" & SRV=$!
+LINKF=$(mktemp)    # the tunnel's address, for the editor's "Ver en mi móvil" (serve.py reads it)
+BODA_EDITOR_PASSWORD_FILE="$PWF" BODA_PUBLIC_LINK_FILE="$LINKF" python3 _dev/serve.py "$PORT" & SRV=$!
 "$CF" tunnel --no-autoupdate --url "http://localhost:$PORT" >"$LOG" 2>&1 & TUN=$!
-trap 'kill $SRV $TUN 2>/dev/null; rm -f "$LOG"' EXIT INT TERM
+trap 'kill $SRV $TUN 2>/dev/null; rm -f "$LOG" "$LINKF"' EXIT INT TERM
 for _ in $(seq 40); do
   URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" | head -1 || true)
   [ -n "$URL" ] && break
   sleep 1
 done
 if [ -z "${URL:-}" ]; then echo "No se pudo abrir el túnel:"; tail -5 "$LOG"; exit 1; fi
+echo "$URL" > "$LINKF"
 echo
 echo "  Enlace para compartir:  $URL/_dev/flores.html"
 echo "  (pide la contraseña; el enlace cambia cada vez que se arranca)"

@@ -25,8 +25,11 @@ replaces it, so anything `write_look()` writes must be mirrored there.
 
 - **Ver en mi móvil** shows the link and a QR code of the current branch's preview
   (`/b/<branch>/index.html`, served from git, so it shows the last save). Scan it with the phone
-  or copy the link. Through the tunnel the phone logs in once and lands on the preview; from
-  localhost the phone cannot reach the link. The QR is drawn locally by `_dev/qr.js`, no library.
+  or copy the link. The link always uses the server's public tunnel address: the page's own when
+  the editor was opened through the tunnel; from localhost, the address `compartir.sh` or the
+  container wrote to `BODA_PUBLIC_LINK_FILE` (`GET /_dev/api/public`). A server without a tunnel
+  (plain `serve.py`) shows no QR, only how to get one, since the phone cannot reach it. The phone
+  logs in once and lands on the preview. The QR is drawn locally by `_dev/qr.js`, no library.
 - **Publicar** merges the open branch into `main` and pushes `main`, which publishes the site at
   once. The right panel first lists the saves that would go live (`GET /_dev/api/publish?branch=…`,
   a dry run). It is refused with unsaved changes, on `main` itself, when `main` has local commits

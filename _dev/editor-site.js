@@ -806,9 +806,22 @@
 
   // ---------- "Ver en mi móvil": link and QR of this branch's last save ----------
   // /b/<branch>/ is served by serve.py straight from git ("/" in a branch name is written "~").
-  // Through the tunnel location.origin is the public https address, so the phone can open it.
-  const previewURL = b => location.origin + '/b/' + b.split('/').map(encodeURIComponent).join('~') + '/index.html';
-  function closeShare() { const el = $('sharePop'); if (el) el.remove(); document.removeEventListener('pointerdown', shareOutside, true); }
+  // The phone needs this server's public (tunnel) address: through the tunnel that is location.origin;
+  // on this machine (localhost) serve.py tells it through /_dev/api/public when it has a tunnel
+  // (compartir.sh and the container write it); without a tunnel the phone cannot reach it at all.
+  const previewURL = (b, origin) => (origin || location.origin) + '/b/' + b.split('/').map(encodeURIComponent).join('~') + '/index.html';
+  const isLocal = () => /^(localhost|127\.|\[::1\])/.test(location.hostname);
+  async function phoneOrigin() {
+    if (!isLocal()) return location.origin;
+    try {
+      const r = await fetch('/_dev/api/public', { cache: 'no-store' });
+      const o = r.ok ? (await r.json()).origin : null;
+      if (typeof o === 'string' && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(o)) return o;
+    } catch (e) {}
+    return null;
+  }
+  let shareSeq = 0;                // a newer click, a close or a branch change cancels a popup still being prepared
+  function closeShare() { shareSeq++; const el = $('sharePop'); if (el) el.remove(); document.removeEventListener('pointerdown', shareOutside, true); }
   function shareOutside(e) { if (!e.target.closest('#sharePop, #share')) closeShare(); }
   async function copyText(s) {
     try { await navigator.clipboard.writeText(s); return true; } catch (e) {}
@@ -816,26 +829,36 @@
     document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
     ta.remove(); return ok;
   }
-  function openShare() {
+  async function openShare() {
     if ($('sharePop')) { closeShare(); return; }
     if (!branch) return;
-    const url = previewURL(branch), local = /^(localhost|127\.|\[::1\])/.test(location.hostname);
-    let qr = '';
-    try { qr = window.QR ? window.QR.svg(url, 220, '#26261f') : ''; } catch (e) { qr = ''; }
+    const seq = ++shareSeq, b = branch, origin = await phoneOrigin();
+    if (seq !== shareSeq || b !== branch || $('sharePop')) return;
     const pop = document.createElement('div'); pop.id = 'sharePop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Ver en mi móvil');
-    pop.innerHTML = `<h2>Ver en mi móvil</h2>
-      <div class="qr">${qr || '<p class="note">No se pudo crear el código QR.</p>'}</div>
-      <p class="hint">Escanea el código con la cámara del móvil o copia el enlace.</p>
-      <div class="share-url"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
-      <div class="btns"><button id="shareCopy" class="primary">Copiar enlace</button><button id="shareClose">Cerrar</button></div>
-      <p class="hint">Muestra lo último guardado en esta rama (<b>${esc(branch)}</b>).${dirtyParts().length ? ' Lo que aún no has guardado no sale.' : ''} Si te pide contraseña, es la misma del editor.</p>
-      ${local ? '<p class="note">Has abierto el editor en este ordenador (localhost): el móvil no llega a este enlace. Ábrelo con la dirección compartida del editor para que funcione.</p>' : ''}`;
+    let url = '';
+    if (!origin) {
+      pop.innerHTML = `<h2>Ver en mi móvil</h2>
+        <p class="note">Este editor no tiene enlace público: lo has abierto en este ordenador sin túnel, así que el móvil no puede llegar a él.</p>
+        <p class="hint">Para verlo en el móvil, usa el editor compartido (su enlace de Cloudflare) o arranca este con <code>bash _dev/compartir.sh</code>.</p>
+        <div class="btns"><button id="shareClose">Cerrar</button></div>`;
+    } else {
+      url = previewURL(b, origin);
+      let qr = '';
+      try { qr = window.QR ? window.QR.svg(url, 220, '#26261f') : ''; } catch (e) { qr = ''; }
+      pop.innerHTML = `<h2>Ver en mi móvil</h2>
+        <div class="qr">${qr || '<p class="note">No se pudo crear el código QR.</p>'}</div>
+        <p class="hint">Escanea el código con la cámara del móvil o copia el enlace.</p>
+        <div class="share-url"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
+        <div class="btns"><button id="shareCopy" class="primary">Copiar enlace</button><button id="shareClose">Cerrar</button></div>
+        <p class="hint">Muestra lo último guardado en esta rama (<b>${esc(b)}</b>).${dirtyParts().length ? ' Lo que aún no has guardado no sale.' : ''} Si te pide contraseña, es la misma del editor.</p>
+        ${isLocal() ? '<p class="hint">Es el enlace público de este editor (por el túnel), aunque tú lo tengas abierto en este ordenador.</p>' : ''}`;
+    }
     document.body.appendChild(pop);
     const r = $('share').getBoundingClientRect(), w = pop.offsetWidth;
     pop.style.top = (r.bottom + 6) + 'px';
     pop.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + 'px';
-    $('shareClose').onclick = closeShare;
-    $('shareCopy').onclick = async () => { const ok = await copyText(url); $('shareCopy').textContent = ok ? 'Copiado' : 'No se pudo copiar'; };
+    if ($('shareClose')) $('shareClose').onclick = closeShare;
+    if ($('shareCopy')) $('shareCopy').onclick = async () => { const ok = await copyText(url); $('shareCopy').textContent = ok ? 'Copiado' : 'No se pudo copiar'; };
     setTimeout(() => document.addEventListener('pointerdown', shareOutside, true), 0);
   }
 

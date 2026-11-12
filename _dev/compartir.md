@@ -29,6 +29,11 @@ Saves are commits on the branch chosen in the editor, on the machine running the
 pushes the branch to GitHub, which needs that machine to have push access (an SSH key registered
 on GitHub). Without it, commits stay on that machine until someone pushes them.
 
+"Ver en mi móvil" needs the tunnel's address even when the editor is opened on that machine
+itself (localhost): `compartir.sh` and the container write it to the file named by
+`BODA_PUBLIC_LINK_FILE` once the tunnel is up, and the server hands it to the editor. Each server
+offers only its own tunnel, since each has its own copy of the repo and its own saves.
+
 ## Running it on an always-on machine (container)
 
 `_dev/docker/` runs the editor in a Docker container so that a break-in, should one ever happen,

@@ -25,6 +25,9 @@ Shared mode (to edit from another computer through a tunnel, see _dev/compartir.
   (or BODA_EDITOR_PASSWORD_FILE=path). Then every page, the editor and the API need a login at
   /_dev/login; a session lasts 30 days; 8 wrong passwords from one address lock it for 10 minutes.
   A page opened without a session (e.g. a branch preview from the editor's QR) goes back there after the login.
+  BODA_PUBLIC_LINK_FILE=path: a file where the tunnel's https address appears once it is up
+  (compartir.sh and the container set it); GET /_dev/api/public returns it, so the editor's QR
+  points there even when the editor itself is open on localhost.
 """
 import hashlib
 import hmac
@@ -163,6 +166,25 @@ def safe_next(path):
             and not path.startswith(('/_dev/login', '/_dev/api/'))):   # never straight into the API
         return path
     return '/_dev/flores.html'
+
+
+LINK_FILE = os.environ.get('BODA_PUBLIC_LINK_FILE', '')
+
+
+def public_origin():
+    """The https address of the tunnel in front of this server, for the editor's "Ver en mi móvil" when
+    it is open on this machine. compartir.sh and the container write it to BODA_PUBLIC_LINK_FILE once
+    the tunnel is up (read on every call: the tunnel comes up after the server and changes on restart).
+    None without one, and always None without a password: a public link is only offered for a server
+    that asks for one."""
+    if not (PASSWORD and LINK_FILE):
+        return None
+    try:
+        with open(os.path.expanduser(LINK_FILE)) as fh:
+            m = re.match(r'\s*(https://[a-z0-9-]+\.trycloudflare\.com)(?:[/\s]|$)', fh.read(500))
+    except OSError:
+        return None
+    return m.group(1) if m else None
 
 
 def check_password(given):
@@ -352,6 +374,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             if p == '/_dev/api/branches':
                 return self.send_json(editor_api.branches(HERE))
+            if p == '/_dev/api/public':    # this server's tunnel address, or null
+                return self.send_json({'origin': public_origin()})
             if p == '/_dev/api/state':
                 wt = editor_api.open_branch(HERE, q['branch'][0])
                 if q.get('head'):         # the cheap variant the editor polls: has someone saved since?
