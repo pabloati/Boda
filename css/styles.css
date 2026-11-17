@@ -1755,17 +1755,6 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 /* ========================================================
-   PHOTOS / HASHTAG
-======================================================== */
-.hashtag-text {
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  font-weight: 500;
-  color: var(--ink);
-  margin: -14px 0 10px;
-  overflow-wrap: anywhere;
-}
-
-/* ========================================================
    FOOTER
 ======================================================== */
 .footer-section {

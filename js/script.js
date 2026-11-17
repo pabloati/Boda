@@ -30,8 +30,8 @@
   const btnCopyIban = document.getElementById('btn-copy-iban');
   const ibanValue = document.getElementById('iban-value');
   const copyText = document.getElementById('copy-text');
-  const btnCopyHashtag = document.getElementById('btn-copy-hashtag');
-  const weddingHashtag = document.getElementById('wedding-hashtag');
+  const socialSection = document.getElementById('social');
+  const albumLink = document.getElementById('album-link');
 
   // --- 2. AUDIO ENGINE ---
   let isMusicPlaying = false;
@@ -544,17 +544,9 @@
     });
   }
 
-  if (btnCopyHashtag && weddingHashtag) {
-    btnCopyHashtag.addEventListener('click', function () {
-      const tag = weddingHashtag.textContent.trim();
-      copyToClipboard(tag, function () {
-        const originalContent = btnCopyHashtag.innerHTML;
-        btnCopyHashtag.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('copy.done');
-        setTimeout(() => {
-          btnCopyHashtag.innerHTML = originalContent;
-        }, 2000);
-      });
-    });
+  // Photos: the section only shows once the shared album link is in the HTML
+  if (socialSection && albumLink && /^https:\/\//.test(albumLink.getAttribute('href') || '')) {
+    socialSection.hidden = false;
   }
 
   // --- 9. PLAYLIST: see js/playlist.js ---

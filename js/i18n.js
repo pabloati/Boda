@@ -180,8 +180,8 @@ window.I18N = (function () {
     'pl.demo': 'Demo mode: songs and votes are saved only in this browser.',
     // --- photos ---
     'social.title': 'Photos',
-    'social.lead': 'Share your photos and videos of the day with the hashtag',
-    'social.copy': 'Copy',
+    'social.lead': 'Add the photos and videos you take on the day to the shared album',
+    'social.album': 'Open the album',
     // --- footer ---
     'footer.title': 'Thank you for being part of our lives',
     // --- controls ---
