@@ -544,9 +544,9 @@
     });
   }
 
-  // Photos: the section only shows once the shared album link is in the HTML
-  if (socialSection && albumLink && /^https:\/\//.test(albumLink.getAttribute('href') || '')) {
-    socialSection.hidden = false;
+  // Photos: without an album link in the HTML the section hides
+  if (socialSection && albumLink && !/^https:\/\//.test(albumLink.getAttribute('href') || '')) {
+    socialSection.hidden = true;
   }
 
   // --- 9. PLAYLIST: see js/playlist.js ---

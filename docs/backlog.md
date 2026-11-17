@@ -11,7 +11,6 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
-| 6 | **Shared Google Photos album** link | Create the album in Google Photos, turn on link sharing and collaboration (so guests can add photos), send the link by chat. The repo is public, so anyone who finds the link can add photos. | pastes it in `#album-link` (`index.html`); the Fotos section appears on its own |
 
 ## B. Claude does once A arrives
 
@@ -21,6 +20,13 @@ Status as of 2026-10-07. The site is live at https://pabloati.github.io/Boda/ wi
 - [ ] **Bus information block**: a short disclaimer under the Buses stop in the Hoja de ruta, or a small section right after it (couple decides which, 2026-11-09). Waits for A4 (places and times, outward and return). Both languages in `js/i18n.js`, bump the `?v=` cache-buster.
 - [ ] **Botanical plates**: Pablo picks flowers and places them with `_dev/flores.html`, saves, commit `js/flores-layout.js` (branch `flores`, notes in `docs/flores/README.md`). Then: desktop check, add the flowers from the first dossier, clean the cherry and apple cut-outs, merge into `main`.
 - [ ] **Recommendations section**: where to stay (accommodation) and how to get to the church (transport). Placement not decided yet. Needs the couple's picks first (places, links, prices if any); do not invent recommendations. Both languages in `js/i18n.js`, bump the `?v=` cache-buster.
+
+## Future improvements (not planned yet)
+
+- **Preview of the shared album in the Fotos section** (now only a link, decided 2026-11-17). Google Photos has no embed and no official way to read a shared album, so the options are:
+  - *Fixed strip*: a few photos the couple chooses, saved in `assets/`, refreshed by hand. Stable, not live.
+  - *Live strip*: a small separate Google Apps Script (not the RSVP one) reads the album's public share page and returns the latest ~6 thumbnail addresses; the site shows them and each opens the album. Unofficial, can break without notice, so it must fall back to the link alone. Not tested against the real album yet. A scheduled GitHub job writing the list to the repo is the alternative, at the cost of one commit per change.
+  - To weigh first: guests' photos would show on a public site, and the album is empty until the wedding (seed it or keep the strip hidden until there are enough photos).
 
 ## C. Pending in the other working session (RSVP)
 
