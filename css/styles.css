@@ -1925,6 +1925,237 @@ html.rsvp-modal-open { overflow: hidden; }
   .card-back .veil-sheet .scroll-indicator { top: calc(100% / 0.64 - 72px * var(--s)); }
 }
 
+/* ========================================================
+   BUS MAP (js/mapa.js on assets/mapa.svg)
+   The frame is a window on the map; the script moves the SVG's viewBox.
+   Lines keep their width on screen at any zoom (non-scaling-stroke) and the
+   layers z2 / z3 only show from the middle and the close zoom steps (data-z).
+======================================================== */
+.mapa-shell {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.mapa-frame {
+  position: relative;
+  border: 1px solid var(--paper-line);
+  outline: 1px solid var(--paper-line);
+  outline-offset: 5px;
+  background: var(--paper);
+}
+
+.mapa-canvas {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;          /* one finger scrolls the page; two move the map */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mapa-canvas.is-dragging { cursor: grabbing; }
+
+.mapa-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mapa-svg path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mapa-svg .m-forest path { fill: rgba(142, 145, 102, 0.16); }
+.mapa-svg .m-park path { fill: rgba(142, 145, 102, 0.3); }
+.mapa-svg .m-water path { fill: #c3cfca; }
+.mapa-svg .m-river path { stroke: #b4c3be; stroke-width: 2.5px; }
+.mapa-svg .m-motorway path { stroke: #a9a78c; stroke-width: 1.7px; }
+.mapa-svg .m-primary path { stroke: #cdc6ae; stroke-width: 1px; }
+.mapa-svg .m-mid path { stroke: #d6cfba; stroke-width: 1px; }
+.mapa-svg .m-local path { stroke: #ddd6c2; stroke-width: 1.6px; }
+
+.mapa-svg[data-z="1"] .z2,
+.mapa-svg[data-z="1"] .z3,
+.mapa-svg[data-z="2"] .z3 { display: none; }
+
+/* close up the streets become wide, like on a street map */
+.mapa-svg[data-z="2"] .m-primary path { stroke-width: 2.2px; stroke: #c9c2aa; }
+.mapa-svg[data-z="2"] .m-motorway path { stroke-width: 2.6px; }
+.mapa-svg[data-z="3"] .m-motorway path { stroke-width: 9px; stroke: #cfc8b0; }
+.mapa-svg[data-z="3"] .m-primary path { stroke-width: 8px; stroke: #d5ceb8; }
+.mapa-svg[data-z="3"] .m-mid path { stroke-width: 5px; stroke: #dad3be; }
+.mapa-svg[data-z="3"] .m-local path { stroke-width: 3px; }
+
+.mapa-svg .m-fade-a { stop-color: var(--paper); stop-opacity: 1; }
+.mapa-svg .m-fade-b { stop-color: var(--paper); stop-opacity: 0; }
+
+/* the bus route: a dotted path, like the one in the Hoja de ruta */
+.mapa-svg .m-route-case { stroke: var(--paper); stroke-width: 7px; }
+.mapa-svg .m-route-line { stroke: var(--terracotta); stroke-width: 3px; stroke-dasharray: 0.1 8; }
+
+/* names and stops are drawn in screen pixels (their group is scaled by --u) */
+.m-name text {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  fill: var(--ink-soft);
+  stroke: var(--paper);
+  stroke-width: 3.5px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.m-name { display: none; }
+.mapa-svg[data-z="1"] .m-name.on1,
+.mapa-svg[data-z="2"] .m-name.on2,
+.mapa-svg[data-z="3"] .m-name.on3 { display: inline; }
+
+.m-name-city text { font-size: 15px; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
+.m-name-town text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+.m-name-road text { font-size: 11px; font-weight: 700; fill: #8a886e; }
+.m-name-park text { font-style: italic; fill: var(--olive-deep); }
+.m-name-street text { font-style: italic; font-size: 13.5px; }
+
+.m-stop { cursor: pointer; outline: none; }
+.m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
+.m-stop-dot { fill: var(--terracotta); stroke: var(--paper); stroke-width: 1.5px; }
+.m-stop-badge { fill: var(--paper); stroke: var(--olive-deep); stroke-width: 1.5px; }
+.m-stop.is-on .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
+.m-stop:focus-visible .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
+
+.m-stop-label {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+
+.mapa-tools {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mapa-tool,
+.mapa-expand {
+  background: rgba(251, 248, 240, 0.94);
+  border: 1px solid var(--paper-line);
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+
+.mapa-tool {
+  width: 38px;
+  height: 38px;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.mapa-expand {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 12px;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+}
+
+.mapa-credit {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  background: var(--paper);
+  padding: 0 4px;
+}
+
+.mapa-views {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  margin: 24px 0 6px;
+}
+
+.mapa-views .link-button { color: var(--ink-soft); border-bottom-color: transparent; }
+.mapa-views .link-button.is-on { color: var(--terracotta); border-bottom-color: currentColor; }
+
+.mapa-card {
+  min-height: 132px;
+  padding: 14px 10px 0;
+  text-align: center;
+}
+
+.mapa-card .hand-label { margin-bottom: 2px; }
+.mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
+.mapa-card-note { color: var(--ink-soft); margin: 2px 0 8px; }
+.mapa-card-hint { color: var(--ink-faint); font-style: italic; padding-top: 30px; }
+
+.mapa-buses {
+  list-style: none;
+  max-width: 560px;
+  margin: 18px auto 0;
+  padding: 0;
+}
+
+.mapa-buses li {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--paper-line);
+  font-size: 1.15rem;
+  text-align: left;
+}
+
+.mapa-buses .ruta-time { font-size: 1.6rem; flex: none; }
+
+/* without the map (it could not be loaded) only the two lines stay */
+.mapa-section.no-map .mapa-shell { display: none; }
+
+/* Full screen: the map fills the screen, the views and the card stay under it */
+body.mapa-open { overflow: hidden; }
+body.mapa-open .float-btn,
+body.mapa-open .lang-toggle { display: none; }
+
+.mapa-section.is-open { position: relative; z-index: 9000; }
+
+.mapa-section.is-open .mapa-shell {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  z-index: 9000;
+}
+
+.mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; border: 0; outline: 0; }
+.mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
+.mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
+.mapa-section.is-open .mapa-card { padding-bottom: 14px; }
+
+@media (max-width: 768px) {
+  .mapa-canvas { aspect-ratio: 1 / 1; }
+  .mapa-views { gap: 6px 16px; margin-top: 20px; }
+  .mapa-card { min-height: 150px; }
+  .mapa-buses li { font-size: 1.05rem; gap: 12px; }
+}
+
 /* ---------- Botanical plates (js/flores.js, laid out with _dev/flores.html) ----------
    A section that holds plates clips them and starts its own stacking context, so a plate with
    z-index -1 sits above the section's background and below its text. */

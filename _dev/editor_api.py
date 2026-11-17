@@ -28,7 +28,7 @@ REPO_FILES = ('index.html', 'playlist-admin.html')
 PHOTOS = {'hero-desktop': 'assets/hero-desktop.jpg', 'hero-mobile': 'assets/hero-mobile.jpg', 'foto-envio': 'assets/foto-envio.jpg'}
 TOKENS = ('paper', 'paper-deep', 'paper-line', 'olive', 'olive-deep', 'olive-soft', 'olive-wash', 'terracotta',
           'terracotta-deep', 'ink', 'ink-soft', 'ink-faint', 'cream-text', 'gold')
-SECTIONS = ('intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer')
+SECTIONS = ('intro', 'countdown', 'locations', 'timeline', 'mapa', 'rsvp', 'gifts', 'playlist', 'social', 'footer')
 COLOR = re.compile(r'^(#[0-9a-fA-F]{3,8}|rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(,\s*[\d.]+\s*)?\))$')
 BRANCH = re.compile(r'^[A-Za-z0-9._-]{1,60}(/[A-Za-z0-9._-]{1,60})?$')
 

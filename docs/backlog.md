@@ -14,6 +14,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 | 2 | **Flowers**: choose the botanical plates and place them | The editor's Flores tab (`docs/editor.md`), save on a branch. The layout on `main` is still empty. | checks desktop, cleans the cherry / apple / jonquilla cut-outs, merges |
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
 | 4 | **Bus details**: departure places and times, outward and return | Data doc (Confirmación table) or chat. Nothing about the buses is shown yet; the form only asks outward / return. | adds a line under "Buses" in the timeline and a note in the RSVP |
+| 4b | **Bus map** (branch `mapa-buses`, prototype of 2026-11-17): look at it and confirm the stops. The pins are approximate: the exact pick-up point at Cibeles, the exact drop-off at Avenida de América, and the order of the two stops on the way back (the map draws a separate way back to Avenida de América, which is a guess). | Editor or chat; a Google Maps pin per stop is enough. | corrects `STOPS` in `js/mapa.js` and the route, merges |
 | 5 | **Starting song list** for the playlist | Chat, one per line: `Title – Artist`. | turns it into an SQL insert for you to paste in Supabase → SQL Editor |
 | 6 | **Recommendations**: where to stay and how to get to the church | Chat or data doc: places, links, prices if any, and where the section goes. | builds the section in both languages |
 | 7 | **Bus block placement**: a note under the Buses stop or a small section after it | Chat. | builds it once A4 arrives |
@@ -31,6 +32,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 
 ## Future improvements (not planned yet)
 
+- **Bus map, finer points**: rivers (Jarama, Manzanares) and a wider drawn area are missing because the public OpenStreetMap servers were down on 2026-11-17 (`_dev/mapa_fetch.py` then `_dev/mapa_build.py`; to widen the area change `BB` and `S, W, N, E` together). More street names up close.
 - **Preview of the shared album in the Fotos section** (now only a link, decided 2026-11-17). Google Photos has no embed and no official way to read a shared album, so the options are:
   - *Fixed strip*: a few photos the couple chooses, saved in `assets/`, refreshed by hand. Stable, not live.
   - *Live strip*: a small separate Google Apps Script (not the RSVP one) reads the album's public share page and returns the latest ~6 thumbnail addresses; the site shows them and each opens the album. Unofficial, can break without notice, so it must fall back to the link alone. Not tested against the real album yet. A scheduled GitHub job writing the list to the repo is the alternative, at the cost of one commit per change.
