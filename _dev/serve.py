@@ -364,6 +364,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_api.revert(HERE, req['branch'], req))
             if p == '/_dev/api/sync':
                 return self.send_json(editor_api.sync(HERE, req['branch'], req))
+            if p == '/_dev/api/section':   # add or delete a section added with the editor
+                if req.get('action') == 'remove':
+                    return self.send_json(editor_api.section_remove(HERE, req['branch'], req, write_flores))
+                return self.send_json(editor_api.section_add(HERE, req['branch'], req))
         except editor_api.Conflict as e:
             return self.send_json({'ok': False, 'error': str(e), 'head': e.head}, 409)
         except editor_api.EditorError as e:
@@ -384,6 +388,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return self.send_json({'head': editor_api.head(wt)})
                 return self.send_json({'url': wt_url(wt), 'head': editor_api.head(wt),
                                        'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt),
+                                       'sections': editor_api.sections(wt),
                                        'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
             if p == '/_dev/api/history':
                 return self.send_json(editor_api.history(HERE, q['branch'][0]))

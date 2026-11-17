@@ -42,6 +42,7 @@
 .fake-btn { display: inline-block; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
   .ph-slot.drop { border-color: var(--acc); background: #fdf0f6; }
   .sec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; background: #fff; cursor: grab; }
+  .sec-row.locked { background: #f4f2ec; cursor: default; } .sec-row [data-lk] { padding: 1px 4px; } .sec-row [data-lk].on { background: #fff; border-color: var(--ink); } .sec-opts [data-del] { padding: 1px 7px; }
   .sec-row.off { opacity: .5; } .sec-row.over { border-color: var(--acc); } .sec-row span { flex: 1; } .sec-row button { padding: 1px 7px; }
   .sec-opts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .88em; color: var(--soft); cursor: default; }
   .sec-opts label { display: inline-flex; align-items: center; gap: 3px; } .sec-opts [data-rs] { margin-left: auto; } .sec-opts select { font-size: inherit; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
@@ -106,8 +107,16 @@
   .th:hover { border-color: var(--acc); }
   .th .im { aspect-ratio: 1 / 0.95; display: flex; align-items: flex-end; justify-content: center; } .th img { max-width: 100%; max-height: 100%; }
   .th span { display: block; font-size: .85em; margin-top: 3px; }
-  #stage { grid-area: stage; overflow: auto; padding: 14px; display: flex; justify-content: center; align-items: flex-start; }
-  #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; }
+  /* auto margins centre the page and, unlike align-items: center, keep all of it reachable by scrolling when it is zoomed in */
+  #stage { grid-area: stage; overflow: auto; padding: 0 14px 14px; display: flex; flex-direction: column; align-items: flex-start; }
+  #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; margin: 0 auto; }
+  /* phone view: a fixed screen (width and visible height of the chosen model) inside a bezel */
+  #wrap.phone { border-radius: 22px; box-shadow: 0 0 0 7px #23231f, 0 14px 30px rgba(0,0,0,.28); margin: 7px auto; }
+  #modelBar { flex: none; align-self: stretch; position: sticky; top: 0; left: 0; z-index: 2; height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--soft); font-size: 12px; background: var(--bg); }
+  #modelBar .zm { display: inline-flex; align-items: center; margin-left: 10px; border: 1px solid var(--line); border-radius: 7px; background: #fff; overflow: hidden; }
+  #modelBar .zm button { border: 0; border-radius: 0; background: transparent; padding: 2px 8px; height: 24px; line-height: 1; color: var(--ink); } #modelBar .zm button:hover:not(:disabled) { background: #f1efe8; }
+  #zVal { min-width: 52px; font-variant-numeric: tabular-nums; border-left: 1px solid var(--line) !important; border-right: 1px solid var(--line) !important; }
+  #modelBar select { field-sizing: content; border: 0; background: transparent; color: var(--ink); font-weight: 600; cursor: pointer; padding: 2px; border-radius: 5px; } #modelBar select:hover { background: #e3e0d7; }
   #f { border: 0; display: block; transform-origin: 0 0; background: #fff; }
   .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .row label { width: 6.2em; color: var(--soft); flex: none; }
   .row input[type=number], .row select { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
@@ -198,7 +207,7 @@
   <section class="tab" id="tab-secciones" hidden></section>
   <section class="tab" id="tab-historial" hidden></section>
 </aside>
-<main id="stage"><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
+<main id="stage"><div id="modelBar"><select id="model" title="Modelo de móvil: ancho y alto visible de la pantalla" aria-label="Modelo de móvil"></select><span id="modelSize"></span><span class="zm"><button id="zOut" title="Alejar (Ctrl + rueda)" aria-label="Alejar">−</button><button id="zVal" title="Volver al tamaño ajustado a la ventana"></button><button id="zIn" title="Acercar (Ctrl + rueda)" aria-label="Acercar">+</button></span></div><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
 <div class="gutter" id="gr" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="props"></aside>
 <div id="banners">
@@ -211,7 +220,8 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
+  let SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];   // replaced by the branch's own list (it may have sections added with the editor)
+  const secName = k => window.SITE && window.SITE.secLabel ? window.SITE.secLabel(k) : k;
   const SNAP = 6;
   let DRAFT = 'flores-draft';
   let pendingDraft = null;   // a flower draft from another session ({ items, base, head }), until the banner (editor-site.js) restores or drops it
@@ -674,7 +684,7 @@
   function buildLib() {
     $('libGrid').innerHTML = LIB.map(l => `<div class="th" data-id="${l.id}" title="Añadir ${l.label}"><div class="im"><img src="${BASE}assets/flores/${l.id}.png" alt=""></div><span>${l.label}</span></div>`).join('');
     if (!buildLib.wired) { $('libGrid').addEventListener('click', e => { const t = e.target.closest('.th'); if (t) add(t.dataset.id); }); buildLib.wired = true; }
-    $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECS.map(k => `<option>${k}</option>`).join('');
+    $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECS.map(k => `<option value="${k}">${esc(secName(k))}</option>`).join('');
   }
   function warnings(it) {
     if (geom(it).rot) return [];
@@ -772,10 +782,48 @@
   }
 
   // ---------- frame ----------
+  // Phone view: the frame is the chosen model's screen, width and height, so what fits on one screen
+  // here is what fits on that phone (the hero is 100svh). h is the visible height with the browser's
+  // bars showing (the screen minus about 185 px on iOS and 130 px on Android): approximate, it varies
+  // with the browser. A window too short for it scales the whole phone down instead of cutting it.
+  // Desktop view: 1200 px wide and as tall as the window allows.
+  const MODELS = [
+    { id: 'iphone14', name: 'iPhone 12 – 14', w: 390, h: 664 },
+    { id: 'iphone15', name: 'iPhone 15 – 16', w: 393, h: 667 },
+    { id: 'promax', name: 'iPhone Pro Max', w: 430, h: 747 },
+    { id: 'se', name: 'iPhone SE', w: 375, h: 548 },
+    { id: 'galaxy', name: 'Android pequeño (Galaxy S)', w: 360, h: 650 },
+    { id: 'pixel', name: 'Android grande (Pixel)', w: 412, h: 785 },
+  ];
+  let model = MODELS[0];
+  try { model = MODELS.find(m => m.id === localStorage.getItem('ed-model')) || model; } catch (e) {}
+  // Zoom: steps over the size that fits the window. The point in the middle of the view stays there.
+  const ZOOMS = [1, 1.25, 1.5, 2, 3, 4];
+  let zoom = 1, zoomAt = 0;
+  function setZoom(z) {
+    z = Math.max(ZOOMS[0], Math.min(ZOOMS[ZOOMS.length - 1], z)); if (z === zoom) return;
+    const st = $('stage'), fx = (st.scrollLeft + st.clientWidth / 2) / st.scrollWidth, fy = (st.scrollTop + st.clientHeight / 2) / st.scrollHeight;
+    zoom = z; fit();
+    st.scrollLeft = fx * st.scrollWidth - st.clientWidth / 2; st.scrollTop = fy * st.scrollHeight - st.clientHeight / 2;
+  }
+  const zoomStep = d => setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + d))]);
+  // Ctrl + wheel (or a pinch on a trackpad) over the page or around it; one step at a time
+  function onWheel(e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    if (Date.now() - zoomAt < 160 || !e.deltaY) return;
+    zoomAt = Date.now(); zoomStep(e.deltaY < 0 ? 1 : -1);
+  }
   function fit() {
-    const st = $('stage'), vw = dev === 'm' ? 390 : 1200, avail = st.clientWidth - 28, sc = Math.min(1, avail / vw), h = (st.clientHeight - 28) / sc;
+    const st = $('stage'), phone = dev === 'm', vw = phone ? model.w : 1200;
+    const availW = st.clientWidth - 28 - (phone ? 14 : 0), availH = st.clientHeight - 54 - (phone ? 14 : 0);
+    const base = phone ? Math.min(1, availW / vw, availH / model.h) : Math.min(1, availW / vw), h = phone ? model.h : availH / base;
+    const sc = base * zoom;   // zoom multiplies the size that fits the window: the page keeps its own width, it is only drawn bigger
     frame.style.width = vw + 'px'; frame.style.height = h + 'px'; frame.style.transform = 'scale(' + sc + ')';
     $('wrap').style.width = vw * sc + 'px'; $('wrap').style.height = h * sc + 'px';
+    $('wrap').classList.toggle('phone', phone); $('model').style.display = phone ? '' : 'none';
+    $('modelSize').textContent = phone ? `${model.w} × ${model.h}` : 'Escritorio · 1200 px de ancho';
+    $('zVal').textContent = Math.round(sc * 100) + ' %'; $('zOut').disabled = zoom <= ZOOMS[0]; $('zIn').disabled = zoom >= ZOOMS[ZOOMS.length - 1];
     setTimeout(renderAll, 60);
   }
   function setDev(d) { dev = d; $('devM').classList.toggle('on', d === 'm'); $('devD').classList.toggle('on', d === 'd'); fit(); drawProps(); }
@@ -787,6 +835,7 @@
     FLORES_OK = !!win.Flores;
     doc.addEventListener('click', e => { if (e.target.closest('a, button, label')) e.preventDefault(); }, true);
     doc.addEventListener('keydown', onKey);
+    doc.addEventListener('wheel', onWheel, { passive: false });
     if (window.SITE) window.SITE.onFrame(win, doc);
     if (!FLORES_OK) { $('libGrid').innerHTML = '<p class="hint">Esta rama no tiene las flores (js/flores.js). Usa otra rama para colocarlas.</p>'; fit(); if (window.SITE) window.SITE.offerDraft(); return; }
     const st = doc.createElement('style'); st.textContent = EDIT_CSS; doc.head.appendChild(st);
@@ -868,6 +917,10 @@
 
   // ---------- boot ----------
   $('devM').onclick = () => setDev('m'); $('devD').onclick = () => setDev('d');
+  $('model').innerHTML = MODELS.map(m => `<option value="${m.id}">${m.name}</option>`).join(''); $('model').value = model.id;
+  $('zIn').onclick = () => zoomStep(1); $('zOut').onclick = () => zoomStep(-1); $('zVal').onclick = () => setZoom(1);
+  $('stage').addEventListener('wheel', onWheel, { passive: false });
+  $('model').onchange = e => { model = MODELS.find(m => m.id === e.target.value) || model; try { localStorage.setItem('ed-model', model.id); } catch (er) {} fit(); };
   $('undo').onclick = undo; $('redo').onclick = redo; $('save').onclick = save;
   $('reload').onclick = () => frame.contentWindow.location.reload();
   $('guides').onchange = e => doc && doc.documentElement.classList.toggle('ed-guides', e.target.checked);
@@ -913,7 +966,8 @@
   // ---------- hooks for the site module (_dev/editor-site.js) ----------
   window.ED = {
     // load a branch: BASE is the URL of its worktree; flower state starts from its layout
-    open(base, branch) {
+    open(base, branch, secs) {
+      if (Array.isArray(secs) && secs.length) SECS = secs.slice();
       BASE = base; DRAFT = 'flores-draft:' + branch; pendingDraft = null; items = []; saved = '[]'; sel = null; tsel = null; tpos = {}; multi = new Set(); undoSt = []; redoSt = []; load.done = false; FLORES_OK = false;
       LIB = []; $('libGrid').innerHTML = '';
       fetch(BASE + 'assets/flores/flores.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(l => { LIB = l; if (LIB.length) buildLib(); drawProps(); }).catch(() => {});

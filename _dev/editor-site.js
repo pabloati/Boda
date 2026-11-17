@@ -8,7 +8,9 @@
   const ED = window.ED;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  const SECTIONS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
+  let SECTIONS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
+  // a section added with the editor (extra-N) is called by its own title
+  const secLabel = s => LABELS[s] || (/^extra-\d+$/.test(s) && texts['extra' + s.slice(6) + '.title'] ? plain((textEdits['extra' + s.slice(6) + '.title'] || {}).es || texts['extra' + s.slice(6) + '.title'].es) || s : s);
   const LABELS = { hero: 'Portada', intro: 'Cita', countdown: 'Cuenta atrás', locations: 'Dónde y cuándo', timeline: 'Hoja de ruta', rsvp: 'Confirmación', gifts: 'Regalo', playlist: 'Playlist', social: 'Fotos', footer: 'Pie', envelope: 'Sobre', other: 'Otros' };
   const TOKENS = [['paper', 'Fondo'], ['paper-deep', 'Secciones alternas'], ['paper-line', 'Líneas y bordes'], ['olive', 'Bandas verdes'], ['olive-deep', 'Verde oscuro'], ['olive-soft', 'Verde suave'], ['terracotta', 'Botón y enlaces'], ['terracotta-deep', 'Botón (al pasar)'], ['ink', 'Texto'], ['ink-soft', 'Texto secundario'], ['ink-faint', 'Texto tenue'], ['cream-text', 'Texto sobre verde'], ['gold', 'Dorado']];
   const PHOTOS = [
@@ -40,7 +42,7 @@
   // ---------- state ----------
   let branch = null, texts = {}, textEdits = {}, look = blankLook(), savedLook = '', photos = {}, selText = null, tab = 'flores', saving = false;
   let FONTS = {}, FALLBACK = {};   // the curated fonts per role, from the server (editor_api.FONTS)
-  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [], fonts: {}, bg: {}, space: {} }; }
+  function blankLook() { return { tokens: {}, frame: {}, order: [], hidden: [], text: {}, palettes: [], fonts: {}, bg: {}, space: {}, locked: [] }; }
   let palEdit = null;   // the palette being built in the Colores tab: { idx, name, before }
   let head = null;           // the branch's commit when it was opened (or last saved here): the server refuses a save on top of a newer one
   let remoteHead = null, remoteHidden = null;   // a newer commit seen by the poll, and the one whose banner was closed
@@ -280,7 +282,8 @@
     look = Object.assign(blankLook(), st.look || {}); savedLook = JSON.stringify(look);
     head = st.head || null; remoteHead = null; remoteHidden = null; conflict = null; histErr = '';
     hideDraftBanner(); sitePending = readSiteDraft(); draftHold = true; draftOffered = false;
-    ED.open(st.url, b); ED.setTextPos(look.text);
+    if (Array.isArray(st.sections) && st.sections.length) SECTIONS = st.sections;
+    ED.open(st.url, b, SECTIONS); ED.setTextPos(look.text);
     palEdit = null; syncSt = null; renderSync(); syncNote('');
     renderTab(); status(); checkSync();
     if (tab !== 'flores') panel();   // the flower editor redraws its own panel once the branch loads
@@ -349,7 +352,7 @@
       <p class="hint">También puedes hacer clic en un texto de la web.</p>` +
       order.filter(g => groups[g]).map(g => {
         const ks = groups[g].filter(k => !ql || plain(cur(k).es).toLowerCase().includes(ql) || plain(cur(k).en).toLowerCase().includes(ql));
-        return ks.length ? `<div class="pl-sec">${LABELS[g] || g}</div>` + ks.map(k => `<button class="t-item${k === selText ? ' on' : ''}${textEdits[k] ? ' mod' : ''}" data-k="${esc(k)}" title="${esc(plain(cur(k).es))}">${esc(plain(cur(k).es) || k)}</button>`).join('') : '';
+        return ks.length ? `<div class="pl-sec">${secLabel(g)}</div>` + ks.map(k => `<button class="t-item${k === selText ? ' on' : ''}${textEdits[k] ? ' mod' : ''}" data-k="${esc(k)}" title="${esc(plain(cur(k).es))}">${esc(plain(cur(k).es) || k)}</button>`).join('') : '';
       }).join('');
     const s = box.querySelector('.search');
     s.oninput = () => { const pos = s.selectionStart; renderTexts(); const n = $('tab-textos').querySelector('.search'); n.focus(); n.setSelectionRange(pos, pos); };
@@ -610,16 +613,60 @@
   // every section on the page: the saved order first, then any it does not mention, in page order
   function currentOrder() {
     const onPage = SECTIONS.filter(s => ED.doc && (s === 'footer' ? ED.doc.querySelector('.footer-section') : ED.doc.getElementById(s)));
-    return [...look.order.filter(s => onPage.includes(s)), ...onPage.filter(s => !look.order.includes(s))];
+    const o = look.order.filter(s => onPage.includes(s)), rest = onPage.filter(s => !look.order.includes(s));
+    o.splice(o.length && o[o.length - 1] === 'footer' ? o.length - 1 : o.length, 0, ...rest);   // new ones before the footer, as write_look() does
+    return o;
+  }
+  // Adding or deleting a section changes the page itself, so it is a save of its own (POST
+  // /_dev/api/section) and not one more unsaved change: it needs everything else saved first.
+  let secDraft = { t: '', x: '' }, gotoAfter = null;
+  async function sectionCall(body, doing, done) {
+    if (saving) return null;
+    if (dirtyParts().length) { status('Guarda o descarta tus cambios antes de añadir o eliminar una sección', true); return null; }
+    const who = $('who').value.trim();
+    if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); $('who').focus(); return null; }
+    saving = true; status(doing);
+    let out = null;
+    try {
+      const r = await fetch('/_dev/api/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ branch, who, push: $('push').checked, head }, body)) });
+      let j = {}; try { j = await r.json(); } catch (e) {}
+      if (r.status === 409) throw new Error('alguien ha guardado en esta rama: recárgala y prueba otra vez');
+      if (!r.ok || !j.ok) throw new Error(j.error || 'error ' + r.status);
+      saving = false; out = j; gotoAfter = j.id || null;
+      await openBranch(branch);
+      const pushed = j.pushed === true ? ' · subido a GitHub' : (j.pushed ? ' · NO se pudo subir: ' + j.pushed : '');
+      status(`${done} (${j.commit})${pushed}`, !!(j.pushed && j.pushed !== true), true);
+    } catch (e) { status('No se pudo: ' + e.message, true); }
+    saving = false; checkSync();
+    return out;
+  }
+  async function addSection() {
+    const t = secDraft.t.trim();
+    if (!t) { status('Escribe el título de la sección', true); $('secNewT').focus(); return; }
+    if (await sectionCall({ action: 'add', title: t, text: secDraft.x.trim() }, 'Añadiendo la sección…', 'Sección añadida: su texto en inglés se escribe en la pestaña Textos')) secDraft = { t: '', x: '' };
+    if (tab === 'secciones') renderSections();
+  }
+  function removeSection(s) {
+    const own = /^extra-\d+$/.test(s);
+    if (!confirm(`¿Eliminar del todo la sección «${secLabel(s)}»?\n\n${own ? 'Se borran su texto y las flores que tenga.' : 'Viene con la web: se quita de la página con todo lo que tiene dentro (textos, formulario o botones) y las flores que tenga. Si solo quieres que no se vea, usa su casilla.'}\n\nSe puede recuperar desde el Historial.`)) return;
+    sectionCall({ action: 'remove', id: s }, 'Eliminando la sección…', 'Sección eliminada');
   }
   function renderSections() {
     const box = $('tab-secciones'), order = currentOrder();
     const opt = (v, label, on) => `<option value="${v}"${on ? ' selected' : ''}>${label}</option>`;
-    const spaceSel = (s, i) => { const v = (look.space[s] || [0, 0])[i]; return `<select data-sp="${i}">${SPACE_OPTS.map(([n, l]) => opt(n, l, n === v)).join('')}</select>`; };
-    box.innerHTML = '<h2>Secciones</h2><p class="hint">Arrastra para cambiar el orden. La casilla las muestra u oculta. La portada va siempre primero.</p>' +
-      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}" draggable="true" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'} title="Mostrar"><span>${LABELS[s] || s}</span><button data-mv="-1"${i ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 ? '' : ' disabled'}>↓</button>
-        <div class="sec-opts"><label>Fondo <select data-bg>${opt('', 'Como está', !look.bg[s])}${BG_OPTS.map(([v, l]) => opt(v, l, look.bg[s] === v)).join('')}</select></label><label>Arriba ${spaceSel(s, 0)}</label><label>Abajo ${spaceSel(s, 1)}</label><button data-rs title="Fondo y espacio como en la web"${look.bg[s] || look.space[s] ? '' : ' disabled'}>↺</button></div></div>`).join('') +
-      `<div class="btns" style="margin-top:8px"><button id="secReset"${look.order.length || look.hidden.length ? '' : ' disabled'}>Orden original, todas visibles</button></div>`;
+    const spaceSel = (s, i) => { const v = (look.space[s] || [0, 0])[i]; return `<select data-sp="${i}"${dis(s)}>${SPACE_OPTS.map(([n, l]) => opt(n, l, n === v)).join('')}</select>`; };
+    const lk = s => (look.locked || []).includes(s), dis = s => lk(s) ? ' disabled' : '';
+    box.innerHTML = '<h2>Secciones</h2><p class="hint">Arrastra para cambiar el orden. La casilla oculta una sección sin borrarla; «Eliminar» la quita de la web del todo (se recupera desde el Historial). El candado bloquea una sección: no se puede eliminar, ocultar, mover ni cambiarle el fondo hasta que lo abras. La portada va siempre primero.</p>' +
+      order.map((s, i) => `<div class="sec-row${look.hidden.includes(s) ? ' off' : ''}${lk(s) ? ' locked' : ''}" draggable="${!lk(s)}" data-s="${s}"><input type="checkbox"${look.hidden.includes(s) ? '' : ' checked'}${dis(s)} title="Mostrar"><span>${esc(secLabel(s))}</span><button data-lk class="${lk(s) ? 'on' : ''}" title="${lk(s) ? 'Bloqueada: pulsa para desbloquearla' : 'Bloquear: que no se pueda eliminar, ocultar, mover ni cambiar el fondo'}">${lk(s) ? '🔒' : '🔓'}</button><button data-mv="-1"${i && !lk(s) ? '' : ' disabled'}>↑</button><button data-mv="1"${i < order.length - 1 && !lk(s) ? '' : ' disabled'}>↓</button>
+        <div class="sec-opts"><label>Fondo <select data-bg${dis(s)}>${opt('', 'Como está', !look.bg[s])}${BG_OPTS.map(([v, l]) => opt(v, l, look.bg[s] === v)).join('')}</select></label><label>Arriba ${spaceSel(s, 0)}</label><label>Abajo ${spaceSel(s, 1)}</label><button data-rs title="Fondo y espacio como en la web"${(look.bg[s] || look.space[s]) && !lk(s) ? '' : ' disabled'}>↺</button>${lk(s) ? '' : '<button data-del class="danger" title="Quitar esta sección de la web del todo">Eliminar</button>'}</div></div>`).join('') +
+      `<div class="btns" style="margin-top:8px"><button id="secReset"${look.order.length || look.hidden.length ? '' : ' disabled'}>Orden original, todas visibles</button></div>
+      <h2 style="margin-top:16px">Añadir una sección</h2>
+      <p class="hint">Un título y un texto, como «Regalo» o «Fotos». Aparece al final, antes del cierre, y luego la mueves, le cambias el fondo o le pones flores como a las demás. Se guarda al momento en la rama.</p>
+      <input class="search" id="secNewT" maxlength="120" placeholder="Título (p. ej. Cómo llegar)" value="${esc(secDraft.t)}">
+      <textarea id="secNewX" maxlength="2000" placeholder="Texto">${esc(secDraft.x)}</textarea>
+      <div class="btns" style="margin-top:6px"><button id="secAdd" class="primary">Añadir sección</button></div>`;
+    $('secNewT').oninput = e => { secDraft.t = e.target.value; }; $('secNewX').oninput = e => { secDraft.x = e.target.value; };
+    $('secAdd').onclick = addSection;
     let drag = null;
     box.querySelectorAll('.sec-row').forEach(row => {
       const s = row.dataset.s;
@@ -630,12 +677,14 @@
         if (sp[0] || sp[1]) look.space[s] = sp; else delete look.space[s];
         applyLook(); renderSections();
       });
+      if (row.querySelector('[data-del]')) row.querySelector('[data-del]').onclick = () => removeSection(s);
+      row.querySelector('[data-lk]').onclick = () => { look.locked = lk(s) ? look.locked.filter(x => x !== s) : [...(look.locked || []), s]; status(); renderSections(); };
       row.querySelector('[data-rs]').onclick = () => { delete look.bg[s]; delete look.space[s]; applyLook(); renderSections(); };
       row.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => move(s, +b.dataset.mv));
       row.ondragstart = () => { drag = s; };
       row.ondragover = e => { e.preventDefault(); row.classList.add('over'); };
       row.ondragleave = () => row.classList.remove('over');
-      row.ondrop = e => { e.preventDefault(); if (drag && drag !== s) { const o = currentOrder().filter(x => x !== drag); o.splice(o.indexOf(s), 0, drag); look.order = o; applyLook(); renderSections(); } };
+      row.ondrop = e => { e.preventDefault(); row.classList.remove('over'); if (drag && drag !== s) { const o = currentOrder().filter(x => x !== drag); o.splice(o.indexOf(s), 0, drag); look.order = o; applyLook(); renderSections(); } };
     });
     $('secReset').onclick = () => { look.order = []; look.hidden = []; applyLook(); renderSections(); };
   }
@@ -1056,7 +1105,8 @@
     doc.addEventListener('click', e => { if (editing && editing.el.contains(e.target) && e.target.closest('summary')) e.preventDefault(); }, true);
     doc.documentElement.classList.toggle('ed-mode-textos', tab === 'textos');
     applyLook(); applyTexts(); applyPhotos();
-    if (!$('goto').options.length) $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECTIONS.map(k => `<option>${k}</option>`).join('');
+    $('goto').innerHTML = '<option value="">Ir a sección…</option>' + SECTIONS.map(k => `<option value="${k}">${esc(secLabel(k))}</option>`).join('');
+    if (gotoAfter) { const el = doc.getElementById(gotoAfter); gotoAfter = null; if (el) setTimeout(() => el.scrollIntoView({ block: 'center' }), 300); }
     renderTab(); ED.fit(); status();
   }
   function onPointer(e) {
@@ -1069,7 +1119,7 @@
   // ---------- boot ----------
   // the flower editor moved a text (or undid a move): mirror it in the look and repaint
   function textChanged() { look.text = ED.textPos(); applyLook(); }
-  window.SITE = { save, status, head: () => head, sameHead, merge3, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
+  window.SITE = { secLabel, save, status, head: () => head, sameHead, merge3, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
     dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL,
     colourRow, wireColourRows, normHex,   // the text style panel in _dev/flores.html reuses the colour row
     edits: () => JSON.parse(JSON.stringify(textEdits)), editing: () => editing && editing.k };   // the texts changed (and the one being written), for tests

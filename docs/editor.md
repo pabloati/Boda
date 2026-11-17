@@ -30,6 +30,15 @@ replaces it, so anything `write_look()` writes must be mirrored there.
   container wrote to `BODA_PUBLIC_LINK_FILE` (`GET /_dev/api/public`). A server without a tunnel
   (plain `serve.py`) shows no QR, only how to get one, since the phone cannot reach it. The phone
   logs in once and lands on the preview. The QR is drawn locally by `_dev/qr.js`, no library.
+- **Móvil / Escritorio.** The phone view is a fixed screen: the width and the visible height of
+  the model chosen above the frame (`MODELS` in `flores.html`, default iPhone 12 – 14, 390 × 664;
+  the choice is remembered per browser). The height is the screen minus the browser's bars (about
+  185 px on iOS, 130 px on Android), so it is approximate. A window too short for the phone scales
+  it down whole instead of cutting it. The desktop view is 1200 px wide and as tall as the window.
+- **Zoom** (− / % / + above the page, or Ctrl + wheel over it) draws the page bigger in steps up
+  to four times the size that fits the window. The page keeps its own width, so nothing reflows:
+  it is only for placing things more finely. The percentage is the real scale; clicking it goes
+  back to the fitted size.
 - **Sincronizar** brings the open branch level with GitHub, for work done outside the editor
   (another computer, a Claude session) and pushed there. It fetches, brings in the commits the
   editor lacks (fast-forward, or a merge commit `sincronizar: unir <branch> con GitHub` when there
@@ -49,6 +58,31 @@ replaces it, so anything `write_look()` writes must be mirrored there.
   reads `publicar: <branch> (editor, <who>)`. «Publicar ahora» sends the branch commit the list was
   made from; if someone saved on the branch since, nothing is published (409) and the panel shows
   the new list to confirm again.
+
+## Adding and deleting sections
+
+The Secciones tab can add a section: a script heading and a paragraph. It is written into
+`index.html` as `<section class="section extra-section" id="extra-N">` just before the footer, with
+its texts under `extraN.title` and `extraN.text` (the English entries start as a copy of the
+Spanish and are rewritten in the Textos tab). From then on it is a section like the rest: order,
+background, spacing, flowers and moved texts all work on it, because the section list is read from
+the page (`editor_api.sections()`, sent to the editor in `/_dev/api/state`).
+
+«Eliminar» takes any section out of the page for good, the original ones included: its markup
+(with the comment line above it), the flowers placed on it and what `editor.css` says about it
+(order, background, spacing, moved texts). An added section also loses its English entries; the
+original ones keep theirs in `js/i18n.js`, because scripts may use the same keys and an unused
+entry does no harm. The site's scripts null-guard every lookup, so a missing section breaks
+nothing. It is refused on `main` (delete on a branch and publish it). The checkbox still hides a
+section without deleting it.
+
+The padlock locks a section (`locked` in the editor state of `editor.css`, saved with «Guardar»):
+its row cannot be deleted, hidden, moved or restyled until it is unlocked, and the server refuses
+to delete it. The lock covers the section's row, not the texts and flowers inside it.
+
+Both are saves of their own (`POST /_dev/api/section`, one commit each), since they change the
+page the editor is showing: they need everything else saved first, and they can be undone from the
+Historial.
 
 ## Safety
 

@@ -274,6 +274,8 @@ def write_texts(wt, changes):
             if pat.search(block):
                 block = pat.sub(lambda m: m.group(1) + _js_literal(en), block, count=1)
             else:
+                if not block.rstrip().endswith((',', '{')):   # the map's last entry may come without its comma
+                    block = block.rstrip() + ','
                 block += "\n    '%s': %s," % (key, _js_literal(en))
             js = js[:a] + block + js[b:]
         done.append(key)
@@ -446,13 +448,18 @@ def write_look(wt, look):
     """look: {tokens: {name: color}, frame: {slot: [x, y]}, order: [ids], hidden: [ids],
     text: {key: {x, y, z, size?, color?, align?, font?, d?: {same}}}, palettes: [{name, tokens}],
     fonts: {serif?, script?, hand?: family from FONTS},
-    bg: {section: 'paper' | 'alt' | 'olive'}, space: {section: [top, bottom]} with -1 | 0 | 1}."""
+    bg: {section: 'paper' | 'alt' | 'olive'}, space: {section: [top, bottom]} with -1 | 0 | 1,
+    locked: [ids]}."""
     tokens = {k: v.strip() for k, v in (look.get('tokens') or {}).items() if k in TOKENS and COLOR.match(str(v).strip())}
     frame = {k: [_pct(v[0], 50), _pct(v[1], 50)] for k, v in (look.get('frame') or {}).items() if k in PHOTOS and isinstance(v, list) and len(v) == 2}
-    order = [s for s in (look.get('order') or []) if s in SECTIONS]
-    if order:   # a partial order would leave the rest at order 0, before it: complete it in page order
-        order += [s for s in SECTIONS if s not in order]
-    hidden = [s for s in (look.get('hidden') or []) if s in SECTIONS]
+    SECS = sections(wt)   # the fixed ones plus the ones added with the editor (extra-N)
+    order = [s for s in (look.get('order') or []) if s in SECS]
+    if order:   # a partial order would leave the rest at order 0, before it: complete it (new ones go before the footer)
+        rest = [s for s in SECS if s not in order]
+        at = len(order) - 1 if order[-1] == 'footer' else len(order)
+        order[at:at] = rest
+    hidden = [s for s in (look.get('hidden') or []) if s in SECS]
+    locked = [s for s in (look.get('locked') or []) if s in SECS]   # editor only: cannot be deleted, hidden, moved or restyled
     text = {}   # moved texts: the data-i18n key (or #id) of a heading or paragraph
     for k, v in (look.get('text') or {}).items():
         p = _tplace(v) if TEXT_KEY.match(str(k)) else None
@@ -479,14 +486,16 @@ def write_look(wt, look):
     raw_bg, raw_space = look.get('bg'), look.get('space')
     raw_bg = raw_bg if isinstance(raw_bg, dict) else {}
     raw_space = raw_space if isinstance(raw_space, dict) else {}
-    bg = {s: raw_bg[s] for s in SECTIONS if raw_bg.get(s) in BG}
+    bg = {s: raw_bg[s] for s in SECS if raw_bg.get(s) in BG}
     space = {}
-    for s in SECTIONS:
+    for s in SECS:
         v = raw_space.get(s)
         if isinstance(v, list) and len(v) == 2 and all(type(x) is int and x in SPACE for x in v) and any(v):
             space[s] = v
     state = {'tokens': tokens, 'frame': frame, 'order': order, 'hidden': hidden, 'text': text, 'palettes': palettes,
              'fonts': fonts, 'bg': bg, 'space': space}
+    if locked:
+        state['locked'] = locked
     sel = lambda s: '.footer-section' if s == 'footer' else '#' + s
     css = ['/* Written by the site editor (_dev/flores.html): edit it there, not by hand.',
            '   Loaded after styles.css. Delete this file to go back to styles.css alone. */',
@@ -513,7 +522,7 @@ def write_look(wt, look):
         css.extend('%s { order: %d; }' % (sel(s), i + 1) for i, s in enumerate(order))
     if hidden:
         css.append('%s { display: none !important; }' % ', '.join(sel(s) for s in hidden))
-    for s in SECTIONS:
+    for s in SECS:
         css.extend(section_css(sel(s), s, bg.get(s), space.get(s)))
     rule = lambda r: '%s { %s; }' % (r[0], '; '.join(r[1]))
     for k, p in text.items():
@@ -542,6 +551,154 @@ def write_look(wt, look):
                      lambda m: m.group(1) + '\n  <link rel="stylesheet" href="css/editor.css?v=0">', src, count=1)
         open(path, 'w', encoding='utf-8').write(src)
     return ['css/editor.css', 'index.html']
+
+
+# ---------- sections added with the editor ----------
+# A new section is a script heading and a paragraph, like the simple ones on the page. It lives in
+# index.html as <section id="extra-N"> just before the footer, with the texts under the keys
+# extraN.title and extraN.text (English in js/i18n.js), so every other tool of the editor (texts,
+# order, background, flowers, moved texts) treats it like any other. Adding and deleting are saves
+# of their own: the page itself changes, so they cannot wait among the unsaved changes.
+
+EXTRA = re.compile(r'^extra-(\d{1,3})$')
+_FOOTER = re.compile(r'[ \t]*(?:<!-- FOOTER -->\s*)?<footer\b[^>]*\bclass="[^"]*\bfooter-section\b')
+
+
+def sections(wt):
+    """Section ids in page order: the fixed ones still on the page, with the added ones before the footer."""
+    try:
+        src = open(os.path.join(wt, 'index.html'), encoding='utf-8').read()
+    except FileNotFoundError:
+        return list(SECTIONS)
+    extra = re.findall(r'<section\b[^>]*\bid="(extra-\d{1,3})"', src)
+    fixed = [s for s in SECTIONS[:-1] if re.search(r'<section\b[^>]*\bid="%s"' % s, src)]
+    return fixed + extra + (['footer'] if _FOOTER.search(src) else [])
+
+
+def _section_span(src, sid):
+    """(start, end) of a section's whole block in the page, with the comment line right above it and
+    the blank line after; None if it is not there. Nested tags of the same name are matched."""
+    if sid == 'footer':
+        m, tag = re.search(r'<footer\b[^>]*\bclass="[^"]*\bfooter-section\b[^>]*>', src), 'footer'
+    else:
+        m, tag = re.search(r'<section\b[^>]*\bid="%s"[^>]*>' % re.escape(sid), src), 'section'
+    if not m:
+        return None
+    depth, pos, pat = 1, m.end(), re.compile(r'<(/?)%s\b[^>]*>' % tag, re.I)
+    while depth:
+        n = pat.search(src, pos)
+        if not n:
+            return None
+        depth += -1 if n.group(1) else 1
+        pos = n.end()
+    start = src.rfind('\n', 0, m.start()) + 1
+    if src[start:m.start()].strip():
+        start = m.start()   # something else shares the line: leave it
+    above = re.search(r'(?:^|\n)([ \t]*<!--(?:(?!-->).)*-->[ \t]*\n)$', src[:start], re.S)
+    if above and '\n' not in above.group(1).rstrip('\n'):
+        start -= len(above.group(1))
+    end = re.match(r'[ \t]*\n?(?:[ \t]*\n)?', src[pos:]).end() + pos
+    return start, end
+
+
+def _section_text(v, default, limit):
+    v = re.sub(r'\r?\n', '<br>', str(v or '').strip()[:limit])
+    return clean_html(v).strip() or default
+
+
+def _finish(wt, branch, files, msg, payload):
+    """Stamp, stage and commit a change the editor made outside «Guardar»."""
+    files = sorted(set(files + bump(wt, [])))
+    run(wt, 'add', '--', *files)
+    return _commit(wt, branch, msg, payload.get('push'))
+
+
+def section_add(repo, branch, payload):
+    wt = open_branch(repo, branch)
+    with branch_lock(branch):
+        check_head(wt, payload)
+        path = os.path.join(wt, 'index.html')
+        src = open(path, encoding='utf-8').read()
+        m = _FOOTER.search(src) or re.search(r'[ \t]*</main>', src)   # before the footer, or last if there is none
+        if not m:
+            raise EditorError('No encuentro dónde poner la sección en la página: %s.' % ASK)
+        n = max([int(x) for x in re.findall(r'\bid="extra-(\d{1,3})"', src)] + [0]) + 1
+        if n > 99:
+            raise EditorError('Demasiadas secciones añadidas')
+        sid, key = 'extra-%d' % n, 'extra%d' % n
+        title = _section_text(payload.get('title'), 'Nueva sección', 120)
+        text = _section_text(payload.get('text'), 'Escribe aquí el texto.', 2000)
+        block = ('    <!-- EXTRA %d (added with the site editor) -->\n'
+                 '    <section class="section extra-section" id="%s">\n'
+                 '      <div class="container narrow text-center">\n'
+                 '        <h2 class="h-script" data-i18n="%s.title">%s</h2>\n'
+                 '        <p class="section-lead" data-i18n="%s.text">%s</p>\n'
+                 '      </div>\n'
+                 '    </section>\n\n' % (n, sid, key, title, key, text))
+        open(path, 'w', encoding='utf-8').write(src[:m.start()] + block + src[m.start():])
+        # English starts as the Spanish, so nothing shows as missing; it is rewritten in the Textos tab
+        files = write_texts(wt, {key + '.title': {'en': _section_text(payload.get('title_en'), title, 120)},
+                                 key + '.text': {'en': _section_text(payload.get('text_en'), text, 2000)}})
+        look = read_look(wt)
+        if look.get('order'):   # an explicit order: the new section needs its place in it
+            files += write_look(wt, look)
+        plain = re.sub(r'<[^>]+>', ' ', title).strip()[:60]
+        out = _finish(wt, branch, files + ['index.html'], 'editor (%s): nueva sección %s («%s»)' % (_who(payload), sid, plain), payload)
+        out['id'] = sid
+        return out
+
+
+def section_remove(repo, branch, payload, write_flores):
+    """Delete a section from the page: its markup, the flowers placed on it and what the look says
+    about it. A section added with the editor also loses its English texts; the fixed ones keep
+    theirs in js/i18n.js (scripts may use the same keys, and an unused entry does no harm). The
+    site's scripts look every element up before using it, so a missing section breaks nothing.
+    Refused for a locked section (look.locked) and on main, where it would go live unseen."""
+    sid = str(payload.get('id') or '')
+    wt = open_branch(repo, branch)
+    if sid not in sections(wt):
+        raise EditorError('Esa sección ya no está en la página')
+    if branch == 'main':
+        raise EditorError('Estás en main, que es la web publicada: elimina la sección en una rama y publícala')
+    with branch_lock(branch):
+        check_head(wt, payload)
+        look = read_look(wt)
+        if sid in (look.get('locked') or []):
+            raise EditorError('Esa sección está bloqueada: desbloquéala (y guarda) antes de eliminarla')
+        path = os.path.join(wt, 'index.html')
+        src = open(path, encoding='utf-8').read()
+        span = _section_span(src, sid)
+        if not span:
+            raise EditorError('No encuentro esa sección en la página: %s.' % ASK)
+        block = src[span[0]:span[1]]
+        t = re.search(r'<h[1-6]\b[^>]*>(.*?)</h[1-6]>', block, re.S)
+        plain = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', t.group(1))).strip()[:60] if t else sid
+        open(path, 'w', encoding='utf-8').write(src[:span[0]] + src[span[1]:])
+        files = ['index.html']
+        m = EXTRA.match(sid)
+        if m:
+            key = 'extra%d.' % int(m.group(1))
+            js_path = os.path.join(wt, 'js', 'i18n.js')
+            js = open(js_path, encoding='utf-8').read()
+            a, b = _en_block(js)
+            en = re.sub(r"\n[ \t]*'%s[\w.-]*':\s*%s,?" % (re.escape(key), JS_STR), '', js[a:b])
+            if en != js[a:b]:
+                open(js_path, 'w', encoding='utf-8').write(js[:a] + en + js[b:])
+                files.append('js/i18n.js')
+        lay = os.path.join(wt, 'js', 'flores-layout.js')
+        if os.path.exists(lay):
+            items = [json.loads(l.strip().rstrip(',')) for l in open(lay, encoding='utf-8').read().split('\n') if l.strip().startswith('{')]
+            if any(i.get('sec') == sid for i in items):
+                files.append(write_flores(wt, [i for i in items if i.get('sec') != sid]))
+        if look:
+            for k in ('order', 'hidden'):
+                look[k] = [x for x in look.get(k) or [] if x != sid]
+            for k in ('bg', 'space'):
+                (look.get(k) or {}).pop(sid, None)
+            gone = set(re.findall(r'\bdata-i18n="([^"]+)"', block)) | {'#' + i for i in re.findall(r'\bid="([^"]+)"', block)}
+            look['text'] = {k: v for k, v in (look.get('text') or {}).items() if k not in gone}   # moved or styled texts that were in it
+            files += write_look(wt, look)
+        return _finish(wt, branch, files, 'editor (%s): eliminar sección %s («%s»)' % (_who(payload), sid, plain), payload)
 
 
 # ---------- photos ----------
