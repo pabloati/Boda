@@ -59,7 +59,7 @@
     else if (note && !parts.length) { msg = note.msg; bad = note.bad; }
     else note = null;
     el.textContent = msg || (parts.length ? 'Sin guardar: ' + parts.join(', ') : 'Sin cambios');
-    el.classList.toggle('dirty', !!bad || (!msg && parts.length > 0));
+    el.classList.toggle('dirty', !!bad || (!msg && parts.length > 0)); el.title = el.textContent;
     scheduleDraft(); renderRemote();
   }
   const sameHead = (a, b) => !!a && !!b && (a.startsWith(b) || b.startsWith(a));
@@ -251,9 +251,13 @@
   }
 
   // ---------- branch ----------
-  async function loadBranches(pick) {
+  async function listBranches() {
     const list = await (await fetch('/_dev/api/branches', { cache: 'no-store' })).json();
     $('branch').innerHTML = list.map(b => `<option value="${esc(b.branch)}">${esc(b.branch)}${b.branch === 'main' ? ' (web publicada)' : ''}</option>`).join('') + '<option value="__new">＋ Nueva rama…</option>';
+    return list;
+  }
+  async function loadBranches(pick) {
+    const list = await listBranches();
     const want = pick || (() => { try { return localStorage.getItem('ed-branch'); } catch (e) { return null; } })();
     const b = list.find(x => x.branch === want) ? want : (list.find(x => x.branch === 'editor') ? 'editor' : list[0].branch);
     $('branch').value = b;
@@ -277,8 +281,8 @@
     head = st.head || null; remoteHead = null; remoteHidden = null; conflict = null; histErr = '';
     hideDraftBanner(); sitePending = readSiteDraft(); draftHold = true; draftOffered = false;
     ED.open(st.url, b); ED.setTextPos(look.text);
-    palEdit = null;
-    renderTab(); status();
+    palEdit = null; syncSt = null; renderSync(); syncNote('');
+    renderTab(); status(); checkSync();
     if (tab !== 'flores') panel();   // the flower editor redraws its own panel once the branch loads
   }
   function newBranchForm(p) {
@@ -778,7 +782,7 @@
     if (Object.keys(textEdits).length) payload.texts = textEdits;
     if (lookDirty()) payload.look = look;
     if (Object.keys(photos).length) payload.photos = photos;
-    saving = true; status('Guardando…');
+    saving = true; syncNote(''); status('Guardando…');
     try {
       const r = await fetch('/_dev/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const j = await r.json();
@@ -801,7 +805,7 @@
         await openBranch(branch); status(msg, bad, true);
       }
     } catch (e) { status('No se pudo guardar: ' + e.message, true); }
-    saving = false;
+    saving = false; checkSync();
   }
 
   // ---------- "Ver en mi móvil": link and QR of this branch's last save ----------
@@ -954,6 +958,65 @@
     }
   }
 
+  // ---------- "Sincronizar": bring the open branch level with GitHub ----------
+  // For work done outside the editor (another computer, a Claude session) and pushed to GitHub.
+  // The badge counts what is waiting each way (GET /_dev/api/sync, which fetches at most every two
+  // minutes); the button brings the new commits in and pushes the saves GitHub lacks (POST). With
+  // unsaved changes nothing is brought in: the server refuses and says to save or discard first.
+  let syncSt = null, syncing = false;   // syncSt: the last answer, { branch, ahead, behind, remote, fetched }
+  function renderSync() {
+    const bt = $('sync'), n = $('syncN'); if (!bt || !n) return;
+    const s = syncSt && syncSt.branch === branch ? syncSt : null, main = branch === 'main';
+    const down = s && s.behind ? s.behind : 0, up = s && s.ahead && !main ? s.ahead : 0;
+    n.textContent = [down && '↓' + down, up && (s.remote ? '↑' + up : '↑')].filter(Boolean).join(' '); n.hidden = !n.textContent;
+    bt.classList.toggle('busy', syncing); bt.disabled = syncing || !branch;
+    const tip = [down && (down === 1 ? 'hay 1 cambio nuevo en GitHub' : `hay ${down} cambios nuevos en GitHub`),
+      up && (!s.remote ? 'esta rama todavía no está en GitHub' : up === 1 ? '1 guardado sin subir' : `${up} guardados sin subir`)].filter(Boolean).join(' y ');
+    bt.title = 'Sincronizar con GitHub: trae los cambios hechos desde otro sitio y sube los guardados que falten'
+      + (s ? ' · ' + (tip ? tip[0].toUpperCase() + tip.slice(1) : 'Al día') + (s.fetched ? '' : ' (sin conexión con GitHub)') : '');
+  }
+  // a refusal is too long for the bar's status line: it gets a banner of its own until closed
+  function syncNote(msg) {
+    const bn = $('syncMsg'); if (!bn) return;
+    bn.classList.toggle('show', !!msg);
+    bn.innerHTML = msg ? `<span>${esc(msg)}</span><button data-x title="Cerrar">✕</button>` : '';
+    if (msg) bn.querySelector('[data-x]').onclick = () => syncNote('');
+  }
+  async function checkSync() {
+    if (!branch || syncing || saving || document.hidden) return;
+    const b = branch;
+    try {
+      const r = await fetch('/_dev/api/sync?branch=' + encodeURIComponent(b), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (b === branch && !syncing && j.ok) { syncSt = j; renderSync(); }
+    } catch (e) {}
+  }
+  async function doSync() {
+    if (syncing || saving || !branch) return;
+    endEdit(); closeShare();
+    const b = branch;
+    syncing = true; renderSync(); syncNote(''); status('Sincronizando con GitHub…');
+    try {
+      const r = await fetch('/_dev/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch: b, who: $('who').value.trim(), dirty: dirtyParts().length > 0 }) });
+      let j = {}; try { j = await r.json(); } catch (e) {}
+      if (!r.ok || !j.ok) throw new Error(j.error || 'error ' + r.status);
+      syncSt = j;
+      const bits = [j.pulled && (j.pulled === 1 ? '1 cambio traído de GitHub' : j.pulled + ' cambios traídos de GitHub'), j.pushed && 'tus guardados subidos'].filter(Boolean);
+      let msg = bits.length ? 'Sincronizado: ' + bits.join(' · ') : 'Ya estaba al día con GitHub', bad = false;
+      if (j.pushError) { msg += ' · NO se pudo subir: ' + j.pushError; bad = true; }
+      else if (b === 'main' && j.ahead) msg += ` · main tiene ${j.ahead} cambio(s) sin subir: eso se hace con Publicar`;
+      try { const v = $('branch').value; await listBranches(); $('branch').value = v; } catch (e) {}   // branches made elsewhere show up in the list
+      syncing = false;
+      if (j.moved && b === branch) {
+        // the branch's files changed: load them, unless something was written while the answer came
+        if (dirtyParts().length) { remoteHead = j.head; remoteHidden = null; } else await openBranch(b);
+      }
+      status(msg, bad, true);
+    } catch (e) { syncing = false; status('No se ha sincronizado', true); syncNote(e.message); checkSync(); }
+    syncing = false; renderSync();
+  }
+
   // ---------- someone else saved on this branch: poll its HEAD every minute while the tab is visible ----------
   async function checkHead() {
     if (!branch || !head || saving || document.hidden) return;
@@ -1012,6 +1075,7 @@
     edits: () => JSON.parse(JSON.stringify(textEdits)), editing: () => editing && editing.k };   // the texts changed (and the one being written), for tests
   if ($('share')) $('share').onclick = openShare;
   if ($('publish')) $('publish').onclick = openPublish;
+  if ($('sync')) $('sync').onclick = doSync;
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sharePop')) closeShare(); });
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
   $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
@@ -1019,7 +1083,7 @@
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
   document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && e.target.closest('input, textarea, select')) { e.preventDefault(); save(); } });
   window.addEventListener('beforeunload', e => { if (dirtyParts().length) { e.preventDefault(); e.returnValue = ''; } });
-  setInterval(checkHead, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHead(); });
+  setInterval(checkHead, 60000); setInterval(checkSync, 300000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHead(); checkSync(); } });
   loadBranches();
 })();

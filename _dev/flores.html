@@ -16,7 +16,7 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   /* Side panels resize like VS Code's: drag the gutters, double-click to reset, drag to the edge to close. */
-  body { --libW: 220px; --propW: 250px; font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 46px 1fr; grid-template-columns: var(--libW) 5px 1fr 5px var(--propW); grid-template-areas: "bar bar bar bar bar" "lib gl stage gr props"; }
+  body { --libW: 220px; --propW: 250px; font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-rows: 52px 1fr; grid-template-columns: var(--libW) 5px 1fr 5px var(--propW); grid-template-areas: "bar bar bar bar bar" "lib gl stage gr props"; }
   .gutter { background: var(--line); cursor: col-resize; position: relative; z-index: 3; touch-action: none; }
   .gutter::after { content: ''; position: absolute; inset: 0 -4px; }   /* wider grab area */
   .gutter:hover, .gutter.drag { background: var(--acc); }
@@ -26,7 +26,6 @@
   .closed { display: none; }
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: -4px 0 12px; }
   .tabs button { padding: 4px 9px; border-radius: 999px; font-size: .9em; } .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .bar-f { display: inline-flex; align-items: center; gap: 5px; color: var(--soft); } #branch { max-width: 170px; } #who { padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; }
   textarea { width: 100%; min-height: 4.5em; font: inherit; padding: 6px; border: 1px solid var(--line); border-radius: 5px; resize: vertical; background: #fff; }
   .t-item { display: block; width: 100%; text-align: left; margin-bottom: 3px; font-size: .92em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-item.on { border-color: var(--acc); color: var(--accd); background: #fff4f8; } .t-item.mod::before { content: '● '; color: var(--acc); }
@@ -46,20 +45,56 @@
   .sec-row.off { opacity: .5; } .sec-row.over { border-color: var(--acc); } .sec-row span { flex: 1; } .sec-row button { padding: 1px 7px; }
   .sec-opts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .88em; color: var(--soft); cursor: default; }
   .sec-opts label { display: inline-flex; align-items: center; gap: 3px; } .sec-opts [data-rs] { margin-left: auto; } .sec-opts select { font-size: inherit; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  button.panel-t.on { background: #fff; color: var(--ink); border-color: var(--line); } button.panel-t:not(.on) { color: var(--soft); background: transparent; text-decoration: line-through; }
-  #bar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
-  #bar h1 { font-size: 14px; margin: 0 8px 0 0; white-space: nowrap; }
-  #bar { overflow-x: auto; } #bar > * { flex: none; } #bar label, #bar button { white-space: nowrap; }
-  #bar .sp { flex: 1; }
-  #bar .grp.panels { margin-left: 4px; }
+  /* Top bar: view tools on the left, the status in the flexible middle, branch and save on the right.
+     Icons come from the <symbol> sprite at the top of <body>; labels (.lbl) fold away on narrow windows. */
+  #bar { grid-area: bar; position: relative; z-index: 4; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 6px 16px -12px rgba(38,38,31,.45); overflow-x: auto; scrollbar-width: none; }
+  #bar::-webkit-scrollbar { display: none; }
+  #bar > * { flex: none; }
+  #bar h1 { font: italic 600 19px/1 'Cormorant Garamond', Georgia, 'Times New Roman', serif; margin: 0 8px 0 0; white-space: nowrap; }
+  #bar h1 span { font: 500 10px/1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .14em; color: var(--soft); margin-left: 3px; }
+  #bar .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #bar button, #bar .field, #bar .tg, #goto { height: 32px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  #bar .div { width: 1px; height: 20px; background: var(--line); margin: 0 5px; }
+  /* quiet buttons: icon only (.ib) or icon and label (.gh) */
+  #bar .ib, #bar .gh { border-color: transparent; background: transparent; color: #4a4a40; cursor: pointer; }
+  #bar .ib { width: 32px; padding: 0; justify-content: center; } #bar .gh { padding: 0 9px; }
+  #bar .ib:hover, #bar .gh:hover { background: #f1efe8; } #bar button:disabled { background: transparent; opacity: .32; }
+  #bar .panel-t:not(.on) { color: #b9b5a8; }
+  /* Móvil / Escritorio */
+  #bar .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 10px; background: #efede6; }
+  #bar .seg button { height: 28px; padding: 0 10px; border: 0; background: transparent; color: var(--soft); }
+  #bar .seg button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(38,38,31,.18); }
+  /* fields: an icon and a borderless select or input inside one outline */
+  #bar .field { border: 1px solid var(--line); background: #fff; padding: 0 9px; color: var(--soft); }
+  #bar .field:focus-within, #goto:focus-visible { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(200,60,120,.13); outline: 0; }
+  #bar .field select, #bar .field input { height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); }
+  #branch { width: 124px; font-weight: 600; text-overflow: ellipsis; } #who { width: 10ch; }
+  #goto { width: 116px; border: 1px solid var(--line); background: #fff; padding: 0 6px; }
+  /* switches: a hidden checkbox inside a label (the scripts keep reading .checked) */
+  #bar .tg { position: relative; cursor: pointer; } #bar .tg input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+  #bar .tg:has(input:focus-visible) { outline: 2px solid var(--acc); outline-offset: 1px; }
+  #bar .ib.tg:has(input:checked) { background: #efede6; color: var(--ink); } #bar .ib.tg:not(:has(input:checked)) { color: #b9b5a8; }
+  #bar .sw { position: relative; width: 24px; height: 14px; border-radius: 999px; background: #cfcbbd; transition: background .15s; }
+  #bar .sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  #bar .tg:has(input:checked) .sw { background: var(--ink); } #bar .tg:has(input:checked) .sw::after { transform: translateX(10px); }
+  /* Sincronizar: the badge counts what waits on GitHub (↓) and what GitHub lacks (↑) */
+  #syncN { font: 600 11px/1 system-ui, sans-serif; background: var(--acc); color: #fff; border-radius: 999px; padding: 3px 6px; }
+  #sync.busy .ic { animation: spin .9s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+  #bar button.primary { padding: 0 16px; box-shadow: 0 1px 2px rgba(163,42,94,.4); }
+  #bar .pub { padding: 0 12px; border-color: #cfcbbd; font-weight: 600; } #bar .pub:hover { border-color: var(--ink); }
+  @media (max-width: 1700px) { #bar .lbl2, #bar h1 span { display: none; } }
+  @media (max-width: 1580px) { #bar .lbl { display: none; } }
+  @media (max-width: 1400px) { #bar { gap: 4px; padding: 0 10px; } #bar .div { margin: 0 2px; } }
+  @media (max-width: 1340px) { #bar .lbl3 { display: none; } #branch { width: 104px; } }
   button, select, input[type=number] { font: inherit; color: inherit; }
   button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
   button:hover { border-color: #b9b5a8; } button:disabled { opacity: .4; cursor: default; }
   button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
   button.primary { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 600; } button.primary:hover { background: var(--accd); }
   button.danger { color: #a22; }
-  .grp { display: flex; gap: 0; } .grp button { border-radius: 0; margin-left: -1px; } .grp button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .grp button:last-child { border-radius: 0 6px 6px 0; }
-  #status { color: var(--soft); min-width: 170px; text-align: right; } #status.dirty { color: var(--accd); font-weight: 600; }
+  #bar > #status { flex: 1 1 112px; min-width: 112px; padding: 0 6px; text-align: right; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #status::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #a9bb8f; vertical-align: 1px; }
+  #status.dirty { color: var(--accd); font-weight: 600; } #status.dirty::before { background: var(--acc); }
   /* panel contents scale with the panel: text a little, thumbnails and columns a lot */
   aside { background: var(--panel); overflow: auto; padding: 12px; container-type: inline-size; }
   aside > * { font-size: clamp(12.5px, 5.2cqw, 16px); }   /* cqw = the panel's width (a container cannot size itself) */
@@ -88,7 +123,7 @@
   button:disabled { opacity: .45; cursor: default; }
   .note { background: #fff4d6; border: 1px solid #ecd48a; border-radius: 6px; padding: 7px 9px; margin: 8px 0; }
   .hint { color: var(--soft); } .hint p { margin: 0 0 8px; } kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font: 11px monospace; }
-  #banners { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+  #banners { position: fixed; left: 50%; top: 62px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
   .bn { display: none; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; gap: 10px; align-items: center; pointer-events: auto; max-width: 70vw; }
   .bn.show { display: flex; } .bn button { padding: 3px 9px; color: var(--ink); }
   /* Historial tab */
@@ -113,22 +148,43 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-desktop" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+  <symbol id="i-reload" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1L20.5 8"/><path d="M20.5 3v5h-5"/></symbol>
+  <symbol id="i-guides" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2" stroke-dasharray="3.2 3.2"/><path d="M3.5 10h17"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.2"/><path d="M9 4v16"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.2"/><path d="M15 4v16"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5M20.5 14v2.5M14 20.5h2.5M20.5 20.5v-.5"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><path d="M6 3.5V15"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20.5 11A8.5 8.5 0 0 0 5.6 6.4L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M3.5 13a8.5 8.5 0 0 0 14.9 4.6l2.1-2.1"/><path d="M20.5 20.5v-5h-5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.5 2.5 10.5 13.5"/><path d="m21.5 2.5-7 19-4-8-8-4z"/></symbol>
+</defs></svg>
 <header id="bar">
-  <h1>Editor de la web</h1>
-  <div class="grp"><button id="devM" class="on">Móvil</button><button id="devD">Escritorio</button></div>
+  <h1>Editor <span>de la web</span></h1>
+  <div class="seg"><button id="devM" class="on" title="Vista de móvil"><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg><span class="lbl2">Móvil</span></button><button id="devD" title="Vista de escritorio: lo que cambies aquí solo afecta a las pantallas anchas"><svg class="ic" aria-hidden="true"><use href="#i-desktop"/></svg><span class="lbl2">Escritorio</span></button></div>
+  <i class="div"></i>
+  <button id="undo" class="ib" title="Deshacer (Ctrl+Z)" aria-label="Deshacer"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
+  <button id="redo" class="ib" title="Rehacer (Ctrl+Mayús+Z)" aria-label="Rehacer"><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg></button>
+  <button id="reload" class="ib" title="Recargar la web (conserva las flores)" aria-label="Recargar la web"><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg></button>
+  <i class="div"></i>
   <select id="goto" title="Ir a una sección"></select>
-  <label><input type="checkbox" id="guides" checked> Ver secciones</label>
-  <div class="grp"><button id="undo" title="Ctrl+Z">Deshacer</button><button id="redo" title="Ctrl+Mayús+Z">Rehacer</button></div>
-  <button id="reload" title="Vuelve a cargar la web, conserva las flores">Recargar web</button>
-  <div class="grp panels"><button id="tLib" class="panel-t on" title="Mostrar u ocultar la biblioteca">Flores</button><button id="tProps" class="panel-t on" title="Mostrar u ocultar las propiedades">Propiedades</button></div>
-  <button id="share" title="Enlace y código QR de esta rama, para abrirla en el móvil">Ver en mi móvil</button>
-  <span class="sp"></span>
-  <label class="bar-f" title="Rama de git en la que se guardan los cambios">Rama <select id="branch"></select></label>
-  <input id="who" class="bar-f" placeholder="Tu nombre" title="Aparece en el commit" size="9">
-  <label class="bar-f" title="Después de guardar, sube la rama a GitHub"><input type="checkbox" id="push" checked> Subir</label>
+  <label class="ib tg" title="Ver los bordes de las secciones"><input type="checkbox" id="guides" checked aria-label="Ver secciones"><svg class="ic" aria-hidden="true"><use href="#i-guides"/></svg></label>
+  <button id="tLib" class="ib panel-t on" title="Mostrar u ocultar el panel izquierdo" aria-label="Panel izquierdo"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg></button>
+  <button id="tProps" class="ib panel-t on" title="Mostrar u ocultar el panel de propiedades" aria-label="Panel de propiedades"><svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></button>
+  <i class="div"></i>
+  <button id="share" class="gh" title="Ver en mi móvil: enlace y código QR de esta rama"><svg class="ic" aria-hidden="true"><use href="#i-qr"/></svg><span class="lbl">Ver en mi móvil</span></button>
   <span id="status">Sin cambios</span>
-  <button id="save" class="primary" title="Ctrl+S">Guardar</button>
-  <button id="publish" title="Une esta rama a main: cambia la web que ven los invitados">Publicar</button>
+  <label class="field" title="Rama de git en la que se guardan los cambios"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><select id="branch" aria-label="Rama"></select></label>
+  <button id="sync" class="gh" title="Sincronizar con GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span class="lbl">Sincronizar</span><b id="syncN" hidden></b></button>
+  <i class="div"></i>
+  <label class="field" title="Tu nombre: firma cada guardado en el historial"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><input id="who" placeholder="Tu nombre" aria-label="Tu nombre"></label>
+  <label class="gh tg" title="Después de guardar, sube la rama a GitHub"><input type="checkbox" id="push" checked><i class="sw"></i><span class="lbl3">Subir</span></label>
+  <button id="save" class="primary" title="Guardar (Ctrl+S)">Guardar</button>
+  <button id="publish" class="pub" title="Une esta rama a main: cambia la web que ven los invitados"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg>Publicar</button>
 </header>
 <div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib">
@@ -148,6 +204,7 @@
 <div id="banners">
   <div id="banner" class="bn"><span>Hay un borrador sin guardar de otra sesión.</span><button id="bRestore">Recuperar</button><button id="bDrop">Descartar</button></div>
   <div id="remote" class="bn"></div>
+  <div id="syncMsg" class="bn"></div>
 </div>
 
 <script>

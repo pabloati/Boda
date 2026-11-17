@@ -22,7 +22,9 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import threading
+import time
 
 REPO_FILES = ('index.html', 'playlist-admin.html')
 PHOTOS = {'hero-desktop': 'assets/hero-desktop.jpg', 'hero-mobile': 'assets/hero-mobile.jpg', 'foto-envio': 'assets/foto-envio.jpg'}
@@ -866,3 +868,140 @@ def publish(repo, branch, payload):
             raise EditorError('No se pudo subir main a GitHub (%s). No se ha publicado nada.' % e)
         return {'ok': True, 'merged': plan['commits'], 'commit': run(wt, 'rev-parse', '--short', 'HEAD').strip(),
                 'branchPushed': plan['pushBranch']}
+
+
+# ---------- sync: bring the open branch level with GitHub (fetch, pull, push) ----------
+# For work done somewhere else (another computer, a Claude session) and pushed to GitHub: the editor's
+# copy of the branch does not see it until someone syncs. sync_state() counts what is waiting each
+# way; sync() brings the new commits in and pushes the ones GitHub lacks. main is only ever brought
+# in (pushing main publishes the site: that is Publicar's job).
+
+_FETCH_LOCK = threading.Lock()
+_FETCHED = {}   # repo -> time of the last good fetch
+
+
+def fetch(repo, max_age=0):
+    """git fetch origin, unless one succeeded less than max_age seconds ago. True if GitHub answered."""
+    with _FETCH_LOCK:
+        if max_age and time.time() - _FETCHED.get(repo, 0) < max_age:
+            return True
+        try:
+            run(repo, 'fetch', '-q', 'origin')
+        except EditorError:
+            return False
+        _FETCHED[repo] = time.time()
+        return True
+
+
+def _sync_counts(wt, branch):
+    """(commits here that GitHub lacks, commits on GitHub that are not here, GitHub has the branch)."""
+    remote = 'refs/remotes/origin/' + branch
+    if not _has(wt, remote):
+        return _count(wt, 'HEAD'), 0, False
+    return _count(wt, remote + '..HEAD'), _count(wt, 'HEAD..' + remote), True
+
+
+def sync_state(repo, branch, max_age=120):
+    """What a sync would do: ahead = saves GitHub lacks, behind = changes on GitHub not here yet."""
+    wt = open_branch(repo, branch)
+    fetched = fetch(repo, max_age)
+    ahead, behind, remote = _sync_counts(wt, branch)
+    return {'ok': True, 'branch': branch, 'fetched': fetched, 'ahead': ahead, 'behind': behind,
+            'remote': remote, 'head': head(wt)}
+
+
+_V = re.compile(r'\?v=[\w-]+')
+
+
+def _merge_stamps(wt):
+    """A merge stopped on conflicts. Both sides of a branch stamp a new ?v= on the same links, so the
+    pages always collide there even when nothing else does. Merge each conflicted file again with the
+    stamps taken out; if every one of them then merges cleanly, write the results with a fresh stamp
+    and stage them (True). Any real conflict: touch nothing (False)."""
+    files = [f for f in run(wt, '-c', 'core.quotepath=off', 'diff', '--name-only', '--diff-filter=U').split('\n') if f]
+    if not files or any(not f.endswith(('.html', '.css')) for f in files):
+        return False
+    stamp, merged = _stamp(wt), {}
+    with tempfile.TemporaryDirectory() as tmp:
+        for f in files:
+            sides = []
+            for n in (2, 1, 3):   # ours, base, theirs: the order git merge-file takes
+                r = subprocess.run(['git', '-C', wt, 'show', ':%d:%s' % (n, f)], capture_output=True, text=True)
+                if r.returncode:
+                    return False   # added or deleted on one side: not a stamp collision
+                path = os.path.join(tmp, str(n))
+                with open(path, 'w', encoding='utf-8') as fh:
+                    fh.write(_V.sub('?v=0', r.stdout))
+                sides.append(path)
+            r = subprocess.run(['git', 'merge-file', '-p', *sides], capture_output=True, text=True)
+            if r.returncode:
+                return False
+            merged[f] = r.stdout.replace('?v=0', '?v=' + stamp)
+    for f, text in merged.items():
+        with open(os.path.join(wt, f), 'w', encoding='utf-8') as fh:
+            fh.write(text)
+    run(wt, 'add', '--', *merged)
+    return True
+
+
+def sync(repo, branch, payload):
+    """Fetch, then bring the branch level with GitHub: new commits there come in (fast-forward, or a
+    merge commit when there are saves on both sides) and the saves GitHub lacks are pushed. A merge
+    that collides is undone and nothing changes. payload.dirty: the editor has unsaved changes, so
+    nothing may come in under them (pushing is still fine)."""
+    wt = open_branch(repo, branch)
+    with branch_lock(branch):
+        if not fetch(repo):
+            raise EditorError('No se pudo conectar con GitHub: prueba otra vez en un momento')
+        ahead, behind, remote = _sync_counts(wt, branch)
+        before = run(wt, 'rev-parse', 'HEAD').strip()
+        merged, pulled = False, 0
+        if behind:
+            if payload.get('dirty'):
+                raise EditorError('%s en GitHub para esta rama. Guarda o descarta los tuyos antes de sincronizar, '
+                                  'para que no se pisen.' % ('Hay 1 cambio nuevo' if behind == 1 else 'Hay %d cambios nuevos' % behind))
+            ref = 'refs/remotes/origin/' + branch
+            outside = 'La carpeta de esta rama tiene cambios sin guardar hechos fuera del editor: guárdalos o descártalos antes'
+            if not ahead:
+                try:   # git itself refuses when a file with changes nobody committed would be overwritten
+                    run(wt, 'merge', '-q', '--ff-only', ref)
+                except EditorError:
+                    raise EditorError(outside)
+            elif branch == 'main':
+                raise EditorError('main tiene cambios aquí y también en GitHub: %s.' % ASK)
+            elif run(wt, 'status', '--porcelain', '--untracked-files=no').strip():
+                raise EditorError(outside)
+            else:
+                msg = 'sincronizar: unir %s con GitHub (editor, %s)' % (branch, _who(payload))
+                try:
+                    run(wt, *IDENT, 'merge', '-q', '--no-ff', '--no-edit', '-m', msg, ref)
+                except EditorError as e:
+                    if not _has(wt, 'MERGE_HEAD'):
+                        raise EditorError('No se pudo sincronizar (%s). No se ha tocado nada: %s.' % (e, ASK))
+                    try:
+                        ok = _merge_stamps(wt)
+                        if ok:
+                            run(wt, *IDENT, 'commit', '-q', '--no-edit')
+                    except (EditorError, OSError):
+                        ok = False
+                    if not ok:
+                        try:
+                            run(wt, 'merge', '--abort')
+                        except EditorError:
+                            run(wt, 'reset', '-q', '--merge', before)
+                        raise EditorError('Los cambios de GitHub chocan con los guardados aquí en %s. No se ha tocado '
+                                          'nada; pide a Pablo que los una a mano.' % branch)
+                merged = True
+            pulled = behind
+        pushed, push_error = 0, None
+        ahead = _sync_counts(wt, branch)[0]
+        if ahead and branch != 'main':
+            try:
+                run(wt, 'push', '-q', '-u', 'origin', branch)
+                pushed = ahead
+            except EditorError as e:
+                push_error = str(e)
+        after = run(wt, 'rev-parse', 'HEAD').strip()
+        ahead, behind, remote = _sync_counts(wt, branch)
+        return {'ok': True, 'branch': branch, 'head': head(wt), 'moved': after != before, 'pulled': pulled,
+                'pushed': pushed, 'pushError': push_error, 'merged': merged, 'ahead': ahead, 'behind': behind, 'remote': remote}

@@ -13,7 +13,7 @@ Routes
                        name is written "~": origin~redesign).
   /_dev/sources.json   the list of worktrees and branches the phone page shows.
   POST /_dev/save-flores   the flower editor (_dev/flores.html) writes js/flores-layout.js here.
-  /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save
+  /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save, sync
                        (writes into that branch's worktree and commits; see _dev/editor_api.py),
                        publish (GET: dry run, POST: merge the branch into main and push main),
                        history of a branch and going back to one of its commits (POST revert).
@@ -362,6 +362,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_api.publish(HERE, req['branch'], req))
             if p == '/_dev/api/revert':
                 return self.send_json(editor_api.revert(HERE, req['branch'], req))
+            if p == '/_dev/api/sync':
+                return self.send_json(editor_api.sync(HERE, req['branch'], req))
         except editor_api.Conflict as e:
             return self.send_json({'ok': False, 'error': str(e), 'head': e.head}, 409)
         except editor_api.EditorError as e:
@@ -385,6 +387,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                        'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
             if p == '/_dev/api/history':
                 return self.send_json(editor_api.history(HERE, q['branch'][0]))
+            if p == '/_dev/api/sync':      # what is waiting each way; the sync itself is a POST
+                return self.send_json(editor_api.sync_state(HERE, q['branch'][0]))
             if p == '/_dev/api/publish':   # dry run; the merge itself is a POST
                 plan = editor_api.publish_plan(HERE, q['branch'][0])
                 plan.pop('_ref', None)

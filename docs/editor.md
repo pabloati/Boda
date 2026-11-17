@@ -30,6 +30,17 @@ replaces it, so anything `write_look()` writes must be mirrored there.
   container wrote to `BODA_PUBLIC_LINK_FILE` (`GET /_dev/api/public`). A server without a tunnel
   (plain `serve.py`) shows no QR, only how to get one, since the phone cannot reach it. The phone
   logs in once and lands on the preview. The QR is drawn locally by `_dev/qr.js`, no library.
+- **Sincronizar** brings the open branch level with GitHub, for work done outside the editor
+  (another computer, a Claude session) and pushed there. It fetches, brings in the commits the
+  editor lacks (fast-forward, or a merge commit `sincronizar: unir <branch> con GitHub` when there
+  are saves on both sides) and pushes the saves GitHub lacks; then it reloads the branch and the
+  branch list. The badge on the button counts what waits each way (↓ on GitHub, ↑ not pushed yet;
+  `GET /_dev/api/sync?branch=…`, checked on opening a branch, after a save and every five minutes,
+  with at most one fetch every two minutes). With unsaved changes nothing is brought in: save or
+  discard first. Both sides always stamp a new `?v=` on the same links, so that collision is merged
+  again without the stamps and given a fresh one (`_merge_stamps`); any real conflict undoes the
+  merge, changes nothing and asks to tell Pablo. `main` is only ever brought in, never pushed:
+  that is «Publicar».
 - **Publicar** merges the open branch into `main` and pushes `main`, which publishes the site at
   once. The right panel first lists the saves that would go live (`GET /_dev/api/publish?branch=…`,
   a dry run). It is refused with unsaved changes, on `main` itself, when `main` has local commits
