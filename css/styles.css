@@ -434,7 +434,7 @@ button {
   --card-t: 0s;
   --card-ease: ease;
   transform: rotateY(180deg);
-  background: var(--olive-deep) url('../assets/hero-desktop.jpg') center 18% / cover no-repeat;
+  background: var(--olive-deep) url('../assets/hero-desktop.jpg') center 30% / cover no-repeat;
   transition: border-radius 0.8s ease, box-shadow 0.8s ease;
 }
 
@@ -714,7 +714,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;   /* hero-desktop.jpg: keep the tops of their heads in frame */
+  object-position: center 30%;   /* hero-desktop.jpg: keep both faces and the raised arm in frame */
   display: block;
 }
 
@@ -736,21 +736,29 @@ button {
 
 /* Portrait tablets use the phone photo too (see the <source> in index.html) */
 @media (min-width: 769px) and (orientation: portrait) {
-  .hero-photo img { object-position: 53% 50%; }
-  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 53% 50%; }
+  .hero-photo img { object-position: 50% 30%; }
+  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 50% 30%; }
 }
 
-/* Wide screens: the faces are in the middle of hero-desktop.jpg, so the
-   letters move to the left over the blurred hall, and the shade fades sideways */
+/* Portrait (phones and tablets): the lettering sits at the top, over the
+   mountains of hero-mobile.jpg, so it clears the faces */
+@media (max-width: 768px), (orientation: portrait) {
+  .hero-veil .veil-sheet { align-items: flex-start; }
+}
+
+/* Wide screens: the faces are in the upper middle of hero-desktop.jpg, so the
+   letters go to the bottom left, over the dark jacket, and the shade rises from there */
 @media (min-width: 769px) and (orientation: landscape) {
   :root { --veil-h: 100%; }
   .hero-veil .veil-sheet {
     justify-content: flex-start;
     text-align: left;
+    align-items: flex-end;
     padding-left: 6vw;
-    background: linear-gradient(90deg, rgba(28, 26, 20, 0.5) 0%, rgba(28, 26, 20, 0.32) 34%, rgba(28, 26, 20, 0) 62%);
+    padding-bottom: 4vh;
+    background: linear-gradient(0deg, rgba(28, 26, 20, 0.55) 0%, rgba(28, 26, 20, 0.3) 30%, rgba(28, 26, 20, 0) 55%);
   }
-  .card-back .hero-veil .veil-sheet { padding-left: calc(6vw * var(--s)); }
+  .card-back .hero-veil .veil-sheet { padding-left: calc(6vw * var(--s)); padding-bottom: calc(4vh * var(--s)); }
   .hero-veil .veil-sheet .hero-content { max-width: 46vw; }
   .card-back .hero-veil .veil-sheet .hero-content { max-width: calc(46vw * var(--s)); }
   .hero-veil .veil-sheet .hero-title { padding: 0; }
@@ -1833,7 +1841,7 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .hero-photo img {
-    object-position: 53% 50%;   /* hero-mobile.jpg: the couple is just right of centre */
+    object-position: 50% 0%;   /* hero-mobile.jpg: keep the mountains; the couple is centred */
   }
 
   :root {
@@ -1900,12 +1908,32 @@ html.rsvp-modal-open { overflow: hidden; }
 
   .card-back {
     background-image: url('../assets/hero-mobile.jpg');
-    background-position: 53% 50%;
+    background-position: 50% 0%;
   }
 
   .card-back .hero-location {
-    margin-bottom: calc(30px * var(--s));
+    margin-bottom: 0;
   }
+
+  /* Phones: a compact lettering block at the top so it ends above the faces of
+     hero-mobile.jpg, and the scroll hint goes to the bottom of the screen
+     (the veil is --veil-h of the stage, hence the division) */
+  .hero-location { margin-bottom: 0; }
+  .veil-sheet { padding-top: 40px; }
+  .card-back .veil-sheet { padding-top: calc(40px * var(--s)); }
+  .hero-content { position: static; padding-top: 8px; }
+  .card-back-content { position: static; padding-top: calc(8px * var(--s)); }
+  .hero-title { margin-bottom: 10px; }
+  .card-back .hero-title { margin-bottom: calc(10px * var(--s)); }
+  .hero-date { font-size: 1.25rem; letter-spacing: 1px; }
+  .card-back .hero-date { font-size: calc(1.25rem * var(--s)); letter-spacing: calc(1px * var(--s)); }
+  .veil-sheet .scroll-indicator {
+    position: absolute;
+    left: 50%;
+    top: calc(100% / 0.64 - 72px);
+    transform: translateX(-50%);
+  }
+  .card-back .veil-sheet .scroll-indicator { top: calc(100% / 0.64 - 72px * var(--s)); }
 }
 
 /* ---------- Botanical plates (js/flores.js, laid out with _dev/flores.html) ----------
