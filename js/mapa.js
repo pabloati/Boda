@@ -31,7 +31,7 @@
   // --- The stops. lat/lon place them; dx/dy is where the round drawing sits, in screen
   //     pixels from the exact point (so two stops that are close do not cover each other).
   const STOPS = [
-    { id: 'iglesia', lat: 40.41905, lon: -3.69742, art: 'assets/ruta-ceremonia.png', dx: -44, dy: -34,
+    { id: 'iglesia', lat: 40.41905, lon: -3.69742, art: 'assets/ruta-ceremonia.png', dx: -52, dy: -6, below: true,
       href: 'https://share.google/moPjthgGraOJOiUeF' },
     { id: 'cibeles', lat: 40.41930, lon: -3.69310, art: 'assets/ruta-buses.png', dx: -2, dy: 52, below: true },
     { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 36, dy: -40 },
@@ -41,7 +41,7 @@
 
   // --- Place names. z = the zoom steps they show in (1 far, 2 middle, 3 close).
   const PLACES = [
-    { name: 'Madrid', lat: 40.3960, lon: -3.7540, z: [1], cls: 'city' },
+    { name: 'Madrid', lat: 40.4520, lon: -3.7300, z: [1], cls: 'city' },
     { name: 'Vallecas', lat: 40.3800, lon: -3.6350, z: [1, 2], cls: 'town' },
     { name: 'Rivas-Vaciamadrid', lat: 40.3560, lon: -3.5420, z: [2], cls: 'town' },
     { name: 'Arganda del Rey', lat: 40.3030, lon: -3.4560, z: [2], cls: 'town' },
@@ -50,7 +50,7 @@
     { name: 'A-3', lat: 40.3660, lon: -3.5960, z: [1, 2], cls: 'road' },
     { name: 'El Retiro', lat: 40.4140, lon: -3.6830, z: [2, 3], cls: 'park' },
     { name: 'Gran Vía', lat: 40.4200, lon: -3.7030, z: [3], cls: 'street' },
-    { name: 'Calle de Alcalá', lat: 40.4183, lon: -3.6990, z: [3], cls: 'street' },
+    { name: 'Calle de Alcalá', lat: 40.4196, lon: -3.6952, z: [3], cls: 'street' },
     { name: 'Paseo del Prado', lat: 40.4150, lon: -3.6938, z: [3], cls: 'street' },
     { name: 'Paseo de Recoletos', lat: 40.4228, lon: -3.6917, z: [3], cls: 'street' },
     { name: 'Puerta de Alcalá', lat: 40.4201, lon: -3.6887, z: [3], cls: 'street' },
@@ -127,7 +127,7 @@
     const xs = pts.map(function (p) { return p.x; }), ys = pts.map(function (p) { return p.y; });
     const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
     const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
-    const padX = 88, padTop = 128, padBottom = 112;     // screen pixels kept free around the stops
+    const padX = 88, padTop = 128, padBottom = 126;     // screen pixels kept free around the stops
     const availW = Math.max(60, f.w - padX * 2), availH = Math.max(60, f.h - padTop - padBottom);
     const u = Math.max((x1 - x0) / availW, (y1 - y0) / availH, (v.min || 11) / f.w);
     const w = u * f.w;
