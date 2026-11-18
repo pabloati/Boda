@@ -956,23 +956,6 @@ button {
   margin: 72px auto 0;
 }
 
-/* Pieces that come in as the guest scrolls. Only hidden once script.js has put .js-reveal on
-   <html>, so the text is always there without JavaScript. */
-.js-reveal .reveal {
-  opacity: 0;
-  transform: translateY(22px);
-}
-
-.js-reveal .reveal.is-in {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.9s ease, transform 0.9s ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js-reveal .reveal { opacity: 1; transform: none; transition: none; }
-}
-
 @media (max-width: 640px) {
   .historia-moment,
   .historia-moment:nth-of-type(odd) {
@@ -2015,9 +1998,41 @@ html.rsvp-modal-open { overflow: hidden; }
     left: 50%;
     top: calc(100% / 0.64 - 72px);
     transform: translateX(-50%);
+    opacity: calc(1 - var(--veil-p, 0) * 5);   /* gone before it would slide over the faces */
   }
   .card-back .veil-sheet .scroll-indicator { top: calc(100% / 0.64 - 72px * var(--s)); }
 }
+
+/* ========================================================
+   SCROLL REVEAL (js/script.js, 10b): each piece starts faded and a little low, and settles
+   the first time it comes into view. Uses the `translate` property, not `transform`, so it
+   never fights the positions the site editor writes on texts. Only the content fades, never
+   the section's own background, so the seams between bands stay solid.
+======================================================== */
+.js-reveal .reveal {
+  opacity: 0;
+  translate: 0 22px;
+}
+
+.js-reveal .reveal.is-in {
+  opacity: 1;
+  translate: none;
+  transition: opacity 0.9s ease-out, translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* inside a block, the heading lands a moment after the text and the two venues one after the other */
+.js-reveal .reveal:not(.is-in) .h-script,
+.js-reveal .reveal:not(.is-in) .location {
+  opacity: 0;
+  translate: 0 18px;
+}
+
+.js-reveal .reveal.is-in .h-script,
+.js-reveal .reveal.is-in .location {
+  transition: opacity 0.8s ease-out 0.15s, translate 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+
+.js-reveal .reveal.is-in .location:nth-child(2) { transition-delay: 0.37s; }
 
 /* ========================================================
    BUS MAP (js/mapa.js on assets/mapa.svg)

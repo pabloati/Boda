@@ -564,18 +564,40 @@
     });
   }
 
-  // --- 10b. REVEAL ON SCROLL: elements with .reveal fade in the first time they come into view ---
-  const revealEls = document.querySelectorAll('.reveal');
-  if (revealEls.length && 'IntersectionObserver' in window) {
-    document.documentElement.classList.add('js-reveal');
-    const revealWatcher = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('is-in');
-        revealWatcher.unobserve(e.target);
-      });
-    }, { threshold: 0.18, rootMargin: '0px 0px -6% 0px' });
-    revealEls.forEach(function (el) { revealWatcher.observe(el); });
+  // --- 10b. SCROLL REVEAL: the content of each section fades up the first time it comes into view ---
+  // The script picks the pieces itself (so sections added later, or with the editor, get the effect
+  // too): the content block of each section, or, where a section has pieces of its own
+  // (.reveal in the HTML, the stops of the Hoja de ruta), each piece and the heading.
+  // css/styles.css only hides them once .js-reveal is on <html>, so nothing is hidden without
+  // JavaScript, and guests who asked their device for less motion see everything at once.
+  const revealRoot = document.getElementById('main-content');
+  const lessMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (revealRoot && 'IntersectionObserver' in window && !lessMotion) {
+    const revealEls = [];
+    revealRoot.querySelectorAll('section:not(#hero)').forEach(function (sec) {
+      const pieces = sec.querySelectorAll('.reveal, .ruta-stop');
+      if (pieces.length) {
+        pieces.forEach(function (el) { revealEls.push(el); });
+        sec.querySelectorAll('.h-script').forEach(function (h) {
+          if (!h.closest('.reveal, .ruta-stop')) revealEls.push(h);
+        });
+      } else {
+        const block = sec.querySelector('.container');
+        if (block) revealEls.push(block);
+      }
+    });
+    if (revealEls.length) {
+      revealEls.forEach(function (el) { el.classList.add('reveal'); });
+      document.documentElement.classList.add('js-reveal');
+      const revealWatcher = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-in');
+          revealWatcher.unobserve(e.target);    // once: it never hides again
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
+      revealEls.forEach(function (el) { revealWatcher.observe(el); });
+    }
   }
 
   // --- 11. HERO VEIL ---
@@ -592,6 +614,7 @@
       const p = travel > 0
         ? Math.min(1, Math.max(0, (window.scrollY - heroSection.offsetTop) / (travel * 0.8)))
         : 0;
+      heroVeil.style.setProperty('--veil-p', p.toFixed(3));   // lets the CSS fade the scroll hint
       heroVeil.style.transform = 'translate3d(0, ' + (-p * (heroVeil.offsetHeight + 6)).toFixed(1) + 'px, 0)';
     };
     const queueVeil = function () {
