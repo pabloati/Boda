@@ -1937,12 +1937,39 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .mapa-frame {
+  --frame: #24211b;
   position: relative;
-  border: 1px solid var(--paper-line);
-  outline: 1px solid var(--paper-line);
-  outline-offset: 5px;
+  margin: 26px 12px 34px;
+  border: 14px solid var(--frame);
+  outline: 1px solid var(--frame);
+  outline-offset: 4px;
   background: var(--paper);
 }
+
+/* a thin gold fillet just inside the black frame */
+.mapa-frame::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid var(--gold);
+  pointer-events: none;
+}
+
+/* the flowers grow over the frame's corners: the big ones on the two corners the route leaves free */
+.mapa-deco {
+  position: absolute;
+  z-index: 2;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.mapa-deco-tr { width: 150px; top: -34px; right: -40px; transform: rotate(8deg); }
+.mapa-deco-bl { width: 170px; bottom: -40px; left: -46px; transform: scaleX(-1) rotate(-6deg); }
+.mapa-deco-tl { width: 62px; top: -44px; left: -30px; transform: rotate(-38deg); }
+.mapa-deco-br { width: 96px; bottom: -48px; right: -34px; transform: rotate(14deg); }
 
 .mapa-canvas {
   position: relative;
@@ -2029,6 +2056,8 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-stop.is-on .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
 .m-stop:focus-visible .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
 
+.m-stop-hit { fill: transparent; }
+
 .m-stop-label {
   font-family: var(--font-serif);
   font-size: 14px;
@@ -2040,47 +2069,50 @@ html.rsvp-modal-open { overflow: hidden; }
   stroke-linejoin: round;
 }
 
-.mapa-tools {
+/* the little plate on the bottom of the frame: zoom out, full screen, zoom in */
+.mapa-plaque {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  left: 50%;
+  bottom: -25px;
+  transform: translateX(-50%);
+  z-index: 3;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: stretch;
+  background: var(--paper);
+  border: 1px solid var(--frame);
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px var(--gold);
 }
 
 .mapa-tool,
 .mapa-expand {
-  background: rgba(251, 248, 240, 0.94);
-  border: 1px solid var(--paper-line);
+  background: none;
+  border: 0;
   color: var(--ink);
   font-family: var(--font-serif);
+  height: 36px;
 }
 
 .mapa-tool {
-  width: 38px;
-  height: 38px;
-  font-size: 1.5rem;
+  width: 42px;
+  font-size: 1.45rem;
   line-height: 1;
 }
 
 .mapa-expand {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 12px;
-  font-size: 0.95rem;
-  letter-spacing: 1px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-left: 1px solid var(--paper-line);
+  border-right: 1px solid var(--paper-line);
 }
 
 .mapa-credit {
-  position: absolute;
-  right: 6px;
-  bottom: 4px;
-  font-size: 0.72rem;
+  display: block;
+  width: max-content;
+  margin: 10px auto 0;
+  font-size: 0.8rem;
   color: var(--ink-faint);
-  background: var(--paper);
-  padding: 0 4px;
 }
 
 .mapa-views {
@@ -2088,7 +2120,7 @@ html.rsvp-modal-open { overflow: hidden; }
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px 22px;
-  margin: 24px 0 6px;
+  margin: 44px 0 6px;
 }
 
 .mapa-views .link-button { color: var(--ink-soft); border-bottom-color: transparent; }
@@ -2144,14 +2176,22 @@ body.mapa-open .lang-toggle { display: none; }
   z-index: 9000;
 }
 
-.mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; border: 0; outline: 0; }
+.mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; margin: 0; border: 0; outline: 0; }
+.mapa-section.is-open .mapa-frame::after,
+.mapa-section.is-open .mapa-deco { display: none; }
+.mapa-section.is-open .mapa-plaque { bottom: 12px; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
 .mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
 .mapa-section.is-open .mapa-card { padding-bottom: 14px; }
 
 @media (max-width: 768px) {
   .mapa-canvas { aspect-ratio: 1 / 1; }
-  .mapa-views { gap: 6px 16px; margin-top: 20px; }
+  .mapa-frame { margin: 22px 4px 32px; border-width: 11px; }
+  .mapa-deco-tr { width: 84px; top: -30px; right: -22px; }
+  .mapa-deco-bl { width: 96px; bottom: -34px; left: -26px; }
+  .mapa-deco-tl { width: 40px; top: -38px; left: -22px; }
+  .mapa-deco-br { width: 62px; bottom: -36px; right: -20px; }
+  .mapa-views { gap: 6px 14px; margin-top: 42px; }
   .mapa-card { min-height: 150px; }
   .mapa-buses li { font-size: 1.05rem; gap: 12px; }
 }

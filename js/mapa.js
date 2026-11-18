@@ -43,7 +43,7 @@
   const PLACES = [
     { name: 'Madrid', lat: 40.3960, lon: -3.7540, z: [1], cls: 'city' },
     { name: 'Vallecas', lat: 40.3800, lon: -3.6350, z: [1, 2], cls: 'town' },
-    { name: 'Rivas-Vaciamadrid', lat: 40.3560, lon: -3.5420, z: [1, 2], cls: 'town' },
+    { name: 'Rivas-Vaciamadrid', lat: 40.3560, lon: -3.5420, z: [2], cls: 'town' },
     { name: 'Arganda del Rey', lat: 40.3030, lon: -3.4560, z: [2], cls: 'town' },
     { name: 'Coslada', lat: 40.4290, lon: -3.5560, z: [1, 2], cls: 'town' },
     { name: 'Getafe', lat: 40.3080, lon: -3.7300, z: [1, 2], cls: 'town' },
@@ -60,12 +60,15 @@
 
   // --- The views the buttons under the map jump to: the stops each one frames.
   //     min = the narrowest the view gets, in map units (1 unit is about 28 m).
+  //     card = whose details show under the map: a stop, or 'vuelta' for the way back as a whole.
   const VIEWS = {
     todo: { stops: ['iglesia', 'cibeles', 'avamerica', 'ciguena'] },
-    salida: { stops: ['iglesia', 'cibeles'] },
-    convite: { stops: ['ciguena'], min: 90 },
-    vuelta: { stops: ['cibeles', 'avamerica'] }
+    iglesia: { stops: ['iglesia', 'cibeles'], card: 'iglesia' },
+    salida: { stops: ['iglesia', 'cibeles'], card: 'cibeles' },
+    convite: { stops: ['ciguena'], min: 90, card: 'ciguena' },
+    vuelta: { stops: ['cibeles', 'avamerica'], card: 'vuelta' }
   };
+  const VIEW_OF_STOP = { iglesia: 'iglesia', cibeles: 'salida', ciguena: 'convite' };
 
   let svg = null;
   let W = 975, H = 960, geo = null;
@@ -97,7 +100,7 @@
     svg.setAttribute('viewBox', view.x.toFixed(2) + ' ' + view.y.toFixed(2) + ' ' + view.w.toFixed(2) + ' ' + h.toFixed(2));
     const u = view.w / f.w;                       // map units per screen pixel
     svg.style.setProperty('--u', u.toFixed(5));
-    const z = u > 0.55 ? 1 : (u > 0.085 ? 2 : 3);
+    const z = u > 0.55 ? 1 : (u > 0.115 ? 2 : 3);
     if (svg.getAttribute('data-z') !== String(z)) svg.setAttribute('data-z', z);
   }
 
@@ -124,7 +127,7 @@
     const xs = pts.map(function (p) { return p.x; }), ys = pts.map(function (p) { return p.y; });
     const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
     const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
-    const padX = 84, padTop = 112, padBottom = 92;     // screen pixels kept free around the stops
+    const padX = 88, padTop = 128, padBottom = 112;     // screen pixels kept free around the stops
     const availW = Math.max(60, f.w - padX * 2), availH = Math.max(60, f.h - padTop - padBottom);
     const u = Math.max((x1 - x0) / availW, (y1 - y0) / availH, (v.min || 11) / f.w);
     const w = u * f.w;
@@ -186,7 +189,7 @@
     el('circle', { r: 21 }, el('clipPath', { id: 'm-clip' }, defs));
 
     STOPS.forEach(function (s) {
-      const g = pinned(over, project(s.lat, s.lon), 'm-stop' + (selected === s.id ? ' is-on' : ''));
+      const g = pinned(over, project(s.lat, s.lon), 'm-stop' + (isOn(s.id) ? ' is-on' : ''));
       g.setAttribute('data-stop', s.id);
       g.setAttribute('role', 'button');
       g.setAttribute('tabindex', '0');
@@ -197,9 +200,21 @@
       el('circle', { r: 24, 'class': 'm-stop-badge' }, b);
       const img = el('image', { href: s.art, x: -21, y: -21, width: 42, height: 42, preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'url(#m-clip)' }, b);
       img.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', s.art);
+      const name = t('map.' + s.id + '.short');
+      // an unseen box behind the name, so the name is as easy to tap as the drawing
+      el('rect', { x: -name.length * 4.6 - 8, y: s.below ? 24 : -50, width: name.length * 9.2 + 16, height: 28, 'class': 'm-stop-hit' }, b);
       const label = el('text', { y: s.below ? 41 : -31, 'text-anchor': 'middle', 'class': 'm-stop-label' }, b);
-      label.textContent = t('map.' + s.id + '.short');
+      label.textContent = name;
     });
+  }
+
+  function stopById(id) {
+    return STOPS.filter(function (x) { return x.id === id; })[0] || null;
+  }
+
+  // selected is a stop, or 'vuelta' (the way back: its two stops light up together)
+  function isOn(id) {
+    return selected === id || (selected === 'vuelta' && VIEWS.vuelta.stops.indexOf(id) !== -1);
   }
 
   function renderCard() {
@@ -208,22 +223,34 @@
       card.innerHTML = '<p class="mapa-card-hint">' + esc(t('map.hint')) + '</p>';
       return;
     }
-    const s = STOPS.filter(function (x) { return x.id === selected; })[0];
-    const href = s.href || ('https://www.google.com/maps/search/?api=1&query=' + s.lat + ',' + s.lon);
-    card.innerHTML =
-      '<p class="hand-label">' + esc(t('map.' + s.id + '.when')) + '</p>' +
-      '<h3 class="mapa-card-name">' + esc(t('map.' + s.id + '.name')) + '</h3>' +
-      '<p class="mapa-card-note">' + esc(t('map.' + s.id + '.note')) + '</p>' +
-      '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' + esc(t('map.open')) + '</a>';
+    const s = stopById(selected);
+    let html =
+      '<p class="hand-label">' + esc(t('map.' + selected + '.when')) + '</p>' +
+      '<h3 class="mapa-card-name">' + esc(t('map.' + selected + '.name')) + '</h3>' +
+      '<p class="mapa-card-note">' + esc(t('map.' + selected + '.note')) + '</p>';
+    if (s) {
+      const href = s.href || ('https://www.google.com/maps/search/?api=1&query=' + s.lat + ',' + s.lon);
+      html += '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' + esc(t('map.open')) + '</a>';
+    }
+    card.innerHTML = html;
+  }
+
+  // the button under the map that goes with what is showing
+  function markView(name) {
+    document.querySelectorAll('[data-mapa]').forEach(function (x) {
+      const v = x.getAttribute('data-mapa');
+      if (VIEWS[v]) x.classList.toggle('is-on', v === name);
+    });
   }
 
   function select(id, fly) {
     selected = id;
     svg.querySelectorAll('.m-stop').forEach(function (g) {
-      g.classList.toggle('is-on', g.getAttribute('data-stop') === id);
+      g.classList.toggle('is-on', isOn(g.getAttribute('data-stop')));
     });
     renderCard();
-    if (fly && id) {
+    if (fly && stopById(id)) {
+      markView(VIEW_OF_STOP[id] || null);
       // close enough to tell the stop from its neighbours, never further out than now
       const target = viewFor({ stops: [id] });
       const f = frameSize();
@@ -318,6 +345,7 @@
     if (!svg || moved > 6) return;
     const g = e.target.closest ? e.target.closest('.m-stop') : null;
     select(g ? g.getAttribute('data-stop') : null, !!g);
+    if (!g) markView(null);
   });
   box.addEventListener('keydown', function (e) {
     const g = e.target.closest ? e.target.closest('.m-stop') : null;
@@ -357,11 +385,9 @@
     else if (what === 'out') zoomAt(1.7);
     else if (what === 'expand') setOpen(!isOpen());
     else if (VIEWS[what]) {
-      select(null);
+      select(VIEWS[what].card || null);
       flyTo(viewFor(VIEWS[what]));
-      document.querySelectorAll('[data-mapa]').forEach(function (x) {
-        if (VIEWS[x.getAttribute('data-mapa')]) x.classList.toggle('is-on', x === b);
-      });
+      markView(what);
     }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) setOpen(false); });
