@@ -2132,6 +2132,7 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-card .hand-label { margin-bottom: 2px; }
 .mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
 .mapa-card-note { color: var(--ink-soft); margin: 2px 0 8px; }
+.mapa-card-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; }
 .mapa-card-hint { color: var(--ink-faint); font-style: italic; padding-top: 30px; }
 
 .mapa-buses {

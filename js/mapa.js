@@ -33,8 +33,10 @@
   const STOPS = [
     { id: 'iglesia', lat: 40.41905, lon: -3.69742, art: 'assets/ruta-ceremonia.png', dx: -52, dy: -6, below: true,
       href: 'https://share.google/moPjthgGraOJOiUeF' },
-    { id: 'cibeles', lat: 40.41930, lon: -3.69310, art: 'assets/ruta-buses.png', dx: -2, dy: 52, below: true },
-    { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 36, dy: -40 },
+    { id: 'cibeles', lat: 40.41930, lon: -3.69310, art: 'assets/ruta-buses.png', dx: -2, dy: 52, below: true,
+      href: 'https://www.google.com/maps/search/?api=1&query=Plaza+de+Cibeles%2C+Madrid' },
+    { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 36, dy: -40,
+      href: 'https://www.google.com/maps/search/?api=1&query=Avenida+de+Am%C3%A9rica%2C+Madrid' },
     { id: 'ciguena', lat: 40.29114, lon: -3.51444, art: 'assets/ruta-convite.png', dx: 46, dy: -30,
       href: 'https://share.google/xqutfRoSoisIk9tlh' }
   ];
@@ -227,9 +229,18 @@
       '<p class="hand-label">' + esc(t('map.' + selected + '.when')) + '</p>' +
       '<h3 class="mapa-card-name">' + esc(t('map.' + selected + '.name')) + '</h3>' +
       '<p class="mapa-card-note">' + esc(t('map.' + selected + '.note')) + '</p>';
+    const link = function (st, label) {
+      const href = st.href || ('https://www.google.com/maps/search/?api=1&query=' + st.lat + ',' + st.lon);
+      return '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' + esc(label) + '</a>';
+    };
     if (s) {
-      const href = s.href || ('https://www.google.com/maps/search/?api=1&query=' + s.lat + ',' + s.lon);
-      html += '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' + esc(t('map.open')) + '</a>';
+      html += link(s, t('map.open'));
+    } else if (selected === 'vuelta') {
+      // the way back has two stops: one link to each
+      html += '<p class="mapa-card-links">' + ['cibeles', 'avamerica'].map(function (id) {
+        const st = stopById(id);
+        return st ? link(st, t('map.' + id + '.name')) : '';
+      }).join('') + '</p>';
     }
     card.innerHTML = html;
   }
@@ -399,11 +410,12 @@
   });
 
   document.addEventListener('langchange', function () {
+    // the button first: it must follow the language even before the map file has loaded
+    const btn = document.getElementById('mapa-expand');
+    if (btn) btn.textContent = t(isOpen() ? 'map.close' : 'map.expand');
     if (!svg) return;
     drawOverlay();
     renderCard();
-    const btn = document.getElementById('mapa-expand');
-    if (btn) btn.textContent = t(isOpen() ? 'map.close' : 'map.expand');
   });
 
   // --- Start: the map file is only downloaded when the section is about to come into view ---
