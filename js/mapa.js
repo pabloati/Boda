@@ -44,28 +44,29 @@
       href: 'https://share.google/xqutfRoSoisIk9tlh' }
   ];
   function placeName(pl) {
-    return (K < 1.3 && pl.short) || pl.name;
+    return (narrow && pl.short) || pl.name;
   }
   // where a stop's drawing sits for the current frame
   function place(s) {
-    return (K < 1.3 && s.narrow) || s;
+    return (narrow && s.narrow) || s;
   }
 
   // --- Size of the round drawings: K scales them (1 = a 24 px circle), R is the radius on screen.
   //     Narrow frames (phones) get smaller ones, or the three stops in Madrid cover each other.
-  let K = 1.45, R = 24 * K;
+  let K = 1.8, R = 24 * K, narrow = false;
   function sizeUp() {
-    const k = box.clientWidth < 480 ? 1.12 : 1.45;
-    const changed = k !== K;
-    K = k; R = 24 * K;
-    return changed;
+    const was = narrow;
+    narrow = box.clientWidth < 480;
+    K = narrow ? 1.4 : 1.8;
+    R = 24 * K;
+    return was !== narrow;
   }
 
   // --- Place names. z = the zoom steps they show in (1 far, 2 middle, 3 close).
   //     wide = left out of the far view on phone-width frames, where the drawings need the room;
   //     short = the name used on those frames.
   const PLACES = [
-    { name: 'Madrid', lat: 40.4640, lon: -3.7080, z: [1, 2], cls: 'city', wide: true },
+    { name: 'Madrid', lat: 40.4560, lon: -3.7180, z: [1, 2], cls: 'city', wide: true },
     { name: 'Vallecas', lat: 40.3800, lon: -3.6350, z: [1, 2], cls: 'town', wide: true },
     { name: 'Rivas', lat: 40.3560, lon: -3.5250, z: [1, 2], cls: 'town' },
     { name: 'Arganda del Rey', short: 'Arganda', lat: 40.3000, lon: -3.4700, z: [1, 2], cls: 'town' },
@@ -74,13 +75,30 @@
     { name: 'A-3', lat: 40.3660, lon: -3.5767, z: [1, 2], cls: 'road' },
     { name: 'A-4', lat: 40.3080, lon: -3.6900, z: [1, 2], cls: 'road' },
     { name: 'El Retiro', lat: 40.4140, lon: -3.6830, z: [2, 3], cls: 'park' },
-    { name: 'Gran Vía', lat: 40.4200, lon: -3.7030, z: [3], cls: 'street' },
-    { name: 'Calle de Alcalá', lat: 40.4196, lon: -3.6952, z: [3], cls: 'street' },
-    { name: 'Paseo del Prado', lat: 40.4150, lon: -3.6938, z: [3], cls: 'street' },
-    { name: 'Paseo de Recoletos', lat: 40.4228, lon: -3.6917, z: [3], cls: 'street' },
-    { name: 'Puerta de Alcalá', lat: 40.4201, lon: -3.6887, z: [3], cls: 'street' },
-    { name: 'Calle de María de Molina', lat: 40.4372, lon: -3.6835, z: [3], cls: 'street' },
-    { name: 'Río Jarama', lat: 40.3050, lon: -3.5330, z: [2, 3], cls: 'park' }
+    { name: 'Río Jarama', lat: 40.3050, lon: -3.5330, z: [2, 3], cls: 'park' },
+    // Street names (from `python3 _dev/mapa_calles.py <data folder>`). s = when they show: 1 the main
+    // streets, from a middle zoom; 2 the rest, only close up. rot = the angle of the street.
+    { name: 'Calle de Alcalá', lat: 40.41877, lon: -3.69619, s: 1, rot: -17, cls: 'street' },
+    { name: 'Gran Vía', lat: 40.42011, lon: -3.70297, s: 1, rot: 5, cls: 'street' },
+    { name: 'Paseo de Recoletos', lat: 40.42411, lon: -3.69138, s: 1, rot: -71, cls: 'street' },
+    { name: 'Paseo del Prado', lat: 40.41286, lon: -3.69351, s: 1, rot: 74, cls: 'street' },
+    { name: 'Calle de Alcalá', lat: 40.42030, lon: -3.68751, s: 2, rot: -14, cls: 'street' },
+    { name: 'Calle de Alfonso XII', lat: 40.41718, lon: -3.68887, s: 2, rot: -86, cls: 'street' },
+    { name: 'Calle del Barquillo', lat: 40.42135, lon: -3.69566, s: 2, rot: 90, cls: 'street' },
+    { name: 'Carrera de San Jerónimo', lat: 40.41619, lon: -3.69745, s: 2, rot: 20, cls: 'street' },
+    { name: 'Calle de Hortaleza', lat: 40.42243, lon: -3.69953, s: 2, rot: -61, cls: 'street' },
+    { name: 'Calle de Fuencarral', lat: 40.42248, lon: -3.70089, s: 2, rot: -80, cls: 'street' },
+    { name: 'Avenida de América', lat: 40.43955, lon: -3.67064, s: 1, rot: -25, cls: 'street' },
+    { name: 'Calle de María de Molina', lat: 40.43768, lon: -3.68374, s: 1, rot: 4, cls: 'street' },
+    { name: 'Calle de Francisco Silvela', lat: 40.43276, lon: -3.67264, s: 1, rot: 58, cls: 'street' },
+    { name: 'Calle del Príncipe de Vergara', lat: 40.44278, lon: -3.67850, s: 1, rot: -85, cls: 'street' },
+    { name: 'Calle de Cartagena', lat: 40.43732, lon: -3.67127, s: 2, rot: 39, cls: 'street' },
+    { name: 'Calle de López de Hoyos', lat: 40.44276, lon: -3.67599, s: 2, rot: -38, cls: 'street' },   // 275 m from its anchor
+    { name: 'Calle de Velázquez', lat: 40.43464, lon: -3.68334, s: 2, rot: -86, cls: 'street' },
+    { name: 'Calle de Juan Bravo', lat: 40.43269, lon: -3.68209, s: 2, rot: 4, cls: 'street' },
+    { name: 'Calle de Diego de León', lat: 40.43473, lon: -3.67902, s: 2, rot: 4, cls: 'street' },
+    { name: 'M-506', lat: 40.28581, lon: -3.49705, s: 1, rot: 0, cls: 'road' },
+    { name: 'M-832', lat: 40.29104, lon: -3.50769, s: 1, rot: 0, cls: 'road' }
   ];
 
   // --- The views the buttons under the map jump to: the stops each one frames.
@@ -88,8 +106,8 @@
   //     card = whose details show under the map: a stop, or 'vuelta' for the way back as a whole.
   const VIEWS = {
     todo: { stops: ['iglesia', 'cibeles', 'avamerica', 'ciguena'], refs: ['A-4', 'Arganda del Rey'] },
-    iglesia: { stops: ['iglesia', 'cibeles'], card: 'iglesia' },
-    salida: { stops: ['iglesia', 'cibeles'], card: 'cibeles' },
+    iglesia: { stops: ['iglesia', 'cibeles'], min: 45, card: 'iglesia' },
+    salida: { stops: ['iglesia', 'cibeles'], min: 45, card: 'cibeles' },
     convite: { stops: ['ciguena'], min: 90, card: 'ciguena' },
     vuelta: { stops: ['cibeles', 'avamerica'], fit: ['iglesia', 'cibeles', 'avamerica'], card: 'vuelta' }
   };
@@ -126,6 +144,8 @@
     svg.style.setProperty('--u', u.toFixed(5));
     const z = u > 0.55 ? 1 : (u > 0.115 ? 2 : 3);
     if (svg.getAttribute('data-z') !== String(z)) svg.setAttribute('data-z', z);
+    const st = u < 0.075 ? 2 : (u < 0.17 ? 1 : 0);     // which street names show (see PLACES)
+    if (svg.getAttribute('data-s') !== String(st)) svg.setAttribute('data-s', st);
   }
 
   function zoomAt(factor, px, py) {
@@ -151,14 +171,14 @@
     STOPS.forEach(function (s) {
       if ((v.fit || v.stops).indexOf(s.id) === -1) return;     // fit: also kept whole, though not part of the view
       const q = place(s), p = project(s.lat, s.lon), cx = q.dx * K, cy = q.dy * K;
-      const half = Math.max(R, t('map.' + s.id + '.short').length * 4.6 + 8);
+      const half = Math.max(R, t('map.' + s.id + '.short').length * 5.6 + 8);
       boxes.push({ x: p.x, y: p.y, l: Math.min(0, cx - half), r: Math.max(0, cx + half),
-        t: Math.min(0, cy - R - (q.below ? 2 : 32)), b: Math.max(0, cy + R + (q.below ? 32 : 2)) });
+        t: Math.min(0, cy - R - (q.below ? 2 : 36)), b: Math.max(0, cy + R + (q.below ? 36 : 2)) });
     });
     (v.refs || []).forEach(function (name) {
       const pl = PLACES.filter(function (x) { return x.name === name; })[0];
       if (!pl) return;
-      const p = project(pl.lat, pl.lon), half = placeName(pl).length * 4.6 + 6;
+      const p = project(pl.lat, pl.lon), half = placeName(pl).length * 5.6 + 6;
       boxes.push({ x: p.x, y: p.y, l: -half, r: half, t: -15, b: 7 });
     });
     if (!boxes.length) return null;
@@ -234,9 +254,12 @@
     const over = el('g', { 'class': 'm-over' }, svg);
 
     PLACES.forEach(function (pl) {
-      const zs = (K < 1.3 && pl.wide) ? pl.z.filter(function (z) { return z !== 1; }) : pl.z;
-      const g = pinned(over, project(pl.lat, pl.lon), 'm-name m-name-' + pl.cls + ' ' + zs.map(function (z) { return 'on' + z; }).join(' '));
-      el('text', { 'text-anchor': 'middle' }, g).textContent = placeName(pl);
+      const zs = (narrow && pl.wide) ? pl.z.filter(function (z) { return z !== 1; }) : (pl.z || []);
+      const when = pl.s ? 'ons' + pl.s : zs.map(function (z) { return 'on' + z; }).join(' ');
+      const g = pinned(over, project(pl.lat, pl.lon), 'm-name m-name-' + pl.cls + ' ' + when);
+      const txt = el('text', { 'text-anchor': 'middle' }, g);
+      if (pl.rot) txt.setAttribute('transform', 'rotate(' + pl.rot + ')');
+      txt.textContent = placeName(pl);
     });
 
     const defs = el('defs', {}, over);
@@ -258,8 +281,8 @@
       img.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', s.art);
       const name = t('map.' + s.id + '.short');
       // an unseen box behind the name, so the name is as easy to tap as the drawing
-      el('rect', { x: -name.length * 4.6 - 8, y: q.below ? R : -R - 26, width: name.length * 9.2 + 16, height: 28, 'class': 'm-stop-hit' }, b);
-      const label = el('text', { y: q.below ? R + 17 : -R - 7, 'text-anchor': 'middle', 'class': 'm-stop-label' }, b);
+      el('rect', { x: -name.length * 5.6 - 8, y: q.below ? R : -R - 30, width: name.length * 11.2 + 16, height: 32, 'class': 'm-stop-hit' }, b);
+      const label = el('text', { y: q.below ? R + 20 : -R - 8, 'text-anchor': 'middle', 'class': 'm-stop-label' }, b);
       label.textContent = name;
     });
   }
@@ -317,7 +340,7 @@
     if (fly && stopById(id)) {
       markView(VIEW_OF_STOP[id] || null);
       // close enough to tell the stop from its neighbours, never further out than now
-      const target = viewFor({ stops: [id] });
+      const target = viewFor({ stops: [id], min: 45 });
       const f = frameSize();
       target.w = Math.min(view.w, Math.max(target.w, 46));
       const p = project.apply(null, STOPS.filter(function (x) { return x.id === id; }).map(function (x) { return [x.lat, x.lon]; })[0]);

@@ -2043,13 +2043,16 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-name { display: none; }
 .mapa-svg[data-z="1"] .m-name.on1,
 .mapa-svg[data-z="2"] .m-name.on2,
-.mapa-svg[data-z="3"] .m-name.on3 { display: inline; }
+.mapa-svg[data-z="3"] .m-name.on3,
+.mapa-svg[data-s="1"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons2 { display: inline; }
 
-.m-name-city text { font-size: 15px; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
-.m-name-town text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink); }
-.m-name-road text { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; fill: var(--olive-deep); }
+.m-name-city text { font-size: 18px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
+.m-name-town text { font-size: 13.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink); }
+.m-name-road text { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; fill: var(--olive-deep); }
 .m-name-park text { font-style: italic; fill: var(--olive-deep); }
-.m-name-street text { font-style: italic; font-size: 13.5px; }
+.m-name-street text { font-size: 14.5px; font-weight: 600; fill: var(--ink); }
 
 .m-stop { cursor: pointer; outline: none; }
 .m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
@@ -2062,7 +2065,7 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .m-stop-label {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 17.5px;
   font-weight: 700;
   fill: var(--ink);
   stroke: var(--paper);
