@@ -434,7 +434,7 @@ button {
   --card-t: 0s;
   --card-ease: ease;
   transform: rotateY(180deg);
-  background: var(--olive-deep) url('../assets/hero-desktop.jpg') center 18% / cover no-repeat;
+  background: var(--olive-deep) url('../assets/hero-desktop.jpg') center 30% / cover no-repeat;
   transition: border-radius 0.8s ease, box-shadow 0.8s ease;
 }
 
@@ -714,7 +714,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;   /* hero-desktop.jpg: keep the tops of their heads in frame */
+  object-position: center 30%;   /* hero-desktop.jpg: keep both faces and the raised arm in frame */
   display: block;
 }
 
@@ -736,21 +736,29 @@ button {
 
 /* Portrait tablets use the phone photo too (see the <source> in index.html) */
 @media (min-width: 769px) and (orientation: portrait) {
-  .hero-photo img { object-position: 53% 50%; }
-  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 53% 50%; }
+  .hero-photo img { object-position: 50% 30%; }
+  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 50% 30%; }
 }
 
-/* Wide screens: the faces are in the middle of hero-desktop.jpg, so the
-   letters move to the left over the blurred hall, and the shade fades sideways */
+/* Portrait (phones and tablets): the lettering sits at the top, over the
+   mountains of hero-mobile.jpg, so it clears the faces */
+@media (max-width: 768px), (orientation: portrait) {
+  .hero-veil .veil-sheet { align-items: flex-start; }
+}
+
+/* Wide screens: the faces are in the upper middle of hero-desktop.jpg, so the
+   letters go to the bottom left, over the dark jacket, and the shade rises from there */
 @media (min-width: 769px) and (orientation: landscape) {
   :root { --veil-h: 100%; }
   .hero-veil .veil-sheet {
     justify-content: flex-start;
     text-align: left;
+    align-items: flex-end;
     padding-left: 6vw;
-    background: linear-gradient(90deg, rgba(28, 26, 20, 0.5) 0%, rgba(28, 26, 20, 0.32) 34%, rgba(28, 26, 20, 0) 62%);
+    padding-bottom: 4vh;
+    background: linear-gradient(0deg, rgba(28, 26, 20, 0.55) 0%, rgba(28, 26, 20, 0.3) 30%, rgba(28, 26, 20, 0) 55%);
   }
-  .card-back .hero-veil .veil-sheet { padding-left: calc(6vw * var(--s)); }
+  .card-back .hero-veil .veil-sheet { padding-left: calc(6vw * var(--s)); padding-bottom: calc(4vh * var(--s)); }
   .hero-veil .veil-sheet .hero-content { max-width: 46vw; }
   .card-back .hero-veil .veil-sheet .hero-content { max-width: calc(46vw * var(--s)); }
   .hero-veil .veil-sheet .hero-title { padding: 0; }
@@ -1747,17 +1755,6 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 /* ========================================================
-   PHOTOS / HASHTAG
-======================================================== */
-.hashtag-text {
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  font-weight: 500;
-  color: var(--ink);
-  margin: -14px 0 10px;
-  overflow-wrap: anywhere;
-}
-
-/* ========================================================
    FOOTER
 ======================================================== */
 .footer-section {
@@ -1833,7 +1830,7 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .hero-photo img {
-    object-position: 53% 50%;   /* hero-mobile.jpg: the couple is just right of centre */
+    object-position: 50% 0%;   /* hero-mobile.jpg: keep the mountains; the couple is centred */
   }
 
   :root {
@@ -1900,12 +1897,296 @@ html.rsvp-modal-open { overflow: hidden; }
 
   .card-back {
     background-image: url('../assets/hero-mobile.jpg');
-    background-position: 53% 50%;
+    background-position: 50% 0%;
   }
 
   .card-back .hero-location {
-    margin-bottom: calc(30px * var(--s));
+    margin-bottom: 0;
   }
+
+  /* Phones: a compact lettering block at the top so it ends above the faces of
+     hero-mobile.jpg, and the scroll hint goes to the bottom of the screen
+     (the veil is --veil-h of the stage, hence the division) */
+  .hero-location { margin-bottom: 0; }
+  .veil-sheet { padding-top: 40px; }
+  .card-back .veil-sheet { padding-top: calc(40px * var(--s)); }
+  .hero-content { position: static; padding-top: 8px; }
+  .card-back-content { position: static; padding-top: calc(8px * var(--s)); }
+  .hero-title { margin-bottom: 10px; }
+  .card-back .hero-title { margin-bottom: calc(10px * var(--s)); }
+  .hero-date { font-size: 1.25rem; letter-spacing: 1px; }
+  .card-back .hero-date { font-size: calc(1.25rem * var(--s)); letter-spacing: calc(1px * var(--s)); }
+  .veil-sheet .scroll-indicator {
+    position: absolute;
+    left: 50%;
+    top: calc(100% / 0.64 - 72px);
+    transform: translateX(-50%);
+  }
+  .card-back .veil-sheet .scroll-indicator { top: calc(100% / 0.64 - 72px * var(--s)); }
+}
+
+/* ========================================================
+   BUS MAP (js/mapa.js on assets/mapa.svg)
+   The frame is a window on the map; the script moves the SVG's viewBox.
+   Lines keep their width on screen at any zoom (non-scaling-stroke) and the
+   layers z2 / z3 only show from the middle and the close zoom steps (data-z).
+======================================================== */
+.mapa-shell {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.mapa-frame {
+  --frame: #2b2822;
+  --fs: 0.56;                   /* scale of the frame drawing (1 = the 213 px corner at full size) */
+  position: relative;
+  margin: 8px 0 34px;
+  border: calc(3px * var(--fs)) solid var(--frame);
+  background: var(--paper);
+}
+
+/* Corner ornaments: one drawing (the couple's Victorian frame), mirrored on the four corners and
+   painted with the frame colour through a mask. The map fades to paper under each of them. */
+.mapa-corner {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: calc(213px * var(--fs));
+  height: calc(213px * var(--fs));
+  pointer-events: none;
+  background: radial-gradient(circle calc(213px * var(--fs)) at 0 0, var(--paper) 0, var(--paper) 55%, transparent 100%);
+}
+
+.mapa-corner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--frame);
+  -webkit-mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
+}
+
+.mapa-corner-tr { left: auto; right: 0; transform: scaleX(-1); }
+.mapa-corner-bl { top: auto; bottom: 0; transform: scaleY(-1); }
+.mapa-corner-br { top: auto; left: auto; right: 0; bottom: 0; transform: scale(-1, -1); }
+
+.mapa-canvas {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;          /* one finger scrolls the page; two move the map */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mapa-canvas.is-dragging { cursor: grabbing; }
+
+.mapa-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mapa-svg path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mapa-svg .m-forest path { fill: rgba(142, 145, 102, 0.16); }
+.mapa-svg .m-park path { fill: rgba(142, 145, 102, 0.3); }
+.mapa-svg .m-water path { fill: #c3cfca; }
+.mapa-svg .m-river path { stroke: #b4c3be; stroke-width: 2.5px; }
+.mapa-svg .m-motorway path { stroke: #a9a78c; stroke-width: 1.7px; }
+.mapa-svg .m-primary path { stroke: #cdc6ae; stroke-width: 1px; }
+.mapa-svg .m-mid path { stroke: #d6cfba; stroke-width: 1px; }
+.mapa-svg .m-local path { stroke: #ddd6c2; stroke-width: 1.6px; }
+
+.mapa-svg[data-z="1"] .z2,
+.mapa-svg[data-z="1"] .z3,
+.mapa-svg[data-z="2"] .z3 { display: none; }
+
+/* close up the streets become wide, like on a street map */
+.mapa-svg[data-z="2"] .m-primary path { stroke-width: 2.2px; stroke: #c9c2aa; }
+.mapa-svg[data-z="2"] .m-motorway path { stroke-width: 2.6px; }
+.mapa-svg[data-z="3"] .m-motorway path { stroke-width: 9px; stroke: #cfc8b0; }
+.mapa-svg[data-z="3"] .m-primary path { stroke-width: 8px; stroke: #d5ceb8; }
+.mapa-svg[data-z="3"] .m-mid path { stroke-width: 5px; stroke: #dad3be; }
+.mapa-svg[data-z="3"] .m-local path { stroke-width: 3px; }
+
+/* the bus route: a dotted path, like the one in the Hoja de ruta */
+.mapa-svg .m-route-case { stroke: var(--paper); stroke-width: 7px; }
+.mapa-svg .m-route-line { stroke: var(--terracotta); stroke-width: 3px; stroke-dasharray: 0.1 8; }
+
+/* names and stops are drawn in screen pixels (their group is scaled by --u) */
+.m-name text {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  fill: var(--ink-soft);
+  stroke: var(--paper);
+  stroke-width: 3.5px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.m-name { display: none; }
+.mapa-svg[data-z="1"] .m-name.on1,
+.mapa-svg[data-z="2"] .m-name.on2,
+.mapa-svg[data-z="3"] .m-name.on3 { display: inline; }
+
+.m-name-city text { font-size: 15px; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
+.m-name-town text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+.m-name-road text { font-size: 11px; font-weight: 700; fill: #8a886e; }
+.m-name-park text { font-style: italic; fill: var(--olive-deep); }
+.m-name-street text { font-style: italic; font-size: 13.5px; }
+
+.m-stop { cursor: pointer; outline: none; }
+.m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
+.m-stop-dot { fill: var(--terracotta); stroke: var(--paper); stroke-width: 1.5px; }
+.m-stop-badge { fill: var(--paper); stroke: var(--olive-deep); stroke-width: 1.5px; }
+.m-stop.is-on .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
+.m-stop:focus-visible .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
+
+.m-stop-hit { fill: transparent; }
+
+.m-stop-label {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+
+/* the little plate on the bottom of the frame: zoom out, full screen, zoom in */
+.mapa-plaque {
+  position: absolute;
+  left: 50%;
+  bottom: -20px;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: stretch;
+  background: var(--paper);
+  border: 1px solid var(--frame);
+  box-shadow: 0 0 0 4px var(--paper);
+}
+
+.mapa-tool,
+.mapa-expand {
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  height: 36px;
+}
+
+.mapa-tool {
+  width: 42px;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.mapa-expand {
+  padding: 0 14px;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-left: 1px solid var(--paper-line);
+  border-right: 1px solid var(--paper-line);
+}
+
+.mapa-credit {
+  display: block;
+  width: max-content;
+  margin: 10px auto 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.mapa-views {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  margin: 40px 0 6px;
+}
+
+.mapa-views .link-button { color: var(--ink-soft); border-bottom-color: transparent; }
+.mapa-views .link-button.is-on { color: var(--terracotta); border-bottom-color: currentColor; }
+
+.mapa-card {
+  min-height: 132px;
+  padding: 14px 10px 0;
+  text-align: center;
+}
+
+.mapa-card .hand-label { margin-bottom: 2px; }
+.mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
+.mapa-card-note { color: var(--ink-soft); margin: 2px 0 8px; }
+.mapa-card-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; }
+.mapa-card-hint { color: var(--ink-faint); font-style: italic; padding-top: 30px; }
+
+.mapa-buses {
+  list-style: none;
+  max-width: 560px;
+  margin: 18px auto 0;
+  padding: 0;
+}
+
+.mapa-buses li {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--paper-line);
+  font-size: 1.15rem;
+  text-align: left;
+}
+
+.mapa-buses .ruta-time { font-size: 1.6rem; flex: none; }
+
+/* without the map (it could not be loaded) only the two lines stay */
+.mapa-section.no-map .mapa-shell { display: none; }
+
+/* Full screen: the map fills the screen, the views and the card stay under it */
+body.mapa-open { overflow: hidden; }
+body.mapa-open .float-btn,
+body.mapa-open .lang-toggle { display: none; }
+
+.mapa-section.is-open { position: relative; z-index: 9000; }
+
+.mapa-section.is-open .mapa-shell {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  z-index: 9000;
+}
+
+.mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; margin: 0; border: 0; outline: 0; }
+.mapa-section.is-open .mapa-corner { display: none; }
+.mapa-section.is-open .mapa-plaque { bottom: 12px; }
+.mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
+.mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
+.mapa-section.is-open .mapa-card { padding-bottom: 14px; }
+
+@media (max-width: 768px) {
+  .mapa-canvas { aspect-ratio: 1 / 1; }
+  .mapa-frame { --fs: 0.4; margin-bottom: 30px; }
+  .mapa-views { gap: 6px 14px; margin-top: 40px; }
+  .mapa-card { min-height: 150px; }
+  .mapa-buses li { font-size: 1.05rem; gap: 12px; }
 }
 
 /* ---------- Botanical plates (js/flores.js, laid out with _dev/flores.html) ----------
