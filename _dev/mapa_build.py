@@ -20,7 +20,7 @@ import math
 import os
 import sys
 
-S, W, N, E = 40.24, -3.76, 40.48, -3.44
+S, W, N, E = 40.16, -3.90, 40.56, -3.34
 K = 4000.0
 COS = math.cos(math.radians((S + N) / 2))
 WIDTH = (E - W) * COS * K
@@ -87,10 +87,18 @@ def area(pts):
     return abs(sum(pts[i][0] * pts[i + 1][1] - pts[i + 1][0] * pts[i][1] for i in range(len(pts) - 1))) / 2
 
 
+def num(v, nd):
+    """A coordinate with at most nd decimals and no padding ('12.5', '-3', never '-0' or '-')."""
+    t = '%.*f' % (nd, v)
+    if '.' in t:
+        t = t.rstrip('0').rstrip('.')
+    return '0' if t in ('-0', '-', '') else t
+
+
 def d_of(pts, nd, close=False):
     out, last = [], None
     for i, (x, y) in enumerate(pts):
-        s = '%s %s' % (('%.*f' % (nd, x)).rstrip('0').rstrip('.'), ('%.*f' % (nd, y)).rstrip('0').rstrip('.'))
+        s = '%s %s' % (num(x, nd), num(y, nd))
         if s == last:
             continue
         out.append(('M' if not out else 'L') + s)
@@ -159,9 +167,9 @@ def main():
         a = area(g)
         if tags.get('landuse') == 'forest':
             if a >= 400:
-                layers['forest'].append(d_of(simplify(g, 0.8), 1, True))
+                layers['forest'].append(d_of(simplify(g, 1.5), 0, True))
         elif a >= 120:
-            layers['park'].append(d_of(simplify(g, 0.5), 1, True))
+            layers['park'].append(d_of(simplify(g, 0.8), 1, True))
         elif a >= 0.4 and in_detail(g):
             layers['park3'].append(d_of(simplify(g, 0.04), 2, True))
 
@@ -170,10 +178,10 @@ def main():
         if el['type'] == 'way' and tags.get('waterway') == 'river':
             g = geom(el)
             if inside(g):
-                layers['river'].append(d_of(simplify(g, 0.3), 1))
+                layers['river'].append(d_of(simplify(g, 0.8), 1))
     for tags, g in polygons([e for e in load(folder, 'water') if e.get('tags', {}).get('natural') == 'water']):
         if inside(g) and area(g) >= 25:
-            layers['water'].append(d_of(simplify(g, 0.3), 1, True))
+            layers['water'].append(d_of(simplify(g, 0.8), 1, True))
 
     for el in load(folder, 'major'):
         g = geom(el)
@@ -181,9 +189,9 @@ def main():
             continue
         kind = el.get('tags', {}).get('highway')
         if kind in ('motorway', 'trunk'):
-            layers['motorway'].append(d_of(simplify(g, 0.35), 1))
+            layers['motorway'].append(d_of(simplify(g, 0.7), 1))
         else:
-            layers['primary'].append(d_of(simplify(g, 0.25), 1))
+            layers['primary'].append(d_of(simplify(g, 0.7), 1))
 
     seen = set()
     for el in load(folder, 'mid'):
@@ -229,21 +237,6 @@ def main():
     svg.append('</g>\n')
     for name, d in routes.items():
         svg.append('<g class="m-route m-route-%s z1"><path class="m-route-case" d="%s"/><path class="m-route-line" d="%s"/></g>\n' % (name, d, d))
-    # the drawn area fades into the paper on its four sides, so the view can go a little past it
-    f = 70
-    svg.append('<defs>' + ''.join(
-        '<linearGradient id="m-fade-%s" x1="%s" y1="%s" x2="%s" y2="%s"><stop offset="0" class="m-fade-a"/><stop offset="1" class="m-fade-b"/></linearGradient>' % g
-        for g in (('l', 0, 0, 1, 0), ('r', 1, 0, 0, 0), ('t', 0, 0, 0, 1), ('b', 0, 1, 0, 0))) + '</defs>\n')
-    big = 400
-    svg.append('<g class="m-fade">'
-               '<rect x="%d" y="%d" width="%d" height="%d" fill="url(#m-fade-l)"/>' % (-1, -big, f + 1, HEIGHT + 2 * big) +
-               '<rect x="%d" y="%d" width="%d" height="%d" fill="url(#m-fade-r)"/>' % (WIDTH - f, -big, f + 1, HEIGHT + 2 * big) +
-               '<rect x="%d" y="%d" width="%d" height="%d" fill="url(#m-fade-t)"/>' % (-big, -1, WIDTH + 2 * big, f + 1) +
-               '<rect x="%d" y="%d" width="%d" height="%d" fill="url(#m-fade-b)"/>' % (-big, HEIGHT - f, WIDTH + 2 * big, f + 1) +
-               '</g>\n')
-    idx = [i for i, x in enumerate(svg) if 'm-route' in x]
-    if idx:    # the fade goes under the bus route
-        svg.insert(idx[0], svg.pop())
     svg.append('</svg>\n')
     out = os.path.join(root, 'assets', 'mapa.svg')
     open(out, 'w', encoding='utf-8').write(''.join(svg))

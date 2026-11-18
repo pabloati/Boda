@@ -2029,9 +2029,6 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg[data-z="3"] .m-mid path { stroke-width: 5px; stroke: #dad3be; }
 .mapa-svg[data-z="3"] .m-local path { stroke-width: 3px; }
 
-.mapa-svg .m-fade-a { stop-color: var(--paper); stop-opacity: 1; }
-.mapa-svg .m-fade-b { stop-color: var(--paper); stop-opacity: 0; }
-
 /* the bus route: a dotted path, like the one in the Hoja de ruta */
 .mapa-svg .m-route-case { stroke: var(--paper); stroke-width: 7px; }
 .mapa-svg .m-route-line { stroke: var(--terracotta); stroke-width: 3px; stroke-dasharray: 0.1 8; }

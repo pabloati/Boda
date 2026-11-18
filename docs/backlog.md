@@ -32,7 +32,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 
 ## Future improvements (not planned yet)
 
-- **Bus map, finer points**: rivers (Jarama, Manzanares) and a wider drawn area are missing because the public OpenStreetMap servers were down on 2026-11-17 (`_dev/mapa_fetch.py` then `_dev/mapa_build.py`; to widen the area change `BB` and `S, W, N, E` together). More street names up close.
+- **Bus map, finer points**: more street names up close. The map is rebuilt with `_dev/mapa_extract.py` (from a Geofabrik file, needs `pip install osmium`) or `_dev/mapa_fetch.py` (public servers, often down), then `_dev/mapa_build.py`.
 - **Preview of the shared album in the Fotos section** (now only a link, decided 2026-11-17). Google Photos has no embed and no official way to read a shared album, so the options are:
   - *Fixed strip*: a few photos the couple chooses, saved in `assets/`, refreshed by hand. Stable, not live.
   - *Live strip*: a small separate Google Apps Script (not the RSVP one) reads the album's public share page and returns the latest ~6 thumbnail addresses; the site shows them and each opens the album. Unofficial, can break without notice, so it must fall back to the link alone. Not tested against the real album yet. A scheduled GitHub job writing the list to the repo is the alternative, at the cost of one commit per change.

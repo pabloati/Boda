@@ -71,7 +71,7 @@
   const VIEW_OF_STOP = { iglesia: 'iglesia', cibeles: 'salida', ciguena: 'convite' };
 
   let svg = null;
-  let W = 975, H = 960, geo = null;
+  let W = 1707, H = 1600, geo = null;
   let view = { x: 0, y: 0, w: 975 };   // the viewBox: left, top, width (height follows the frame)
   let selected = null;
   let anim = 0;
@@ -88,15 +88,14 @@
   function apply() {
     const f = frameSize();
     const ratio = f.h / f.w;
-    const M = 150;     // how far past the drawn area the view may go (it fades into the paper there)
+    const M = 0;       // the view never leaves the drawn area, so the map always fills the frame
     const cx = view.x + view.w / 2, cy = view.y + view.w * ratio / 2;
-    view.w = Math.min(W + 2 * M, Math.max(7, view.w));
+    view.w = Math.min(W + 2 * M, (H + 2 * M) / ratio, Math.max(7, view.w));
     const h = view.w * ratio;
     view.x = cx - view.w / 2;       // a width that had to be cut keeps its centre
     view.y = cy - h / 2;
     view.x = Math.min(W + M - view.w, Math.max(-M, view.x));
-    // a tall frame can show more than the drawn height: then the map sits in the middle
-    view.y = h >= H + 2 * M ? (H - h) / 2 : Math.min(H + M - h, Math.max(-M, view.y));
+    view.y = Math.min(H + M - h, Math.max(-M, view.y));
     svg.setAttribute('viewBox', view.x.toFixed(2) + ' ' + view.y.toFixed(2) + ' ' + view.w.toFixed(2) + ' ' + h.toFixed(2));
     const u = view.w / f.w;                       // map units per screen pixel
     svg.style.setProperty('--u', u.toFixed(5));

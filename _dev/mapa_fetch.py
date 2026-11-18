@@ -14,7 +14,7 @@ import time
 import urllib.parse
 import urllib.request
 
-BB = '40.24,-3.76,40.48,-3.44'    # the same area as S, W, N, E in mapa_build.py
+BB = '40.16,-3.90,40.56,-3.34'    # the same area as S, W, N, E in mapa_build.py
 # church, Cibeles, Avenida de América, La Cigüeña
 PTS = {'iglesia': (40.4189, -3.6975), 'cibeles': (40.4193, -3.6931), 'avamerica': (40.4380, -3.6765), 'ciguena': (40.2911, -3.5144)}
 UA = {'User-Agent': 'map-prototype/1.0'}
