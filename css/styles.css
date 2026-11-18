@@ -737,7 +737,7 @@ button {
 /* Portrait tablets use the phone photo too (see the <source> in index.html) */
 @media (min-width: 769px) and (orientation: portrait) {
   .hero-photo img { object-position: 50% 30%; }
-  .card-back { background-image: url('../assets/hero-mobile.jpg?v=202611182317-0822b57'); background-position: 50% 30%; }
+  .card-back { background-image: url('../assets/hero-mobile.jpg?v=202611182322-bd384c6'); background-position: 50% 30%; }
 }
 
 /* Portrait (phones and tablets): the lettering sits at the top, over the
@@ -1973,7 +1973,7 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .card-back {
-    background-image: url('../assets/hero-mobile.jpg?v=202611182317-0822b57');
+    background-image: url('../assets/hero-mobile.jpg?v=202611182322-bd384c6');
     background-position: 50% 0%;
   }
 
