@@ -11,7 +11,7 @@
   let SECTIONS = ['intro', 'countdown', 'locations', 'timeline', 'mapa', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];
   // a section added with the editor (extra-N) is called by its own title
   const secLabel = s => LABELS[s] || (/^extra-\d+$/.test(s) && texts['extra' + s.slice(6) + '.title'] ? plain((textEdits['extra' + s.slice(6) + '.title'] || {}).es || texts['extra' + s.slice(6) + '.title'].es) || s : s);
-  const LABELS = { hero: 'Portada', intro: 'Cita', countdown: 'Cuenta atrás', locations: 'Dónde y cuándo', timeline: 'Hoja de ruta', mapa: 'Mapa', rsvp: 'Confirmación', gifts: 'Regalo', playlist: 'Playlist', social: 'Fotos', footer: 'Pie', envelope: 'Sobre', other: 'Otros' };
+  const LABELS = { hero: 'Portada', intro: 'Historia', countdown: 'Cuenta atrás', locations: 'Dónde y cuándo', timeline: 'Hoja de ruta', mapa: 'Mapa', rsvp: 'Confirmación', gifts: 'Regalo', playlist: 'Playlist', social: 'Fotos', footer: 'Pie', envelope: 'Sobre', other: 'Otros' };
   const TOKENS = [['paper', 'Fondo'], ['paper-deep', 'Secciones alternas'], ['paper-line', 'Líneas y bordes'], ['olive', 'Bandas verdes'], ['olive-deep', 'Verde oscuro'], ['olive-soft', 'Verde suave'], ['terracotta', 'Botón y enlaces'], ['terracotta-deep', 'Botón (al pasar)'], ['ink', 'Texto'], ['ink-soft', 'Texto secundario'], ['ink-faint', 'Texto tenue'], ['cream-text', 'Texto sobre verde'], ['gold', 'Dorado']];
   const PHOTOS = [
     { slot: 'hero-mobile', path: 'assets/hero-mobile.jpg', label: 'Portada en el móvil', max: 1600, sel: '.hero-photo source, .hero-photo img' },

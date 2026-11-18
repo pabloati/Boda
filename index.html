@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261118e">
+  <link rel="stylesheet" href="css/styles.css?v=20261118f">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
@@ -172,11 +172,38 @@
       </div>
     </header>
 
-    <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
-    <section class="intro-band" id="intro">
-      <div class="container narrow text-center">
-        <p class="intro-text" data-i18n="intro.text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
-        <p class="intro-ref" data-i18n="intro.ref">1 Juan 4:18</p>
+    <!-- OUR STORY: a welcome and three moments, each with a photo (assets/historia-N.jpg, the slot
+         shows a dashed frame until the file exists). The last line leads into the countdown. -->
+    <section class="historia" id="intro">
+      <div class="container narrow">
+        <div class="text-center">
+          <h2 class="h-script" data-i18n="story.title">Nuestra historia</h2>
+          <p class="historia-lead reveal" data-i18n="story.lead">[Bienvenida: dos o tres líneas vuestras para recibir a los invitados.]</p>
+        </div>
+
+        <div class="historia-moment reveal">
+          <figure class="historia-foto" data-slot="historia-1.jpg">
+            <img src="assets/historia-1.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            <figcaption data-i18n="story.1.cap">[Pie de foto 1]</figcaption>
+          </figure>
+          <p class="historia-text" data-i18n="story.1.text">[Momento 1: cómo os conocisteis. Dos o tres frases vuestras.]</p>
+        </div>
+        <div class="historia-moment reveal">
+          <figure class="historia-foto" data-slot="historia-2.jpg">
+            <img src="assets/historia-2.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            <figcaption data-i18n="story.2.cap">[Pie de foto 2]</figcaption>
+          </figure>
+          <p class="historia-text" data-i18n="story.2.text">[Momento 2: algo de vuestros años juntos. Dos o tres frases vuestras.]</p>
+        </div>
+        <div class="historia-moment reveal">
+          <figure class="historia-foto" data-slot="historia-3.jpg">
+            <img src="assets/historia-3.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+            <figcaption data-i18n="story.3.cap">[Pie de foto 3]</figcaption>
+          </figure>
+          <p class="historia-text" data-i18n="story.3.text">[Momento 3: la pedida, cómo fue el momento. Dos o tres frases vuestras.]</p>
+        </div>
+
+        <p class="historia-end reveal" data-i18n="story.end">[Frase final que lleva a la cuenta atrás.]</p>
       </div>
     </section>
 
@@ -296,7 +323,7 @@
         <h2 class="h-script text-center" data-i18n="map.title">El mapa</h2>
         <div class="mapa-shell">
           <div class="mapa-frame">
-            <div class="mapa-canvas" id="mapa-canvas" data-src="assets/mapa.svg?v=20261118e"></div>
+            <div class="mapa-canvas" id="mapa-canvas" data-src="assets/mapa.svg?v=20261118f"></div>
             <!-- the frame's four corner ornaments (assets/marco-esquina.png, mirrored; they let taps through) -->
             <span class="mapa-corner mapa-corner-tl" aria-hidden="true"></span>
             <span class="mapa-corner mapa-corner-tr" aria-hidden="true"></span>
@@ -519,13 +546,13 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261118e"></script>
-  <script src="js/rsvp-config.js?v=20261118e"></script>
-  <script src="js/script.js?v=20261118e"></script>
-  <script src="js/playlist-config.js?v=20261118e"></script>
-  <script src="js/playlist.js?v=20261118e"></script>
-  <script src="js/mapa.js?v=20261118e"></script>
-  <script src="js/flores-layout.js?v=20261118e"></script>
-  <script src="js/flores.js?v=20261118e"></script>
+  <script src="js/i18n.js?v=20261118f"></script>
+  <script src="js/rsvp-config.js?v=20261118f"></script>
+  <script src="js/script.js?v=20261118f"></script>
+  <script src="js/playlist-config.js?v=20261118f"></script>
+  <script src="js/playlist.js?v=20261118f"></script>
+  <script src="js/mapa.js?v=20261118f"></script>
+  <script src="js/flores-layout.js?v=20261118f"></script>
+  <script src="js/flores.js?v=20261118f"></script>
 </body>
 </html>

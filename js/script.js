@@ -564,6 +564,20 @@
     });
   }
 
+  // --- 10b. REVEAL ON SCROLL: elements with .reveal fade in the first time they come into view ---
+  const revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('js-reveal');
+    const revealWatcher = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('is-in');
+        revealWatcher.unobserve(e.target);
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -6% 0px' });
+    revealEls.forEach(function (el) { revealWatcher.observe(el); });
+  }
+
   // --- 11. HERO VEIL ---
   // The hero stage is sticky inside a section two screens tall. Over the first
   // 80% of that extra scroll the veil (names, date, gold wavy line) slides up

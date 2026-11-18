@@ -95,8 +95,15 @@ window.I18N = (function () {
     'hero.scroll': 'Scroll',
     'hero.scrollAria': 'Scroll to keep reading',
     // --- intro ---
-    'intro.text': '&laquo;There is no fear in love, but perfect love casts out fear.&raquo;',
-    'intro.ref': '1 John 4:18',
+    'story.title': 'Our story',
+    'story.lead': '[Welcome: two or three lines of your own to greet the guests.]',
+    'story.1.cap': '[Photo caption 1]',
+    'story.1.text': '[Moment 1: how you met. Two or three sentences of your own.]',
+    'story.2.cap': '[Photo caption 2]',
+    'story.2.text': '[Moment 2: something from your years together. Two or three sentences of your own.]',
+    'story.3.cap': '[Photo caption 3]',
+    'story.3.text': '[Moment 3: the proposal, how the moment happened. Two or three sentences of your own.]',
+    'story.end': '[Closing line that leads into the countdown.]',
     // --- countdown ---
     'countdown.title': 'Only a few days to go',
     'countdown.days': 'days',
