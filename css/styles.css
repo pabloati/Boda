@@ -1938,21 +1938,11 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .mapa-frame {
   --frame: #2b2822;
-  --fs: 0.56;                   /* scale of the frame drawing (1 = the 216 px corner at full size) */
+  --fs: 0.56;                   /* scale of the frame drawing (1 = the 213 px corner at full size) */
   position: relative;
   margin: 8px 0 34px;
   border: calc(3px * var(--fs)) solid var(--frame);
   background: var(--paper);
-}
-
-/* the thin second line of the frame, as in the drawing */
-.mapa-frame::after {
-  content: "";
-  position: absolute;
-  inset: calc(4px * var(--fs));
-  border: 1px solid var(--frame);
-  opacity: 0.55;
-  pointer-events: none;
 }
 
 /* Corner ornaments: one drawing (the couple's Victorian frame), mirrored on the four corners and
@@ -1960,12 +1950,12 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-corner {
   position: absolute;
   z-index: 2;
-  top: calc(-3px * var(--fs));
-  left: calc(-3px * var(--fs));
-  width: calc(216px * var(--fs));
-  height: calc(216px * var(--fs));
+  top: 0;
+  left: 0;
+  width: calc(213px * var(--fs));
+  height: calc(213px * var(--fs));
   pointer-events: none;
-  background: radial-gradient(circle at 0 0, var(--paper) 0, var(--paper) 52%, transparent 92%);
+  background: radial-gradient(circle calc(213px * var(--fs)) at 0 0, var(--paper) 0, var(--paper) 55%, transparent 100%);
 }
 
 .mapa-corner::after {
@@ -1977,9 +1967,9 @@ html.rsvp-modal-open { overflow: hidden; }
   mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
 }
 
-.mapa-corner-tr { left: auto; right: calc(-3px * var(--fs)); transform: scaleX(-1); }
-.mapa-corner-bl { top: auto; bottom: calc(-3px * var(--fs)); transform: scaleY(-1); }
-.mapa-corner-br { top: auto; left: auto; right: calc(-3px * var(--fs)); bottom: calc(-3px * var(--fs)); transform: scale(-1, -1); }
+.mapa-corner-tr { left: auto; right: 0; transform: scaleX(-1); }
+.mapa-corner-bl { top: auto; bottom: 0; transform: scaleY(-1); }
+.mapa-corner-br { top: auto; left: auto; right: 0; bottom: 0; transform: scale(-1, -1); }
 
 .mapa-canvas {
   position: relative;
@@ -2184,7 +2174,6 @@ body.mapa-open .lang-toggle { display: none; }
 }
 
 .mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; margin: 0; border: 0; outline: 0; }
-.mapa-section.is-open .mapa-frame::after,
 .mapa-section.is-open .mapa-corner { display: none; }
 .mapa-section.is-open .mapa-plaque { bottom: 12px; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
