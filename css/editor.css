@@ -1,0 +1,7 @@
+/* Written by the site editor (_dev/flores.html): edit it there, not by hand.
+   Loaded after styles.css. Delete this file to go back to styles.css alone. */
+/* editor-state {"tokens": {}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {}, "space": {}} */
+@media (max-width: 768px), (orientation: portrait) {
+  .hero-photo img { object-position: 40.0% 50.0%; }
+  .card-back { background-position: 40.0% 50.0%; }
+}
