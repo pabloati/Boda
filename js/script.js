@@ -603,24 +603,25 @@
   // --- 10c. OUR STORY: the three prints turn over ---
   // Each .hfoto-card has the photo on the front and its text on the back. A tap moves the card to
   // a fixed layer over the page (so no section can clip it or paint over it), where it flies to
-  // the middle of the screen, grows and turns over. A second tap, a tap outside, Esc or scrolling
-  // away sends it back to its slot. Until the guest opens one, the prints take turns to swing
+  // the middle of the screen, grows and turns over. There, each tap on the card turns it again
+  // (text, photo, text…); a tap outside, Esc or scrolling away sends it back to its slot. Until the guest opens one, the prints take turns to swing
   // round and show their back for a moment, as the hint that there is something behind.
   const album = document.getElementById('historia-album');
   const albumCards = album ? Array.prototype.slice.call(album.querySelectorAll('.hfoto-card')) : [];
   if (album && albumCards.length) {
     const FLIGHT_MS = lessMotion ? 0 : 850;
-    let stage = null, openCard = null, openSlot = null, openScrollY = 0, busy = false;
+    let stage = null, stageHint = null, openTurn = 0, openCard = null, openSlot = null, openScrollY = 0, busy = false;
     let everOpened = false, peekTimer = null, peekTurn = 0, albumInView = false;
 
     // where the card sits in its slot, written as a transform of the card on the stage
-    const slotTransform = function (slot, w, h) {
+    // `turn` is the angle the card has already turned on the stage, so it never unwinds
+    const slotTransform = function (slot, w, turn) {
       const r = slot.getBoundingClientRect();
       const dx = r.left + r.width / 2 - window.innerWidth / 2;
       const dy = r.top + r.height / 2 - window.innerHeight / 2;
       const tilt = getComputedStyle(slot).getPropertyValue('--tilt').trim() || '0deg';
       return 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + (r.width / w).toFixed(4) +
-        ') rotateY(0deg) rotate(' + tilt + ')';
+        ') rotateY(' + turn + 'deg) rotate(' + tilt + ')';
     };
 
     const stopPeeks = function () {
@@ -645,7 +646,8 @@
       if (!openCard || busy) return;
       busy = true;
       const card = openCard, slot = openSlot;
-      card.style.transform = slotTransform(slot, card.offsetWidth, card.offsetHeight);
+      // back to the photo side by the shortest way: the nearest full turn
+      card.style.transform = slotTransform(slot, card.offsetWidth, Math.round(openTurn / 360) * 360);
       stage.classList.remove('is-on');
       card.setAttribute('aria-expanded', 'false');
       setTimeout(function () {
@@ -671,6 +673,9 @@
         stage = document.createElement('div');
         stage.className = 'hfoto-stage';
         document.body.appendChild(stage);
+        stageHint = document.createElement('p');
+        stageHint.className = 'hfoto-stage-hint';
+        stage.appendChild(stageHint);
         stage.addEventListener('click', closeAlbumCard);
       }
       busy = true;
@@ -682,10 +687,12 @@
       card.style.left = ((window.innerWidth - w) / 2).toFixed(1) + 'px';
       card.style.top = ((window.innerHeight - h) / 2).toFixed(1) + 'px';
       card.style.width = w.toFixed(1) + 'px';
-      card.style.transform = slotTransform(slot, w, h);
-      stage.appendChild(card);
+      card.style.transform = slotTransform(slot, w, 0);
+      stageHint.textContent = t('story.stageHint');
+      stage.insertBefore(card, stageHint);
       void card.offsetWidth;
       card.style.transition = '';
+      openTurn = 180;
       card.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg) rotate(0deg)';
       stage.classList.add('is-on');
       card.setAttribute('aria-expanded', 'true');
@@ -696,17 +703,23 @@
       setTimeout(function () { busy = false; }, FLIGHT_MS);
     };
 
+    // on the stage: half a turn more, always the same way round
+    const turnAlbumCard = function () {
+      if (!openCard || busy) return;
+      openTurn += 180;
+      openCard.style.transform = 'translate(0px, 0px) scale(1) rotateY(' + openTurn + 'deg) rotate(0deg)';
+    };
+
     albumCards.forEach(function (card) {
       card.addEventListener('click', function (e) {
         if (card.querySelector('[contenteditable="true"]')) return;   // a text being edited in the site editor
-        if (openCard === card) return;                               // on the stage: the stage's own click closes it
-        e.stopPropagation();
-        openAlbumCard(card);
+        e.stopPropagation();                                         // on the stage, only a tap outside the card closes it
+        if (openCard === card) turnAlbumCard(); else openAlbumCard(card);
       });
       card.addEventListener('keydown', function (e) {
         if (e.target !== card || (e.key !== 'Enter' && e.key !== ' ')) return;
         e.preventDefault();
-        if (openCard === card) closeAlbumCard(); else openAlbumCard(card);
+        if (openCard === card) turnAlbumCard(); else openAlbumCard(card);
       });
     });
     document.addEventListener('keydown', function (e) {
@@ -720,9 +733,9 @@
     if ('IntersectionObserver' in window && !lessMotion) {
       new IntersectionObserver(function (entries) {
         albumInView = entries[0].isIntersecting;
-        if (albumInView && !everOpened && !peekTimer) peekTimer = setTimeout(peekNext, 900);
+        if (albumInView && !everOpened && !peekTimer) peekTimer = setTimeout(peekNext, 350);
         if (!albumInView) stopPeeks();
-      }, { threshold: 0.6 }).observe(album);
+      }, { threshold: 0, rootMargin: '0px 0px -22% 0px' }).observe(album);   // as soon as the top of the prints is well in view
     }
   }
 

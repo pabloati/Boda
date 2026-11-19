@@ -16,6 +16,7 @@ window.I18N = (function () {
   'use strict';
 
   const ES = {
+    'story.stageHint': 'Toca la foto para girarla, o fuera para cerrar',
     // --- script.js ---
     'rsvp.alertName': 'Por favor indica tu nombre y apellidos antes de guardar.',
     'rsvp.sending': 'Enviando tu respuesta… puede tardar unos segundos.',
@@ -98,6 +99,7 @@ window.I18N = (function () {
     'story.title': 'Our story',
     'story.lead': '[Welcome: two sentences of your own to greet the guests.]',
     'story.hint': 'Tap a photo to turn it over',
+    'story.stageHint': 'Tap the photo to turn it, or outside to close',
     'story.1.cap': 'Madrid',
     'story.1.aria': 'Madrid: turn the photo over',
     'story.1.text': '[Madrid: how it all began. Two or three sentences of your own.]',
