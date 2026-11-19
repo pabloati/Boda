@@ -79,7 +79,7 @@
     { name: 'Río Jarama', lat: 40.3050, lon: -3.5330, z: [2, 3], cls: 'park' },
     // Street names (from `python3 _dev/mapa_calles.py <data folder>`). s = when they show: 1 the main
     // streets, from a middle zoom; 2 the rest, only close up. rot = the angle of the street.
-    { name: 'Calle de Alcalá', lat: 40.41877, lon: -3.69619, s: 1, rot: -17, cls: 'street' },
+    { name: 'Calle de Alcalá', lat: 40.41826, lon: -3.69840, s: 1, rot: -17, cls: 'street' },   // moved west along the street, clear of the metro mark
     { name: 'Gran Vía', lat: 40.42011, lon: -3.70297, s: 1, rot: 5, cls: 'street' },
     { name: 'Paseo de Recoletos', lat: 40.42411, lon: -3.69138, s: 1, rot: -71, cls: 'street' },
     { name: 'Paseo del Prado', lat: 40.41286, lon: -3.69351, s: 1, rot: 74, cls: 'street' },
@@ -99,7 +99,20 @@
     { name: 'Calle de Juan Bravo', lat: 40.43269, lon: -3.68209, s: 2, rot: 4, cls: 'street' },
     { name: 'Calle de Diego de León', lat: 40.43473, lon: -3.67902, s: 2, rot: 4, cls: 'street' },
     { name: 'M-506', lat: 40.28581, lon: -3.49705, s: 1, rot: 0, cls: 'road' },
-    { name: 'M-832', lat: 40.29104, lon: -3.50769, s: 1, rot: 0, cls: 'road' }
+    { name: 'M-832', lat: 40.29104, lon: -3.50769, s: 1, rot: 0, cls: 'road' },
+    // Metro stations near the church and the stops in Madrid (positions from OpenStreetMap). They get
+    // an «M» mark with the name on one side: at = b below (default), t above, l left, r right.
+    { name: 'Banco de España', lat: 40.41905, lon: -3.69493, s: 1, cls: 'metro', at: 't' },
+    { name: 'Sevilla', lat: 40.41777, lon: -3.69995, s: 1, cls: 'metro' },
+    { name: 'Gran Vía', lat: 40.41991, lon: -3.70162, s: 2, cls: 'metro', at: 'l' },
+    { name: 'Chueca', lat: 40.42267, lon: -3.69767, s: 1, cls: 'metro', at: 't' },
+    { name: 'Retiro', lat: 40.42046, lon: -3.68643, s: 1, cls: 'metro', at: 't' },
+    { name: 'Colón', lat: 40.42580, lon: -3.69204, s: 1, cls: 'metro', at: 'r' },
+    { name: 'Avenida de América', lat: 40.43765, lon: -3.67730, s: 1, cls: 'metro' },
+    { name: 'Diego de León', lat: 40.43447, lon: -3.67472, s: 1, cls: 'metro', at: 'l' },
+    { name: 'Cartagena', lat: 40.43939, lon: -3.67180, s: 1, cls: 'metro' },
+    { name: 'Núñez de Balboa', lat: 40.43264, lon: -3.67956, s: 1, cls: 'metro' },
+    { name: 'Cruz del Rayo', lat: 40.44448, lon: -3.67846, s: 2, cls: 'metro', at: 'l' }
   ];
 
   // --- The views the buttons under the map jump to: the stops each one frames.
@@ -258,6 +271,15 @@
       const zs = (narrow && pl.wide) ? pl.z.filter(function (z) { return z !== 1; }) : (pl.z || []);
       const when = pl.s ? 'ons' + pl.s : zs.map(function (z) { return 'on' + z; }).join(' ');
       const g = pinned(over, project(pl.lat, pl.lon), 'm-name m-name-' + pl.cls + ' ' + when);
+      if (pl.cls === 'metro') {
+        el('circle', { r: 8.5, 'class': 'm-metro-mark' }, g);
+        el('text', { 'text-anchor': 'middle', y: 4.2, 'class': 'm-metro-m' }, g).textContent = 'M';
+        const side = pl.at || 'b';
+        const lab = el('text', { 'text-anchor': side === 'l' ? 'end' : (side === 'r' ? 'start' : 'middle'),
+          x: side === 'l' ? -13 : (side === 'r' ? 13 : 0), y: side === 't' ? -13 : (side === 'b' ? 23 : 4.5) }, g);
+        lab.textContent = pl.name;
+        return;
+      }
       const txt = el('text', { 'text-anchor': 'middle' }, g);
       if (pl.rot) txt.setAttribute('transform', 'rotate(' + pl.rot + ')');
       txt.textContent = placeName(pl);
