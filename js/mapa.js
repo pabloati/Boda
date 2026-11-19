@@ -42,7 +42,7 @@
       href: 'https://www.google.com/maps/search/?api=1&query=Plaza+de+Cibeles%2C+Madrid', dest: 'Plaza de Cibeles, Madrid' },
     { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 50, dy: -12, below: true,
       narrow: { dx: 46, dy: -24, below: false },
-      href: 'https://www.google.com/maps/search/?api=1&query=Intercambiador+de+Avenida+de+Am%C3%A9rica%2C+Madrid', dest: 'Intercambiador de Avenida de América, Madrid' },
+      href: 'https://maps.app.goo.gl/Po6qnfdf63FTc8Pr8', dest: '40.43832,-3.67645' },    // the couple's link: «Estación de Avenida de América»; directions go to its exact point
     { id: 'ciguena', lat: 40.29114, lon: -3.51444, art: 'assets/ruta-convite.png', dx: -52, dy: 12,
       narrow: { dx: -30, dy: 46, below: true },
       href: 'https://share.google/xqutfRoSoisIk9tlh', dest: 'Complejo La Cigüeña, Arganda del Rey' }
