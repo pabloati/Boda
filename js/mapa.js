@@ -41,6 +41,7 @@
       narrow: { dx: 46, dy: -24, below: false },
       href: 'https://www.google.com/maps/search/?api=1&query=Avenida+de+Am%C3%A9rica%2C+Madrid' },
     { id: 'ciguena', lat: 40.29114, lon: -3.51444, art: 'assets/ruta-convite.png', dx: -52, dy: 12,
+      narrow: { dx: -30, dy: 46, below: true },
       href: 'https://share.google/xqutfRoSoisIk9tlh' }
   ];
   function placeName(pl) {
@@ -57,7 +58,7 @@
   function sizeUp() {
     const was = narrow;
     narrow = box.clientWidth < 480;
-    K = narrow ? 1.4 : 1.8;
+    K = narrow ? (box.clientWidth < 340 ? 1.15 : 1.4) : 1.8;   // the smallest phones: or the far view does not fit the drawn area
     R = 24 * K;
     return was !== narrow;
   }
@@ -73,7 +74,7 @@
     { name: 'Coslada', lat: 40.4290, lon: -3.5560, z: [2], cls: 'town' },
     { name: 'Getafe', lat: 40.3080, lon: -3.7300, z: [2], cls: 'town' },
     { name: 'A-3', lat: 40.3660, lon: -3.5767, z: [1, 2], cls: 'road' },
-    { name: 'A-4', lat: 40.3080, lon: -3.6900, z: [1, 2], cls: 'road' },
+    { name: 'A-4', lat: 40.3080, lon: -3.6900, z: [1, 2], cls: 'road', wide: true },
     { name: 'El Retiro', lat: 40.4140, lon: -3.6830, z: [2, 3], cls: 'park' },
     { name: 'Río Jarama', lat: 40.3050, lon: -3.5330, z: [2, 3], cls: 'park' },
     // Street names (from `python3 _dev/mapa_calles.py <data folder>`). s = when they show: 1 the main
@@ -182,7 +183,7 @@
       boxes.push({ x: p.x, y: p.y, l: -half, r: half, t: -15, b: 7 });
     });
     if (!boxes.length) return null;
-    const m = 14, mBottom = 54;                     // free edge in pixels; the bottom one clears the buttons
+    const m = 14, mBottom = 64;                     // free edge in pixels; the bottom one clears the buttons
     const span = function (u) {
       const o = { l: Infinity, r: -Infinity, t: Infinity, b: -Infinity };
       boxes.forEach(function (q) {
