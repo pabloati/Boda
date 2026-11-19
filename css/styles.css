@@ -2160,39 +2160,12 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .mapa-frame {
-  --frame: #2b2822;
-  --fs: 0.56;                   /* scale of the frame drawing (1 = the 213 px corner at full size) */
+  --frame: var(--terracotta);    /* the colour of the dotted bus route */
   position: relative;
   margin: 8px 0 34px;
-  border: calc(3px * var(--fs)) solid var(--frame);
+  border: 2px solid var(--frame);
   background: var(--paper);
 }
-
-/* Corner ornaments: one drawing (the couple's Victorian frame), mirrored on the four corners and
-   painted with the frame colour through a mask. The map fades to paper under each of them. */
-.mapa-corner {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 0;
-  width: calc(213px * var(--fs));
-  height: calc(213px * var(--fs));
-  pointer-events: none;
-  background: radial-gradient(circle calc(213px * var(--fs)) at 0 0, var(--paper) 0, var(--paper) 55%, transparent 100%);
-}
-
-.mapa-corner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--frame);
-  -webkit-mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
-  mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
-}
-
-.mapa-corner-tr { left: auto; right: 0; transform: scaleX(-1); }
-.mapa-corner-bl { top: auto; bottom: 0; transform: scaleY(-1); }
-.mapa-corner-br { top: auto; left: auto; right: 0; bottom: 0; transform: scale(-1, -1); }
 
 .mapa-canvas {
   position: relative;
@@ -2261,13 +2234,16 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-name { display: none; }
 .mapa-svg[data-z="1"] .m-name.on1,
 .mapa-svg[data-z="2"] .m-name.on2,
-.mapa-svg[data-z="3"] .m-name.on3 { display: inline; }
+.mapa-svg[data-z="3"] .m-name.on3,
+.mapa-svg[data-s="1"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons2 { display: inline; }
 
-.m-name-city text { font-size: 15px; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
-.m-name-town text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
-.m-name-road text { font-size: 11px; font-weight: 700; fill: #8a886e; }
+.m-name-city text { font-size: 18px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
+.m-name-town text { font-size: 13.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink); }
+.m-name-road text { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; fill: var(--olive-deep); }
 .m-name-park text { font-style: italic; fill: var(--olive-deep); }
-.m-name-street text { font-style: italic; font-size: 13.5px; }
+.m-name-street text { font-size: 14.5px; font-weight: 600; fill: var(--ink); }
 
 .m-stop { cursor: pointer; outline: none; }
 .m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
@@ -2280,7 +2256,7 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .m-stop-label {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 17.5px;
   font-weight: 700;
   fill: var(--ink);
   stroke: var(--paper);
@@ -2398,15 +2374,14 @@ body.mapa-open .lang-toggle { display: none; }
 }
 
 .mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; margin: 0; border: 0; outline: 0; }
-.mapa-section.is-open .mapa-corner { display: none; }
 .mapa-section.is-open .mapa-plaque { bottom: 12px; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
 .mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
 .mapa-section.is-open .mapa-card { padding-bottom: 14px; }
 
 @media (max-width: 768px) {
-  .mapa-canvas { aspect-ratio: 1 / 1; }
-  .mapa-frame { --fs: 0.4; margin-bottom: 30px; }
+  .mapa-canvas { aspect-ratio: 4 / 5; }
+  .mapa-frame { margin-bottom: 30px; }
   .mapa-views { gap: 6px 14px; margin-top: 40px; }
   .mapa-card { min-height: 150px; }
   .mapa-buses li { font-size: 1.05rem; gap: 12px; }
