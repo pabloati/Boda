@@ -62,6 +62,7 @@
     else note = null;
     el.textContent = msg || (parts.length ? 'Sin guardar: ' + parts.join(', ') : 'Sin cambios');
     el.classList.toggle('dirty', !!bad || (!msg && parts.length > 0)); el.title = el.textContent;
+    if ($('discard')) $('discard').hidden = !parts.length;
     scheduleDraft(); renderRemote();
   }
   const sameHead = (a, b) => !!a && !!b && (a.startsWith(b) || b.startsWith(a));
@@ -624,7 +625,7 @@
     if (saving) return null;
     if (dirtyParts().length) { status('Guarda o descarta tus cambios antes de añadir o eliminar una sección', true); return null; }
     const who = $('who').value.trim();
-    if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); $('who').focus(); return null; }
+    if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); needWho(); return null; }
     saving = true; status(doing);
     let out = null;
     try {
@@ -748,7 +749,7 @@
     const err = m => { const e = $('revErr'); if (e) { e.hidden = false; e.textContent = m; } status(m, true); };
     if (dirtyParts().length) return err('Guarda o descarta los cambios antes de volver atrás');
     const who = $('who').value.trim();
-    if (!who) { $('who').focus(); return err('Escribe tu nombre (arriba) para firmar el cambio'); }
+    if (!who) { needWho(); return err('Escribe tu nombre (arriba) para firmar el cambio'); }
     if (saving) return;
     saving = true; status('Volviendo a ' + c.short + '…');
     try {
@@ -824,7 +825,7 @@
     const parts = dirtyParts();
     if (!parts.length) { status('No hay nada que guardar'); return; }
     const who = $('who').value.trim();
-    if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); $('who').focus(); return; }
+    if (!who) { status('Escribe tu nombre (arriba) para firmar el cambio', true); needWho(); return; }
     const payload = { branch, who, push: $('push').checked, head };
     if (force) payload.force = true;
     if (ED.floresDirty()) payload.flores = ED.floresItems();
@@ -984,7 +985,7 @@
     const why = pubRefusal();
     if (why) { pub = { step: 'refused', error: why }; showPublish(); status(why, true); return; }
     const who = $('who').value.trim();
-    if (!who) { pub.error = 'Escribe tu nombre (arriba) para firmar la publicación.'; showPublish(); status('Escribe tu nombre (arriba) para firmar la publicación', true); $('who').focus(); return; }
+    if (!who) { pub.error = 'Escribe tu nombre (arriba) para firmar la publicación.'; showPublish(); status('Escribe tu nombre (arriba) para firmar la publicación', true); needWho(); return; }
     pub.step = 'busy'; pub.error = ''; showPublish(); status('Publicando…');
     try {
       const r = await fetch('/_dev/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch, who, tip: pub.plan.tip }) });
@@ -1005,6 +1006,31 @@
       if (pub) { pub.step = 'plan'; pub.error = e.message; }
       showPublish(); status('No se pudo publicar', true);
     }
+  }
+
+  // ---------- name and "Subir": a popover under the name button ----------
+  function drawWho() { const bt = $('whoBtn'), v = $('who').value.trim(); if (!bt) return; bt.querySelector('span').textContent = v || 'Tu nombre'; bt.classList.toggle('empty', !v); }
+  function whoOutside(e) { if (!e.target.closest('#whoPop, #whoBtn')) closeWho(); }
+  function closeWho() { const pop = $('whoPop'); if (pop) pop.hidden = true; document.removeEventListener('pointerdown', whoOutside, true); }
+  function openWho() {
+    const pop = $('whoPop'), bt = $('whoBtn'); if (!pop || !bt) return;
+    closeShare(); pop.hidden = false;
+    const r = bt.getBoundingClientRect();
+    pop.style.top = r.bottom + 8 + 'px'; pop.style.left = Math.max(8, Math.min(window.innerWidth - pop.offsetWidth - 8, r.right - pop.offsetWidth)) + 'px';
+    document.addEventListener('pointerdown', whoOutside, true);
+  }
+  // a save needs a name: open the popover and put the cursor in it
+  function needWho() { openWho(); $('who').focus(); }
+
+  // ---------- "Descartar": drop everything unsaved and load the branch as it was last saved ----------
+  async function discard() {
+    const parts = dirtyParts();
+    if (!parts.length || saving) return;
+    endEdit();
+    if (!confirm(`¿Descartar lo que no has guardado (${parts.join(', ')})?\n\nLa rama vuelve a como estaba en el último guardado. Esto no se puede deshacer.`)) return;
+    conflict = null; dropSiteDraft(); ED.dropFloresDraft();
+    await openBranch(branch, true);
+    status('Cambios descartados', false, true);
   }
 
   // ---------- "Sincronizar": bring the open branch level with GitHub ----------
@@ -1126,9 +1152,13 @@
   if ($('share')) $('share').onclick = openShare;
   if ($('publish')) $('publish').onclick = openPublish;
   if ($('sync')) $('sync').onclick = doSync;
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sharePop')) closeShare(); });
+  if ($('discard')) $('discard').onclick = discard;
+  if ($('whoBtn')) $('whoBtn').onclick = () => ($('whoPop').hidden ? openWho() : closeWho());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('sharePop')) closeShare(); closeWho(); } });
   try { $('who').value = localStorage.getItem('ed-who') || ''; } catch (e) {}
-  $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} };
+  $('who').oninput = () => { try { localStorage.setItem('ed-who', $('who').value); } catch (e) {} drawWho(); };
+  $('who').onkeydown = e => { if (e.key === 'Enter') closeWho(); };
+  drawWho();
   $('branch').onchange = e => { if (e.target.value === '__new') drawProps($('props')); else openBranch(e.target.value); };
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
   document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && e.target.closest('input, textarea, select')) { e.preventDefault(); save(); } });

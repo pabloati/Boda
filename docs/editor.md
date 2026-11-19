@@ -23,6 +23,17 @@ replaces it, so anything `write_look()` writes must be mirrored there.
 
 ## Bar buttons
 
+The top bar holds what acts on the work: undo/redo, section jump, «Ver en mi móvil», the status,
+the branch, «Sincronizar», the name button, «Descartar», «Guardar» and «Publicar». What only changes
+the view sits in a second bar above the page: the panel toggles at its ends and, in the middle,
+Móvil/Escritorio, the phone model, the zoom, the section outlines and the page reload.
+
+- **Name button.** Opens a popover with the name that signs every save and the «Subir a GitHub al
+  guardar» switch (`#who` and `#push`, read by the scripts as before). A save without a name opens
+  it by itself.
+- **Descartar** appears only while something is unsaved. After a confirmation it drops the unsaved
+  changes and their browser drafts and loads the branch as last saved.
+
 - **Ver en mi móvil** shows the link and a QR code of the current branch's preview
   (`/b/<branch>/index.html`, served from git, so it shows the last save). Scan it with the phone
   or copy the link. The link always uses the server's public tunnel address: the page's own when

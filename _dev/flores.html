@@ -53,40 +53,45 @@
   #bar > * { flex: none; }
   #bar h1 { font: italic 600 19px/1 'Cormorant Garamond', Georgia, 'Times New Roman', serif; margin: 0 8px 0 0; white-space: nowrap; }
   #bar h1 span { font: 500 10px/1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .14em; color: var(--soft); margin-left: 3px; }
-  #bar .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  #bar button, #bar .field, #bar .tg, #goto { height: 32px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-  #bar .div { width: 1px; height: 20px; background: var(--line); margin: 0 5px; }
+  .tb .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tb button, .tb .field, .tb .tg, #goto { height: 32px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .tb .div { width: 1px; height: 20px; background: var(--line); margin: 0 5px; }
   /* quiet buttons: icon only (.ib) or icon and label (.gh) */
-  #bar .ib, #bar .gh { border-color: transparent; background: transparent; color: #4a4a40; cursor: pointer; }
-  #bar .ib { width: 32px; padding: 0; justify-content: center; } #bar .gh { padding: 0 9px; }
-  #bar .ib:hover, #bar .gh:hover { background: #f1efe8; } #bar button:disabled { background: transparent; opacity: .32; }
-  #bar .panel-t:not(.on) { color: #b9b5a8; }
+  .tb .ib, .tb .gh { border-color: transparent; background: transparent; color: #4a4a40; cursor: pointer; }
+  .tb .ib { width: 32px; padding: 0; justify-content: center; } .tb .gh { padding: 0 9px; }
+  .tb .ib:hover, .tb .gh:hover { background: #f1efe8; } .tb button:disabled { background: transparent; opacity: .32; }
+  .tb .panel-t:not(.on) { color: #b9b5a8; }
   /* Móvil / Escritorio */
-  #bar .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 10px; background: #efede6; }
-  #bar .seg button { height: 28px; padding: 0 10px; border: 0; background: transparent; color: var(--soft); }
-  #bar .seg button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(38,38,31,.18); }
+  .tb .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 10px; background: #efede6; }
+  .tb .seg button { height: 28px; padding: 0 10px; border: 0; background: transparent; color: var(--soft); }
+  .tb .seg button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(38,38,31,.18); }
   /* fields: an icon and a borderless select or input inside one outline */
-  #bar .field { border: 1px solid var(--line); background: #fff; padding: 0 9px; color: var(--soft); }
-  #bar .field:focus-within, #goto:focus-visible { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(200,60,120,.13); outline: 0; }
-  #bar .field select, #bar .field input { height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); }
-  #branch { width: 124px; font-weight: 600; text-overflow: ellipsis; } #who { width: 10ch; }
+  .tb .field { border: 1px solid var(--line); background: #fff; padding: 0 9px; color: var(--soft); }
+  .tb .field:focus-within, #goto:focus-visible { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(200,60,120,.13); outline: 0; }
+  .tb .field select, .tb .field input { height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); }
+  #branch { width: 124px; font-weight: 600; text-overflow: ellipsis; }
   #goto { width: 116px; border: 1px solid var(--line); background: #fff; padding: 0 6px; }
   /* switches: a hidden checkbox inside a label (the scripts keep reading .checked) */
-  #bar .tg { position: relative; cursor: pointer; } #bar .tg input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
-  #bar .tg:has(input:focus-visible) { outline: 2px solid var(--acc); outline-offset: 1px; }
-  #bar .ib.tg:has(input:checked) { background: #efede6; color: var(--ink); } #bar .ib.tg:not(:has(input:checked)) { color: #b9b5a8; }
-  #bar .sw { position: relative; width: 24px; height: 14px; border-radius: 999px; background: #cfcbbd; transition: background .15s; }
-  #bar .sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: transform .15s; }
-  #bar .tg:has(input:checked) .sw { background: var(--ink); } #bar .tg:has(input:checked) .sw::after { transform: translateX(10px); }
+  .tb .tg { position: relative; cursor: pointer; } .tb .tg input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+  .tb .tg:has(input:focus-visible) { outline: 2px solid var(--acc); outline-offset: 1px; }
+  .tb .ib.tg:has(input:checked) { background: #efede6; color: var(--ink); } .tb .ib.tg:not(:has(input:checked)) { color: #b9b5a8; }
+  .tb .sw { position: relative; width: 24px; height: 14px; border-radius: 999px; background: #cfcbbd; transition: background .15s; }
+  .tb .sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .tb .tg:has(input:checked) .sw { background: var(--ink); } .tb .tg:has(input:checked) .sw::after { transform: translateX(10px); }
   /* Sincronizar: the badge counts what waits on GitHub (↓) and what GitHub lacks (↑) */
   #syncN { font: 600 11px/1 system-ui, sans-serif; background: var(--acc); color: #fff; border-radius: 999px; padding: 3px 6px; }
   #sync.busy .ic { animation: spin .9s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
-  #bar button.primary { padding: 0 16px; box-shadow: 0 1px 2px rgba(163,42,94,.4); }
-  #bar .pub { padding: 0 12px; border-color: #cfcbbd; font-weight: 600; } #bar .pub:hover { border-color: var(--ink); }
-  @media (max-width: 1700px) { #bar .lbl2, #bar h1 span { display: none; } }
-  @media (max-width: 1580px) { #bar .lbl { display: none; } }
-  @media (max-width: 1400px) { #bar { gap: 4px; padding: 0 10px; } #bar .div { margin: 0 2px; } }
-  @media (max-width: 1340px) { #bar .lbl3 { display: none; } #branch { width: 104px; } }
+  .tb button.primary { padding: 0 16px; box-shadow: 0 1px 2px rgba(163,42,94,.4); }
+  .tb .pub { padding: 0 12px; border-color: #cfcbbd; font-weight: 600; } .tb .pub:hover { border-color: var(--ink); }
+  .tb [hidden] { display: none !important; }
+  #whoBtn.empty { color: var(--accd); font-weight: 600; } #discard { color: #a22; } #whoBtn span { max-width: 13ch; overflow: hidden; text-overflow: ellipsis; }
+  /* name and "Subir": a small popover under the name button */
+  #whoPop { position: fixed; z-index: 20; width: 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 12px; }
+  #whoPop[hidden] { display: none; } #whoPop label { display: block; color: var(--soft); font-size: 12px; margin-bottom: 4px; }
+  #whoPop #who { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font: inherit; margin-bottom: 10px; }
+  #whoPop .tg { display: flex; align-items: center; gap: 8px; height: auto; color: var(--ink); cursor: pointer; margin: 0; font-size: 13px; } #whoPop .hint { margin: 6px 0 0; font-size: 12px; }
+  @media (max-width: 1360px) { #bar .lbl2, #bar h1 span { display: none; } }
+  @media (max-width: 1180px) { #bar .lbl { display: none; } #bar { gap: 4px; padding: 0 10px; } .tb .div { margin: 0 2px; } #branch { width: 104px; } }
   button, select, input[type=number] { font: inherit; color: inherit; }
   button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
   button:hover { border-color: #b9b5a8; } button:disabled { opacity: .4; cursor: default; }
@@ -112,9 +117,12 @@
   #wrap { background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,.18); flex: none; overflow: hidden; border-radius: 4px; margin: 0 auto; }
   /* phone view: a fixed screen (width and visible height of the chosen model) inside a bezel */
   #wrap.phone { border-radius: 22px; box-shadow: 0 0 0 7px #23231f, 0 14px 30px rgba(0,0,0,.28); margin: 7px auto; }
-  #modelBar { flex: none; align-self: stretch; position: sticky; top: 0; left: 0; z-index: 2; height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--soft); font-size: 12px; background: var(--bg); }
-  #modelBar .zm { display: inline-flex; align-items: center; margin-left: 10px; border: 1px solid var(--line); border-radius: 7px; background: #fff; overflow: hidden; }
-  #modelBar .zm button { border: 0; border-radius: 0; background: transparent; padding: 2px 8px; height: 24px; line-height: 1; color: var(--ink); } #modelBar .zm button:hover:not(:disabled) { background: #f1efe8; }
+  /* view bar above the page: panels at the ends, view / model / zoom / guides / reload in the middle */
+  #modelBar { flex: none; align-self: stretch; position: sticky; top: 0; left: 0; z-index: 2; height: 46px; display: flex; align-items: center; gap: 6px; color: var(--soft); font-size: 12px; background: var(--bg); overflow: hidden; }
+  #modelBar > * { flex: none; } #modelBar .sp { flex: 1; } #modelBar .seg { background: #e3e0d7; } #modelBar .ib:hover { background: #e3e0d7; } #modelBar .ib.tg:has(input:checked) { background: #e3e0d7; }
+  #modelBar select { field-sizing: content; height: 28px; border: 0; background: transparent; color: var(--ink); font-weight: 600; cursor: pointer; padding: 2px; border-radius: 5px; } #modelBar select:hover { background: #e3e0d7; }
+  #modelBar .zm { display: inline-flex; align-items: center; margin: 0 4px; border: 1px solid var(--line); border-radius: 7px; background: #fff; overflow: hidden; }
+  #modelBar .zm button { border: 0; border-radius: 0; background: transparent; padding: 2px 8px; height: 26px; line-height: 1; color: var(--ink); } #modelBar .zm button:hover:not(:disabled) { background: #f1efe8; }
   #zVal { min-width: 52px; font-variant-numeric: tabular-nums; border-left: 1px solid var(--line) !important; border-right: 1px solid var(--line) !important; }
   #modelBar select { field-sizing: content; border: 0; background: transparent; color: var(--ink); font-weight: 600; cursor: pointer; padding: 2px; border-radius: 5px; } #modelBar select:hover { background: #e3e0d7; }
   #f { border: 0; display: block; transform-origin: 0 0; background: #fff; }
@@ -172,29 +180,28 @@
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.5 2.5 10.5 13.5"/><path d="m21.5 2.5-7 19-4-8-8-4z"/></symbol>
 </defs></svg>
-<header id="bar">
+<header id="bar" class="tb">
   <h1>Editor <span>de la web</span></h1>
-  <div class="seg"><button id="devM" class="on" title="Vista de móvil"><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg><span class="lbl2">Móvil</span></button><button id="devD" title="Vista de escritorio: lo que cambies aquí solo afecta a las pantallas anchas"><svg class="ic" aria-hidden="true"><use href="#i-desktop"/></svg><span class="lbl2">Escritorio</span></button></div>
-  <i class="div"></i>
   <button id="undo" class="ib" title="Deshacer (Ctrl+Z)" aria-label="Deshacer"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
   <button id="redo" class="ib" title="Rehacer (Ctrl+Mayús+Z)" aria-label="Rehacer"><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg></button>
-  <button id="reload" class="ib" title="Recargar la web (conserva las flores)" aria-label="Recargar la web"><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg></button>
   <i class="div"></i>
   <select id="goto" title="Ir a una sección"></select>
-  <label class="ib tg" title="Ver los bordes de las secciones"><input type="checkbox" id="guides" checked aria-label="Ver secciones"><svg class="ic" aria-hidden="true"><use href="#i-guides"/></svg></label>
-  <button id="tLib" class="ib panel-t on" title="Mostrar u ocultar el panel izquierdo" aria-label="Panel izquierdo"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg></button>
-  <button id="tProps" class="ib panel-t on" title="Mostrar u ocultar el panel de propiedades" aria-label="Panel de propiedades"><svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></button>
-  <i class="div"></i>
   <button id="share" class="gh" title="Ver en mi móvil: enlace y código QR de esta rama"><svg class="ic" aria-hidden="true"><use href="#i-qr"/></svg><span class="lbl">Ver en mi móvil</span></button>
   <span id="status">Sin cambios</span>
   <label class="field" title="Rama de git en la que se guardan los cambios"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><select id="branch" aria-label="Rama"></select></label>
   <button id="sync" class="gh" title="Sincronizar con GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span class="lbl">Sincronizar</span><b id="syncN" hidden></b></button>
   <i class="div"></i>
-  <label class="field" title="Tu nombre: firma cada guardado en el historial"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><input id="who" placeholder="Tu nombre" aria-label="Tu nombre"></label>
-  <label class="gh tg" title="Después de guardar, sube la rama a GitHub"><input type="checkbox" id="push" checked><i class="sw"></i><span class="lbl3">Subir</span></label>
+  <button id="whoBtn" class="gh" title="Tu nombre (firma cada guardado) y si los guardados se suben a GitHub"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Tu nombre</span></button>
+  <button id="discard" class="gh danger" title="Descartar todo lo que no has guardado y volver al último guardado" hidden>Descartar</button>
   <button id="save" class="primary" title="Guardar (Ctrl+S)">Guardar</button>
-  <button id="publish" class="pub" title="Une esta rama a main: cambia la web que ven los invitados"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg>Publicar</button>
+  <button id="publish" class="pub" title="Une esta rama a main: cambia la web que ven los invitados"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg><span class="lbl2">Publicar</span></button>
 </header>
+<div id="whoPop" class="tb" hidden>
+  <label for="who">Tu nombre (firma cada guardado en el historial)</label>
+  <input id="who" placeholder="Tu nombre" autocomplete="off">
+  <label class="tg"><input type="checkbox" id="push" checked><i class="sw"></i>Subir a GitHub al guardar</label>
+  <p class="hint">Déjalo marcado: es la copia de seguridad, y lo que permite verlo desde otro ordenador.</p>
+</div>
 <div class="gutter" id="gl" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="lib">
   <nav class="tabs" id="tabs"><button data-tab="flores" class="on">Flores</button><button data-tab="textos">Textos</button><button data-tab="colores">Colores</button><button data-tab="fuentes">Fuentes</button><button data-tab="fotos">Fotos</button><button data-tab="secciones">Secciones</button><button data-tab="historial">Historial</button></nav>
@@ -207,7 +214,17 @@
   <section class="tab" id="tab-secciones" hidden></section>
   <section class="tab" id="tab-historial" hidden></section>
 </aside>
-<main id="stage"><div id="modelBar"><select id="model" title="Modelo de móvil: ancho y alto visible de la pantalla" aria-label="Modelo de móvil"></select><span id="modelSize"></span><span class="zm"><button id="zOut" title="Alejar (Ctrl + rueda)" aria-label="Alejar">−</button><button id="zVal" title="Volver al tamaño ajustado a la ventana"></button><button id="zIn" title="Acercar (Ctrl + rueda)" aria-label="Acercar">+</button></span></div><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
+<main id="stage"><div id="modelBar" class="tb">
+  <button id="tLib" class="ib panel-t on" title="Mostrar u ocultar el panel izquierdo" aria-label="Panel izquierdo"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg></button>
+  <span class="sp"></span>
+  <div class="seg"><button id="devM" class="on" title="Vista de móvil"><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg><span class="lbl2">Móvil</span></button><button id="devD" title="Vista de escritorio: lo que cambies aquí solo afecta a las pantallas anchas"><svg class="ic" aria-hidden="true"><use href="#i-desktop"/></svg><span class="lbl2">Escritorio</span></button></div>
+  <select id="model" title="Modelo de móvil: ancho y alto visible de la pantalla" aria-label="Modelo de móvil"></select><span id="modelSize"></span>
+  <span class="zm"><button id="zOut" title="Alejar (Ctrl + rueda)" aria-label="Alejar">−</button><button id="zVal" title="Volver al tamaño ajustado a la ventana"></button><button id="zIn" title="Acercar (Ctrl + rueda)" aria-label="Acercar">+</button></span>
+  <label class="ib tg" title="Ver los bordes de las secciones"><input type="checkbox" id="guides" checked aria-label="Ver secciones"><svg class="ic" aria-hidden="true"><use href="#i-guides"/></svg></label>
+  <button id="reload" class="ib" title="Recargar la web (conserva las flores)" aria-label="Recargar la web"><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg></button>
+  <span class="sp"></span>
+  <button id="tProps" class="ib panel-t on" title="Mostrar u ocultar el panel de propiedades" aria-label="Panel de propiedades"><svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></button>
+</div><div id="wrap"><iframe id="f" title="Web"></iframe></div></main>
 <div class="gutter" id="gr" title="Arrastra para cambiar el ancho · doble clic: ancho inicial"></div>
 <aside id="props"></aside>
 <div id="banners">
@@ -220,7 +237,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  let SECS = ['intro', 'countdown', 'locations', 'timeline', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];   // replaced by the branch's own list (it may have sections added with the editor)
+  let SECS = ['intro', 'countdown', 'locations', 'timeline', 'mapa', 'rsvp', 'gifts', 'playlist', 'social', 'footer'];   // replaced by the branch's own list (it may have sections added with the editor)
   const secName = k => window.SITE && window.SITE.secLabel ? window.SITE.secLabel(k) : k;
   const SNAP = 6;
   let DRAFT = 'flores-draft';
@@ -816,13 +833,13 @@
   }
   function fit() {
     const st = $('stage'), phone = dev === 'm', vw = phone ? model.w : 1200;
-    const availW = st.clientWidth - 28 - (phone ? 14 : 0), availH = st.clientHeight - 54 - (phone ? 14 : 0);
+    const availW = st.clientWidth - 28 - (phone ? 14 : 0), availH = st.clientHeight - 60 - (phone ? 14 : 0);
     const base = phone ? Math.min(1, availW / vw, availH / model.h) : Math.min(1, availW / vw), h = phone ? model.h : availH / base;
     const sc = base * zoom;   // zoom multiplies the size that fits the window: the page keeps its own width, it is only drawn bigger
     frame.style.width = vw + 'px'; frame.style.height = h + 'px'; frame.style.transform = 'scale(' + sc + ')';
     $('wrap').style.width = vw * sc + 'px'; $('wrap').style.height = h * sc + 'px';
     $('wrap').classList.toggle('phone', phone); $('model').style.display = phone ? '' : 'none';
-    $('modelSize').textContent = phone ? `${model.w} × ${model.h}` : 'Escritorio · 1200 px de ancho';
+    $('modelSize').textContent = phone ? `${model.w} × ${model.h}` : '1200 px de ancho';
     $('zVal').textContent = Math.round(sc * 100) + ' %'; $('zOut').disabled = zoom <= ZOOMS[0]; $('zIn').disabled = zoom >= ZOOMS[ZOOMS.length - 1];
     setTimeout(renderAll, 60);
   }
