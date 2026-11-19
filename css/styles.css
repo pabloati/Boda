@@ -2179,6 +2179,29 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .mapa-canvas.is-dragging { cursor: grabbing; }
 
+/* «use two fingers»: shown for a moment when someone drags the map sideways with one finger */
+.mapa-fingers {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 82%;
+  margin: 0;
+  padding: 10px 18px;
+  background: rgba(59, 56, 47, 0.86);
+  color: var(--paper);
+  font-size: 1.1rem;
+  line-height: 1.3;
+  text-align: center;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.mapa-fingers.is-on { opacity: 1; }
+.mapa-section.is-open .mapa-fingers { display: none; }
+
 .mapa-svg {
   position: absolute;
   inset: 0;
@@ -2238,6 +2261,9 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg[data-s="1"] .m-name.ons1,
 .mapa-svg[data-s="2"] .m-name.ons1,
 .mapa-svg[data-s="2"] .m-name.ons2 { display: inline; }
+
+/* a name that a stop's drawing would cover (js/mapa.js, hideCovered) */
+.mapa-svg .m-over .m-name.is-hid { display: none; }
 
 .m-name-city text { font-size: 18px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
 .m-name-town text { font-size: 13.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink); }

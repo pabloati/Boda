@@ -10,8 +10,9 @@
    changing the SVG's viewBox.
 
    On the page, one finger scrolls the page as usual; two fingers (or the
-   mouse) move and zoom the map. "Ampliar" opens it full screen, where one
-   finger drags it.
+   mouse) move and zoom the map, and a sideways drag with one finger shows
+   a hint saying so. "Ampliar" opens it full screen, where one finger drags
+   it. Two quick taps on the map zoom in on that spot.
 ======================================================== */
 (function () {
   'use strict';
@@ -31,18 +32,20 @@
   // --- The stops. lat/lon place them; dx/dy is where the round drawing sits, in screen
   //     pixels from the exact point (so two stops that are close do not cover each other).
   //     `narrow` replaces dx/dy/below on phone-width frames, where there is less room sideways.
+  //     href opens the place in Google Maps; dest is what «Cómo llegar» asks the route to (from
+  //     wherever the guest is: Google Maps fills in the starting point).
   const STOPS = [
     { id: 'iglesia', lat: 40.41905, lon: -3.69742, art: 'assets/ruta-ceremonia.png', dx: -52, dy: -6, below: true,
       narrow: { dx: -36, dy: -40, below: false },
-      href: 'https://share.google/moPjthgGraOJOiUeF' },
+      href: 'https://share.google/moPjthgGraOJOiUeF', dest: 'Parroquia de San José, Calle de Alcalá 43, Madrid' },
     { id: 'cibeles', lat: 40.41930, lon: -3.69310, art: 'assets/ruta-buses.png', dx: -2, dy: 52, below: true,
-      href: 'https://www.google.com/maps/search/?api=1&query=Plaza+de+Cibeles%2C+Madrid' },
+      href: 'https://www.google.com/maps/search/?api=1&query=Plaza+de+Cibeles%2C+Madrid', dest: 'Plaza de Cibeles, Madrid' },
     { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 50, dy: -12, below: true,
       narrow: { dx: 46, dy: -24, below: false },
-      href: 'https://www.google.com/maps/search/?api=1&query=Avenida+de+Am%C3%A9rica%2C+Madrid' },
+      href: 'https://www.google.com/maps/search/?api=1&query=Avenida+de+Am%C3%A9rica%2C+Madrid', dest: 'Avenida de América, Madrid' },
     { id: 'ciguena', lat: 40.29114, lon: -3.51444, art: 'assets/ruta-convite.png', dx: -52, dy: 12,
       narrow: { dx: -30, dy: 46, below: true },
-      href: 'https://share.google/xqutfRoSoisIk9tlh' }
+      href: 'https://share.google/xqutfRoSoisIk9tlh', dest: 'Complejo La Cigüeña, Arganda del Rey' }
   ];
   function placeName(pl) {
     return (narrow && pl.short) || pl.name;
@@ -79,7 +82,7 @@
     { name: 'Río Jarama', lat: 40.3050, lon: -3.5330, z: [2, 3], cls: 'park' },
     // Street names (from `python3 _dev/mapa_calles.py <data folder>`). s = when they show: 1 the main
     // streets, from a middle zoom; 2 the rest, only close up. rot = the angle of the street.
-    { name: 'Calle de Alcalá', lat: 40.41826, lon: -3.69840, s: 1, rot: -17, cls: 'street' },   // moved west along the street, clear of the metro mark
+    { name: 'Calle de Alcalá', lat: 40.41849, lon: -3.69740, s: 1, rot: -17, cls: 'street' },   // moved along the street, between the two metro marks
     { name: 'Gran Vía', lat: 40.42011, lon: -3.70297, s: 1, rot: 5, cls: 'street' },
     { name: 'Paseo de Recoletos', lat: 40.42411, lon: -3.69138, s: 1, rot: -71, cls: 'street' },
     { name: 'Paseo del Prado', lat: 40.41286, lon: -3.69351, s: 1, rot: 74, cls: 'street' },
@@ -101,14 +104,14 @@
     { name: 'M-506', lat: 40.28581, lon: -3.49705, s: 1, rot: 0, cls: 'road' },
     { name: 'M-832', lat: 40.29104, lon: -3.50769, s: 1, rot: 0, cls: 'road' },
     // Metro stations near the church and the stops in Madrid (positions from OpenStreetMap). They get
-    // an «M» mark with the name on one side: at = b below (default), t above, l left, r right.
+    // an «M» mark with the name on one side: at = b below (default), t above, l left, r right; atWide = the side on wide frames.
     { name: 'Banco de España', lat: 40.41905, lon: -3.69493, s: 1, cls: 'metro', at: 't' },
     { name: 'Sevilla', lat: 40.41777, lon: -3.69995, s: 1, cls: 'metro' },
     { name: 'Gran Vía', lat: 40.41991, lon: -3.70162, s: 2, cls: 'metro', at: 'l' },
     { name: 'Chueca', lat: 40.42267, lon: -3.69767, s: 1, cls: 'metro', at: 't' },
     { name: 'Retiro', lat: 40.42046, lon: -3.68643, s: 1, cls: 'metro', at: 't' },
     { name: 'Colón', lat: 40.42580, lon: -3.69204, s: 1, cls: 'metro', at: 'r' },
-    { name: 'Avenida de América', lat: 40.43765, lon: -3.67730, s: 1, cls: 'metro' },
+    { name: 'Avenida de América', lat: 40.43765, lon: -3.67730, s: 1, cls: 'metro', atWide: 'l' },
     { name: 'Diego de León', lat: 40.43447, lon: -3.67472, s: 1, cls: 'metro', at: 'l' },
     { name: 'Cartagena', lat: 40.43939, lon: -3.67180, s: 1, cls: 'metro' },
     { name: 'Núñez de Balboa', lat: 40.43264, lon: -3.67956, s: 1, cls: 'metro' },
@@ -160,6 +163,7 @@
     if (svg.getAttribute('data-z') !== String(z)) svg.setAttribute('data-z', z);
     const st = u < 0.075 ? 2 : (u < 0.17 ? 1 : 0);     // which street names show (see PLACES)
     if (svg.getAttribute('data-s') !== String(st)) svg.setAttribute('data-s', st);
+    hideCovered(u);
   }
 
   function zoomAt(factor, px, py) {
@@ -266,15 +270,19 @@
     const old = svg.querySelector('.m-over');
     if (old) old.remove();
     const over = el('g', { 'class': 'm-over' }, svg);
+    names = [];
+    coverU = 0;
 
     PLACES.forEach(function (pl) {
       const zs = (narrow && pl.wide) ? pl.z.filter(function (z) { return z !== 1; }) : (pl.z || []);
       const when = pl.s ? 'ons' + pl.s : zs.map(function (z) { return 'on' + z; }).join(' ');
-      const g = pinned(over, project(pl.lat, pl.lon), 'm-name m-name-' + pl.cls + ' ' + when);
+      const pt = project(pl.lat, pl.lon);
+      const g = pinned(over, pt, 'm-name m-name-' + pl.cls + ' ' + when);
+      names.push({ g: g, p: pt, pts: nameShape(pl), hid: false });
       if (pl.cls === 'metro') {
         el('circle', { r: 8.5, 'class': 'm-metro-mark' }, g);
         el('text', { 'text-anchor': 'middle', y: 4.2, 'class': 'm-metro-m' }, g).textContent = 'M';
-        const side = pl.at || 'b';
+        const side = (!narrow && pl.atWide) || pl.at || 'b';
         const lab = el('text', { 'text-anchor': side === 'l' ? 'end' : (side === 'r' ? 'start' : 'middle'),
           x: side === 'l' ? -13 : (side === 'r' ? 13 : 0), y: side === 't' ? -13 : (side === 'b' ? 23 : 4.5) }, g);
         lab.textContent = pl.name;
@@ -310,6 +318,54 @@
     });
   }
 
+  // --- Names that a drawing would cover are hidden. Names and drawings keep their size on screen,
+  //     so what covers what depends only on the zoom: it is worked out again when the zoom changes.
+  let names = [], coverU = 0;
+  const NAME_W = { city: 13.5, town: 9.6, road: 8, park: 6.2, street: 7, metro: 6.8 };   // pixels per letter, roughly
+
+  // a name as a few points along its text (in pixels from its place on the map)
+  function nameShape(pl) {
+    const text = pl.cls === 'metro' ? pl.name : placeName(pl);
+    const half = text.length * (NAME_W[pl.cls] || 7) / 2;
+    let x0 = -half, x1 = half, y = -4;
+    const pts = [];
+    if (pl.cls === 'metro') {
+      const side = (!narrow && pl.atWide) || pl.at || 'b';
+      pts.push({ x: 0, y: 0 });                                    // the «M» mark
+      if (side === 'l') { x0 = -13 - half * 2; x1 = -13; y = 0; }
+      else if (side === 'r') { x0 = 13; x1 = 13 + half * 2; y = 0; }
+      else y = side === 't' ? -17 : 19;
+    }
+    const a = (pl.rot || 0) * Math.PI / 180, n = Math.max(2, Math.ceil((x1 - x0) / 12));
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + (x1 - x0) * i / n;
+      pts.push({ x: x * Math.cos(a) - y * Math.sin(a), y: x * Math.sin(a) + y * Math.cos(a) });
+    }
+    return pts;
+  }
+
+  function hideCovered(u) {
+    if (!names.length || Math.abs(u - coverU) < coverU * 0.004) return;
+    coverU = u;
+    const shapes = STOPS.map(function (s) {
+      const q = place(s), p = project(s.lat, s.lon);
+      const half = t('map.' + s.id + '.short').length * 5.6 + 6;
+      return { x: p.x / u + q.dx * K, y: p.y / u + q.dy * K, half: half, y0: q.below ? R + 2 : -R - 28, y1: q.below ? R + 28 : -R - 2 };
+    });
+    names.forEach(function (nm) {
+      const bx = nm.p.x / u, by = nm.p.y / u;
+      const hid = nm.pts.some(function (pt) {
+        const x = bx + pt.x, y = by + pt.y;
+        return shapes.some(function (c) {
+          const dx = x - c.x, dy = y - c.y;
+          return dx * dx + dy * dy < (R + 7) * (R + 7) ||                    // under the round drawing
+            (Math.abs(dx) < c.half + 4 && dy > c.y0 - 7 && dy < c.y1 + 7);   // or under its name
+        });
+      });
+      if (hid !== nm.hid) { nm.hid = hid; nm.g.classList.toggle('is-hid', hid); }
+    });
+  }
+
   function stopById(id) {
     return STOPS.filter(function (x) { return x.id === id; })[0] || null;
   }
@@ -335,7 +391,9 @@
       return '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' + esc(label) + '</a>';
     };
     if (s) {
-      html += link(s, t('map.open'));
+      // one stop: the route to it
+      const dir = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(s.dest || (s.lat + ',' + s.lon));
+      html += '<a class="text-link" target="_blank" rel="noopener noreferrer" href="' + esc(dir) + '">' + esc(t('map.route')) + '</a>';
     } else if (selected === 'vuelta') {
       // the way back has two stops: one link to each
       html += '<p class="mapa-card-links">' + ['cibeles', 'avamerica'].map(function (id) {
@@ -400,11 +458,32 @@
     }
   }
 
+  // On the page one finger scrolls the page, so the map does not follow it. A sideways drag with
+  // one finger can only be someone trying to move the map: tell them how. (An up-and-down drag is
+  // the page being scrolled, so it says nothing.)
+  let hintEl = null, hintT = 0, oneFinger = null;
+  function showFingersHint() {
+    const frame = box.parentNode;
+    if (!frame) return;
+    if (!hintEl) {
+      hintEl = document.createElement('p');
+      hintEl.className = 'mapa-fingers';
+      hintEl.setAttribute('aria-hidden', 'true');
+      frame.appendChild(hintEl);
+    }
+    hintEl.textContent = t('map.twoFingers');
+    void hintEl.offsetWidth;
+    hintEl.classList.add('is-on');
+    clearTimeout(hintT);
+    hintT = setTimeout(function () { if (hintEl) hintEl.classList.remove('is-on'); }, 1900);
+  }
+
   box.addEventListener('pointerdown', function (e) {
     if (!svg || (e.pointerType === 'mouse' && e.button !== 0)) return;
     cancelAnimationFrame(anim);
     pointers.set(e.pointerId, local(e));
     if (pointers.size === 1) moved = 0;
+    oneFinger = (e.pointerType === 'touch' && pointers.size === 1 && !isOpen()) ? local(e) : null;
     startGesture();
   });
 
@@ -415,7 +494,14 @@
     const u = view.w / frameSize().w;
     if (gesture.kind === 'drag' && pts.length === 1) {
       // on the page a single finger belongs to the page's own scroll
-      if (e.pointerType === 'touch' && !isOpen()) return;
+      if (e.pointerType === 'touch' && !isOpen()) {
+        if (oneFinger && Math.abs(pts[0].x - oneFinger.x) > 24 && Math.abs(pts[0].x - oneFinger.x) > Math.abs(pts[0].y - oneFinger.y) * 1.5) {
+          oneFinger = null;
+          moved = 99;          // a drag, not a tap: it must not close the card
+          showFingersHint();
+        }
+        return;
+      }
       const dx = pts[0].x - gesture.x, dy = pts[0].y - gesture.y;
       moved += Math.abs(dx) + Math.abs(dy);
       if (moved > 6) {
@@ -452,9 +538,20 @@
   box.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') endPointer(e); });
 
   // A click that was not a drag: on a stop it opens its card, elsewhere it closes it.
+  // Two quick ones on the same spot of the map zoom in on that spot.
+  let lastTap = null;
   box.addEventListener('click', function (e) {
     if (!svg || moved > 6) return;
     const g = e.target.closest ? e.target.closest('.m-stop') : null;
+    const pt = local(e), now = Date.now();
+    if (!g && lastTap && now - lastTap.t < 350 && Math.hypot(pt.x - lastTap.x, pt.y - lastTap.y) < 32) {
+      lastTap = null;
+      const f = frameSize(), u = view.w / f.w, w2 = Math.max(7, view.w / 2.2), u2 = w2 / f.w;
+      // the spot under the finger stays under the finger
+      flyTo({ w: w2, x: view.x + pt.x * u - pt.x * u2, y: view.y + pt.y * u - pt.y * u2 });
+      return;
+    }
+    lastTap = g ? null : { t: now, x: pt.x, y: pt.y };
     select(g ? g.getAttribute('data-stop') : null, !!g);
     if (!g) markView(null);
   });
