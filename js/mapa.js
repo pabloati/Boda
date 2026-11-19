@@ -42,7 +42,7 @@
       href: 'https://www.google.com/maps/search/?api=1&query=Plaza+de+Cibeles%2C+Madrid', dest: 'Plaza de Cibeles, Madrid' },
     { id: 'avamerica', lat: 40.43800, lon: -3.67650, art: 'assets/ruta-buses.png', dx: 50, dy: -12, below: true,
       narrow: { dx: 46, dy: -24, below: false },
-      href: 'https://www.google.com/maps/search/?api=1&query=Avenida+de+Am%C3%A9rica%2C+Madrid', dest: 'Avenida de América, Madrid' },
+      href: 'https://www.google.com/maps/search/?api=1&query=Intercambiador+de+Avenida+de+Am%C3%A9rica%2C+Madrid', dest: 'Intercambiador de Avenida de América, Madrid' },
     { id: 'ciguena', lat: 40.29114, lon: -3.51444, art: 'assets/ruta-convite.png', dx: -52, dy: 12,
       narrow: { dx: -30, dy: 46, below: true },
       href: 'https://share.google/xqutfRoSoisIk9tlh', dest: 'Complejo La Cigüeña, Arganda del Rey' }
@@ -110,6 +110,7 @@
     { name: 'Gran Vía', lat: 40.41991, lon: -3.70162, s: 2, cls: 'metro', at: 'l' },
     { name: 'Chueca', lat: 40.42267, lon: -3.69767, s: 1, cls: 'metro', at: 't' },
     { name: 'Retiro', lat: 40.42046, lon: -3.68643, s: 1, cls: 'metro', at: 't' },
+    { name: 'Recoletos', lat: 40.42250, lon: -3.69170, s: 1, cls: 'metro', mark: 'C', at: 'l' },    // Cercanías: a «C» mark
     { name: 'Colón', lat: 40.42580, lon: -3.69204, s: 1, cls: 'metro', at: 'r' },
     { name: 'Avenida de América', lat: 40.43765, lon: -3.67730, s: 1, cls: 'metro', atWide: 'l' },
     { name: 'Diego de León', lat: 40.43447, lon: -3.67472, s: 1, cls: 'metro', at: 'l' },
@@ -281,7 +282,7 @@
       names.push({ g: g, p: pt, pts: nameShape(pl), hid: false });
       if (pl.cls === 'metro') {
         el('circle', { r: 8.5, 'class': 'm-metro-mark' }, g);
-        el('text', { 'text-anchor': 'middle', y: 4.2, 'class': 'm-metro-m' }, g).textContent = 'M';
+        el('text', { 'text-anchor': 'middle', y: 4.2, 'class': 'm-metro-m' }, g).textContent = pl.mark || 'M';
         const side = (!narrow && pl.atWide) || pl.at || 'b';
         const lab = el('text', { 'text-anchor': side === 'l' ? 'end' : (side === 'r' ? 'start' : 'middle'),
           x: side === 'l' ? -13 : (side === 'r' ? 13 : 0), y: side === 't' ? -13 : (side === 'b' ? 23 : 4.5) }, g);

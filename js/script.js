@@ -258,6 +258,9 @@
           rsvpAttendanceDetails.style.display = 'block';
         }
       }
+      // the playlist line under the button only makes sense for those who come
+      const hint = document.getElementById('rsvp-playlist-hint');
+      if (hint) hint.style.display = this.value === 'no_asistire' ? 'none' : '';
     });
   });
 
@@ -442,6 +445,8 @@
   function resetRsvpForm() {
     rsvpForm.reset();
     if (rsvpAttendanceDetails) rsvpAttendanceDetails.style.display = 'block';
+    const hint = document.getElementById('rsvp-playlist-hint');
+    if (hint) hint.style.display = '';
     updateBusFields();
   }
 
