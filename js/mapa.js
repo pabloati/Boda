@@ -569,12 +569,16 @@
   }, { passive: false });
 
   // --- Buttons --------------------------------------------------------------------------
+  let openY = 0;    // where the page was when the map went full screen
   function setOpen(open) {
     if (!section) return;
     const f = frameSize();
     const centre = { x: view.x + view.w / 2, y: view.y + view.w * (f.h / f.w) / 2, u: view.w / f.w };
+    if (open) openY = window.scrollY;
     section.classList.toggle('is-open', open);
     document.body.classList.toggle('mapa-open', open);
+    document.documentElement.classList.toggle('mapa-open', open);    // the page itself must not scroll behind the map
+    if (!open && Math.abs(window.scrollY - openY) > 2) window.scrollTo(0, openY);    // back where the guest was
     const btn = document.getElementById('mapa-expand');
     if (btn) btn.textContent = t(open ? 'map.close' : 'map.expand');
     // same centre and same scale in the new frame
@@ -599,6 +603,11 @@
     }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) setOpen(false); });
+  // In full screen a finger dragged over the buttons or the card must not scroll the page underneath
+  // (some phones ignore the overflow lock)
+  document.addEventListener('touchmove', function (e) {
+    if (isOpen() && e.cancelable) e.preventDefault();
+  }, { passive: false });
 
   let resizeT = 0;
   window.addEventListener('resize', function () {

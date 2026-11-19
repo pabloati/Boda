@@ -59,3 +59,4 @@ Short log of choices made for the wedding site. One line each, newest first.
 - 2026-09-28 — Work order: (1) design fixes, (2) real content replacing placeholders, (3) RSVP data collection + backend.
 - 2026-10-07 — Audio: the couple's own file `assets/Emborracharme.mp3` (3.6 MB), replacing the hotlinked violin cover. Plays on the first tap (the seal); the floating button toggles it.
 - 2026-10-18 — Opening sequence: flap up, the envelope falls off the screen, the card turns over and its back (the hero, same photo and copy) grows to fill the viewport before the overlay fades (match cut). The title above the envelope is gone; the card back replaces it. Timings in `openEnvelope()`.
+- 2026-11-19: with the bus map in full screen the page behind no longer scrolls (lock on `html` too, touch drags cancelled), and closing the map puts the page back where it was.
