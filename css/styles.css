@@ -870,8 +870,8 @@ button {
 }
 
 /* ========================================================
-   OUR STORY (#intro): a welcome, three moments with a photo each, and a
-   closing line that runs into the countdown (no gap between the two).
+   OUR STORY (#intro): a short welcome and three prints (Madrid, Copenhague, Valencia)
+   that turn over to show their text, then the countdown (no gap between the two).
 ======================================================== */
 .historia {
   padding: 64px 0;
@@ -888,85 +888,182 @@ button {
   margin: 0 auto;
 }
 
-.historia-moment {
-  display: grid;
-  grid-template-columns: minmax(0, 250px) minmax(0, 1fr);
-  align-items: center;
-  gap: 18px 44px;
-  margin-top: 64px;
+/* the three prints laid out like a page of an album */
+.historia-album {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 34px;
+  margin-top: 56px;
 }
 
-.historia-moment:nth-of-type(odd) .historia-foto { order: 2; }
-.historia-moment:nth-of-type(odd) { grid-template-columns: minmax(0, 1fr) minmax(0, 250px); }
+/* the slot keeps the place in the page while its card is out on the stage */
+.hfoto {
+  --tilt: -2.6deg;
+  flex: 0 1 212px;
+  min-width: 0;
+  aspect-ratio: 4 / 5.5;
+  perspective: 900px;
+}
+.hfoto:nth-child(2) { --tilt: 1.6deg; margin-top: 26px; }
+.hfoto:nth-child(3) { --tilt: 3deg; }
 
-/* the photo as a paper print, slightly askew, with its handwritten caption */
-.historia-foto {
-  margin: 0;
-  padding: 10px 10px 8px;
+/* the card: two faces back to back. Its size always comes from its width (aspect-ratio on the
+   card, cqw units inside the faces), so it looks the same small in the page and large on the stage. */
+.hfoto-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5.5;
+  transform-style: preserve-3d;
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hfoto-card:focus-visible { outline: 2px solid var(--terracotta); outline-offset: 6px; }
+
+@media (hover: hover) {
+  .hfoto .hfoto-card:hover { transform: rotate(var(--tilt, 0deg)) translateY(-5px) scale(1.02); }
+}
+
+.hfoto-face {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   background: #fbf9f3;
   border: 1px solid var(--paper-line);
-  box-shadow: 0 10px 24px rgba(60, 54, 40, 0.14);
-  transform: rotate(-2.2deg);
+  box-shadow: 0 10px 24px rgba(60, 54, 40, 0.16);
 }
 
-.historia-moment:nth-of-type(odd) .historia-foto { transform: rotate(1.8deg); }
+.hfoto-front {
+  display: flex;
+  flex-direction: column;
+  padding: 4.5% 4.5% 0;
+}
 
-.historia-foto img {
+.hfoto-front img {
   display: block;
+  flex: 1 1 0;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 4 / 5;
   object-fit: cover;
 }
 
-.historia-foto figcaption {
-  font-family: var(--font-hand);
-  font-size: 0.78rem;
-  line-height: 1.7;
-  color: var(--ink-soft);
-  text-align: center;
-  padding-top: 8px;
-}
-
-/* empty photo slot: dashed frame named after the file it waits for */
-.historia-foto.is-empty::before {
-  content: attr(data-slot);
+.hfoto-cap {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 4 / 5;
+  height: 44px;
+  height: 21cqw;
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 0.72rem;
+  font-size: 6.4cqw;
+  color: var(--ink-soft);
+}
+
+/* empty photo slot: dashed frame named after the file it waits for */
+.hfoto-front.is-empty::before {
+  content: attr(data-slot);
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px dashed var(--paper-line);
   color: var(--ink-faint);
   font-family: var(--font-hand);
-  font-size: 0.7rem;
+  font-size: 5cqw;
 }
 
-.historia-text {
-  font-size: 1.2rem;
-  line-height: 1.65;
+/* the back: the plain side of the print, with the text written on it */
+.hfoto-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9%;
+  background: #f8f4ea;
+}
+
+.hfoto-city {
+  margin: 0 0 4cqw;
+  font-family: var(--font-script);
+  font-size: 2rem;
+  font-size: 15cqw;
+  line-height: 1;
+  color: var(--olive-deep);
+}
+
+.hfoto-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-size: 7cqw;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
   color: var(--ink);
 }
 
-.historia-end {
-  font-size: clamp(1.3rem, 4.4vw, 1.6rem);
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--ink-soft);
+/* the hint that there is something behind: the print swings round far enough to show its back */
+.hfoto-card.is-peeking { animation: hfoto-peek 1.5s cubic-bezier(0.45, 0, 0.3, 1); }
+
+@keyframes hfoto-peek {
+  0%, 100% { transform: rotate(var(--tilt, 0deg)) rotateY(0deg); }
+  40%, 55% { transform: rotate(var(--tilt, 0deg)) translateY(-6px) rotateY(-128deg); }
+}
+
+.historia-hint {
+  margin: 30px 0 0;
   text-align: center;
-  max-width: 520px;
-  margin: 72px auto 0;
+  font-family: var(--font-hand);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+/* the stage: a dimmed layer over the page where the open print sits (created by js/script.js) */
+.hfoto-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  perspective: 1400px;
+  background: rgba(46, 42, 33, 0);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.hfoto-stage.is-on {
+  background: rgba(46, 42, 33, 0.5);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.hfoto-stage .hfoto-card {
+  position: fixed;
+  margin: 0;
+  transition: transform 0.85s cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+
+.hfoto-stage .hfoto-face { box-shadow: 0 24px 60px rgba(30, 26, 18, 0.34); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hfoto-card, .hfoto-stage, .hfoto-stage .hfoto-card { transition: none; }
 }
 
 @media (max-width: 640px) {
-  .historia-moment,
-  .historia-moment:nth-of-type(odd) {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    margin-top: 52px;
+  /* two prints side by side and the third below, tucked in between them */
+  .historia-album {
+    flex-wrap: wrap;
+    gap: 0 5%;
+    margin-top: 40px;
   }
-  .historia-moment:nth-of-type(odd) .historia-foto { order: 0; }
-  .historia-foto { width: min(72%, 260px); }
-  .historia-text { text-align: center; }
-  .historia-end { margin-top: 56px; }
+  .hfoto { flex: 0 0 46%; }
+  .hfoto:nth-child(2) { margin-top: 18px; }
+  .hfoto:nth-child(3) { margin-top: -5%; }
 }
 
 /* ========================================================

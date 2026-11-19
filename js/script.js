@@ -600,6 +600,132 @@
     }
   }
 
+  // --- 10c. OUR STORY: the three prints turn over ---
+  // Each .hfoto-card has the photo on the front and its text on the back. A tap moves the card to
+  // a fixed layer over the page (so no section can clip it or paint over it), where it flies to
+  // the middle of the screen, grows and turns over. A second tap, a tap outside, Esc or scrolling
+  // away sends it back to its slot. Until the guest opens one, the prints take turns to swing
+  // round and show their back for a moment, as the hint that there is something behind.
+  const album = document.getElementById('historia-album');
+  const albumCards = album ? Array.prototype.slice.call(album.querySelectorAll('.hfoto-card')) : [];
+  if (album && albumCards.length) {
+    const FLIGHT_MS = lessMotion ? 0 : 850;
+    let stage = null, openCard = null, openSlot = null, openScrollY = 0, busy = false;
+    let everOpened = false, peekTimer = null, peekTurn = 0, albumInView = false;
+
+    // where the card sits in its slot, written as a transform of the card on the stage
+    const slotTransform = function (slot, w, h) {
+      const r = slot.getBoundingClientRect();
+      const dx = r.left + r.width / 2 - window.innerWidth / 2;
+      const dy = r.top + r.height / 2 - window.innerHeight / 2;
+      const tilt = getComputedStyle(slot).getPropertyValue('--tilt').trim() || '0deg';
+      return 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + (r.width / w).toFixed(4) +
+        ') rotateY(0deg) rotate(' + tilt + ')';
+    };
+
+    const stopPeeks = function () {
+      clearTimeout(peekTimer);
+      peekTimer = null;
+      albumCards.forEach(function (c) { c.classList.remove('is-peeking'); });
+    };
+
+    const peekNext = function () {
+      peekTimer = null;
+      if (everOpened || !albumInView || openCard) return;
+      const c = albumCards[peekTurn % albumCards.length];
+      peekTurn += 1;
+      c.classList.remove('is-peeking');
+      void c.offsetWidth;                 // restart the animation
+      c.classList.add('is-peeking');
+      // the first round goes one after the other; after that, one every few seconds
+      peekTimer = setTimeout(peekNext, peekTurn < albumCards.length ? 450 : 4200);
+    };
+
+    const closeAlbumCard = function () {
+      if (!openCard || busy) return;
+      busy = true;
+      const card = openCard, slot = openSlot;
+      card.style.transform = slotTransform(slot, card.offsetWidth, card.offsetHeight);
+      stage.classList.remove('is-on');
+      card.setAttribute('aria-expanded', 'false');
+      setTimeout(function () {
+        const hadFocus = document.activeElement === card;
+        card.style.transition = 'none';
+        ['left', 'top', 'width', 'transform'].forEach(function (k) { card.style[k] = ''; });
+        slot.appendChild(card);
+        void card.offsetWidth;
+        card.style.transition = '';
+        if (hadFocus) card.focus({ preventScroll: true });
+        openCard = openSlot = null;
+        busy = false;
+      }, FLIGHT_MS);
+    };
+
+    const openAlbumCard = function (card) {
+      if (openCard || busy) return;
+      const slot = card.parentNode;
+      if (!slot || !slot.classList.contains('hfoto')) return;
+      everOpened = true;
+      stopPeeks();
+      if (!stage) {
+        stage = document.createElement('div');
+        stage.className = 'hfoto-stage';
+        document.body.appendChild(stage);
+        stage.addEventListener('click', closeAlbumCard);
+      }
+      busy = true;
+      const r = slot.getBoundingClientRect();
+      const ratio = r.height / r.width;
+      const w = Math.min(window.innerWidth * 0.84, 400, window.innerHeight * 0.8 / ratio);
+      const h = w * ratio;
+      card.style.transition = 'none';
+      card.style.left = ((window.innerWidth - w) / 2).toFixed(1) + 'px';
+      card.style.top = ((window.innerHeight - h) / 2).toFixed(1) + 'px';
+      card.style.width = w.toFixed(1) + 'px';
+      card.style.transform = slotTransform(slot, w, h);
+      stage.appendChild(card);
+      void card.offsetWidth;
+      card.style.transition = '';
+      card.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg) rotate(0deg)';
+      stage.classList.add('is-on');
+      card.setAttribute('aria-expanded', 'true');
+      card.focus({ preventScroll: true });
+      openCard = card;
+      openSlot = slot;
+      openScrollY = window.scrollY;
+      setTimeout(function () { busy = false; }, FLIGHT_MS);
+    };
+
+    albumCards.forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (card.querySelector('[contenteditable="true"]')) return;   // a text being edited in the site editor
+        if (openCard === card) return;                               // on the stage: the stage's own click closes it
+        e.stopPropagation();
+        openAlbumCard(card);
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.target !== card || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        if (openCard === card) closeAlbumCard(); else openAlbumCard(card);
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAlbumCard();
+    });
+    window.addEventListener('scroll', function () {
+      if (openCard && Math.abs(window.scrollY - openScrollY) > 70) closeAlbumCard();
+    }, { passive: true });
+    window.addEventListener('resize', closeAlbumCard);
+
+    if ('IntersectionObserver' in window && !lessMotion) {
+      new IntersectionObserver(function (entries) {
+        albumInView = entries[0].isIntersecting;
+        if (albumInView && !everOpened && !peekTimer) peekTimer = setTimeout(peekNext, 900);
+        if (!albumInView) stopPeeks();
+      }, { threshold: 0.6 }).observe(album);
+    }
+  }
+
   // --- 11. HERO VEIL ---
   // The hero stage is sticky inside a section two screens tall. Over the first
   // 80% of that extra scroll the veil (names, date, gold wavy line) slides up
