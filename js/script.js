@@ -712,8 +712,8 @@
 
     albumCards.forEach(function (card) {
       card.addEventListener('click', function (e) {
-        if (card.querySelector('[contenteditable="true"]')) return;   // a text being edited in the site editor
         e.stopPropagation();                                         // on the stage, only a tap outside the card closes it
+        if (card.querySelector('[contenteditable="true"]')) return;   // a text being edited in the site editor: the card stays as it is
         if (openCard === card) turnAlbumCard(); else openAlbumCard(card);
       });
       card.addEventListener('keydown', function (e) {
