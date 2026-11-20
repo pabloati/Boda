@@ -8,7 +8,7 @@
 window.RSVP_CONFIG = {
   endpoint: 'https://script.google.com/macros/s/AKfycbz6iXojmG1SE4iJSj9_jl36scEA-Z3uYB8qaDhlHiXuGHul-AiKJHzScTpRDg-ooQFu6g/exec',
   whatsappContacts: [
-    { name: 'Paco', number: '34626841981' },
-    { name: 'Emilia', number: '34635398221' }
+    { name: 'Pablo', number: '34626841981' },
+    { name: 'Mª Ángeles', number: '34635398221' }
   ]
 };
