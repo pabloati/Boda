@@ -1144,7 +1144,7 @@ button {
   .location > .location-art { grid-row: 1; }
   .location > .hand-label { grid-row: 2; }
   .location > .location-name { grid-row: 3; }
-  .location > .location-address { grid-row: 4; }
+  .location > .location-address { grid-row: 4; align-self: center; }
   .location > .text-link { grid-row: 5; justify-self: center; align-self: start; }
 }
 
