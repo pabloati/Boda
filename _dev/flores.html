@@ -178,6 +178,7 @@
   <symbol id="i-branch" viewBox="0 0 24 24"><path d="M6 3.5V15"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
   <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20.5 11A8.5 8.5 0 0 0 5.6 6.4L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M3.5 13a8.5 8.5 0 0 0 14.9 4.6l2.1-2.1"/><path d="M20.5 20.5v-5h-5"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1z"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.5 2.5 10.5 13.5"/><path d="m21.5 2.5-7 19-4-8-8-4z"/></symbol>
 </defs></svg>
 <header id="bar" class="tb">
@@ -187,6 +188,7 @@
   <i class="div"></i>
   <select id="goto" title="Ir a una sección"></select>
   <button id="share" class="gh" title="Ver en mi móvil: enlace y código QR de esta rama"><svg class="ic" aria-hidden="true"><use href="#i-qr"/></svg><span class="lbl">Ver en mi móvil</span></button>
+  <button id="chatBtn" class="gh" title="Pídele un cambio a Claude" hidden><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span class="lbl">Claude</span></button>
   <span id="status">Sin cambios</span>
   <label class="field" title="Rama de git en la que se guardan los cambios"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><select id="branch" aria-label="Rama"></select></label>
   <button id="sync" class="gh" title="Sincronizar con GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span class="lbl">Sincronizar</span><b id="syncN" hidden></b></button>
@@ -1015,5 +1017,6 @@
 </script>
 <script src="/_dev/qr.js"></script>
 <script src="/_dev/editor-site.js"></script>
+<script src="/_dev/editor-chat.js"></script>
 </body>
 </html>

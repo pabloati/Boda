@@ -9,6 +9,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-cer
     && chmod +x /usr/local/bin/cloudflared \
     && useradd -m -u 1500 boda
 
+# Claude Code, for the editor's chat (_dev/editor_chat.py). One self-contained program, copied out of the
+# installer's home folder so the volume on /home/boda cannot shadow it. It only works when run.sh passes
+# a token (CLAUDE_CODE_OAUTH_TOKEN); without one the entrypoint turns the chat off (BODA_CLAUDE=off).
+RUN curl -fsSL https://claude.ai/install.sh | bash \
+    && cp -L /root/.local/bin/claude /usr/local/bin/claude && chmod 755 /usr/local/bin/claude \
+    && rm -rf /root/.local /root/.claude /root/.claude.json /root/.cache
+ENV DISABLE_AUTOUPDATER=1
+
 USER boda
 WORKDIR /home/boda
 COPY --chown=boda:boda entrypoint.sh /usr/local/bin/boda-entrypoint.sh

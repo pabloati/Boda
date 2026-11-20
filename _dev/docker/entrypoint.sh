@@ -17,6 +17,8 @@ git config user.name pabloati
 git config user.email pabloatienzalo@gmail.com
 git fetch -q origin && git checkout -q "$BODA_BRANCH" && git pull -q --ff-only || true
 rm -f /home/boda/link.txt    # the old tunnel's address is dead: never offer it
+# the editor's chat needs Claude logged in: no token, no chat button
+[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || export BODA_CLAUDE=off
 BODA_PUBLIC_LINK_FILE=/home/boda/link.txt python3 _dev/serve.py "$BODA_PORT" &
 SRV=$!
 cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$BODA_PORT" 2>&1 | while read -r line; do

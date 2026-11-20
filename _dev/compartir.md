@@ -53,6 +53,33 @@ bash _dev/docker/run.sh logs     # follow the log
 bash _dev/docker/run.sh stop
 ```
 
+### The chat with Claude in the container (optional)
+
+The image carries Claude Code, but the chat (`docs/editor.md`) only turns on when the box gets a
+third secret, a Claude Code token:
+
+```bash
+claude setup-token                      # in your own terminal; it opens the browser and prints a token
+install -m 600 /dev/null ~/.config/boda-editor/claude_token
+nano ~/.config/boda-editor/claude_token # paste the token, save
+bash _dev/docker/run.sh                 # says "Chat con Claude activado hasta el …"
+```
+
+- **What the token can do.** Only run Claude on Pablo's subscription ("can only make model
+  requests", Claude Code's authentication docs). It gives no access to files, GitHub or the account.
+- **A month at a time.** The box uses the token for 30 days counted from the day the file was
+  written (`BODA_CLAUDE_DAYS` changes it). After that the server forgets it and hides the chat
+  button, and `run.sh` stops passing it. The panel warns during the last week. To go on: a new
+  token in the same file, then `run.sh`.
+- **That limit is the editor's, not the token's.** `claude setup-token` always makes a one-year
+  token and has no option for a shorter one, and the docs describe no way to revoke a single
+  token. So a copy stolen from the box would keep working after the month. If a break-in is ever
+  suspected, stop the container and ask Anthropic support how to invalidate it. A stricter set-up
+  (an API key with a spending cap, which can be deleted at any time) is possible but not built.
+- **Where it lives.** In the container's environment, like the other two secrets. Claude's own
+  process gets it (it needs it) but has no shell and cannot read outside the branch folder. With
+  the chat on, the box gets 2 GB of memory instead of 512 MB.
+
 Snap-installed Docker (as on clab) has three quirks the scripts already work around: it cannot
 read files under `~/.config` (so secrets go in with `-e`, not mounts or `--env-file`),
 `--security-opt no-new-privileges` makes every exec fail, and a named volume seeded from the

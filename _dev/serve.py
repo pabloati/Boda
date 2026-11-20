@@ -16,7 +16,8 @@ Routes
   /_dev/api/...        the site editor: branches, open/create a branch, read texts and look, save, sync
                        (writes into that branch's worktree and commits; see _dev/editor_api.py),
                        publish (GET: dry run, POST: merge the branch into main and push main),
-                       history of a branch and going back to one of its commits (POST revert).
+                       history of a branch and going back to one of its commits (POST revert),
+                       chat (ask Claude for a change on a branch; see _dev/editor_chat.py).
 
 Listens on 127.0.0.1 only. Nothing here is published: GitHub Pages skips _dev/.
 
@@ -47,6 +48,7 @@ import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import editor_api  # noqa: E402
+import editor_chat  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -350,6 +352,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.send_error(413)
         try:
             req = json.loads(self.rfile.read(n) or b'{}')
+            if p == '/_dev/api/chat':        # ask Claude for a change on a branch (see _dev/editor_chat.py)
+                return self.send_json(editor_chat.start(HERE, req['branch'], req))
+            if p == '/_dev/api/chat/stop':
+                return self.send_json(editor_chat.stop())
+            if p == '/_dev/api/chat/new':
+                return self.send_json(editor_chat.new_chat(HERE, req['branch']))
+            if req.get('branch') and req.get('branch') == editor_chat.busy_branch():
+                raise editor_api.EditorError('Claude está cambiando esta rama: espera a que termine (o páralo en su panel)')
             if p == '/_dev/api/open':
                 wt = editor_api.open_branch(HERE, req['branch'])
                 return self.send_json({'branch': req['branch'], 'url': wt_url(wt)})
@@ -390,6 +400,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                        'texts': editor_api.read_texts(wt), 'look': editor_api.read_look(wt),
                                        'sections': editor_api.sections(wt),
                                        'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
+            if p == '/_dev/api/chat':      # the conversation with Claude on this branch, and whether it is working
+                return self.send_json(editor_chat.status(HERE, q['branch'][0]))
             if p == '/_dev/api/history':
                 return self.send_json(editor_api.history(HERE, q['branch'][0]))
             if p == '/_dev/api/sync':      # what is waiting each way; the sync itself is a POST

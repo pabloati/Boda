@@ -24,7 +24,7 @@ replaces it, so anything `write_look()` writes must be mirrored there.
 ## Bar buttons
 
 The top bar holds what acts on the work: undo/redo, section jump, «Ver en mi móvil», the status,
-the branch, «Sincronizar», the name button, «Descartar», «Guardar» and «Publicar». What only changes
+«Claude» (the chat, on servers that have it), the branch, «Sincronizar», the name button, «Descartar», «Guardar» and «Publicar». What only changes
 the view sits in a second bar above the page: the panel toggles at its ends and, in the middle,
 Móvil/Escritorio, the phone model, the zoom, the section outlines and the page reload.
 
@@ -69,6 +69,35 @@ Móvil/Escritorio, the phone model, the zoom, the section outlines and the page 
   reads `publicar: <branch> (editor, <who>)`. «Publicar ahora» sends the branch commit the list was
   made from; if someone saved on the branch since, nothing is published (409) and the panel shows
   the new list to confirm again.
+
+## Chat with Claude
+
+The «Claude» button in the top bar opens a panel on the right where a request is written in plain
+words («haz el botón de confirmar más grande en el móvil»). The server runs Claude Code on the open
+branch and, when it ends, saves what it changed as **one save of the branch**
+(`editor (<name>): Claude: <request>`, new `?v=` stamps, pushed if «Subir» is ticked). The editor
+then reloads the branch, the Historial shows the save, and «Volver a este punto» undoes it.
+
+- **What Claude can touch.** Only the file tools (read, search, edit, write), only inside the
+  branch's folder, and writes only to the site (`index.html`, `css/`, `js/`, `docs/`, text files in
+  `assets/`). No shell, no web, no git. `_dev/`, `.github/` and the two generated files
+  (`css/editor.css`, `js/flores-layout.js`) are read-only; `.git` and `.claude` are hidden. The
+  guard is `_dev/chat_guard.py`, a hook that checks every tool call.
+- **Rules.** It needs a name, a branch other than `main` (the published site) and nothing unsaved
+  in the editor. One request runs at a time on the whole server, for at most 10 minutes; while it
+  runs, saves, go-backs, sync and publish on that branch are refused. «Parar», a timeout or an
+  error leave the branch exactly as it was.
+- **Conversation.** One per branch, kept on the server (`<git dir>/boda-chat/<branch>.json`, never
+  committed), so every computer sees it and a follow-up keeps the context. «Nueva» archives it.
+  Claude is told the view (phone or desktop), the section on screen and the selected text.
+- **Where it works.** On a server whose machine has the `claude` program logged in (`serve.py` or
+  `compartir.sh` on a computer with Claude Code). Elsewhere the button stays hidden. Requests use
+  that machine's Claude account. `BODA_CLAUDE=off` hides it; `BODA_CLAUDE_MODEL` picks the model
+  (default `opus`). The container has it when it is given a token, for 30 days at a time
+  (`_dev/compartir.md`).
+
+Code: `_dev/editor_chat.py` (the run and the save), `_dev/chat_guard.py`, `_dev/editor-chat.js`
+(the panel), routes `GET/POST /_dev/api/chat`, `POST /_dev/api/chat/stop` and `/chat/new`.
 
 ## Adding and deleting sections
 

@@ -1147,6 +1147,7 @@
   function textChanged() { look.text = ED.textPos(); applyLook(); }
   window.SITE = { secLabel, save, status, head: () => head, sameHead, merge3, onFrame, onPointer, drawProps, textChanged, offerDraft, checkHead, asking: () => !!conflict,
     dirty: () => dirtyParts().length > 0, overlay: publishPanel, previewURL,
+    branch: () => branch, reopen: () => openBranch(branch), needWho, busy: () => saving, selText: () => selText, tab: () => tab,   // for the chat (_dev/editor-chat.js)
     colourRow, wireColourRows, normHex,   // the text style panel in _dev/flores.html reuses the colour row
     edits: () => JSON.parse(JSON.stringify(textEdits)), editing: () => editing && editing.k };   // the texts changed (and the one being written), for tests
   if ($('share')) $('share').onclick = openShare;
