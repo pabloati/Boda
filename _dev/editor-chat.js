@@ -21,7 +21,13 @@
   css.textContent = `
   #chatBtn.busy .ic { animation: spin 1.6s linear infinite; color: var(--acc); }
   #chatBtn.open { background: #f1efe8; }
-  #chat { position: fixed; top: 52px; right: 0; bottom: 0; width: min(400px, 100vw); z-index: 15; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -14px 0 30px -18px rgba(38,38,31,.5); font-size: 14px; line-height: 1.45; }
+  /* the chat takes its own column under the bar: the page and both panels shrink to make room, so the right
+     panel, where «Volver a este punto», the new-branch form and «Publicar» are drawn, is never under it */
+  body { --chatW: min(400px, 100vw); }
+  body.chat-open { grid-template-columns: var(--libW) 5px 1fr 5px var(--propW) var(--chatW); grid-template-areas: "bar bar bar bar bar bar" "lib gl stage gr props chat"; }
+  /* no room: it lies over the editor, and steps aside when the right panel needs an answer */
+  @media (max-width: 1100px) { body.chat-open { grid-template-columns: var(--libW) 5px 1fr 5px var(--propW); grid-template-areas: "bar bar bar bar bar" "lib gl stage gr props"; } }
+  #chat { position: fixed; top: 52px; right: 0; bottom: 0; width: var(--chatW); z-index: 15; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -14px 0 30px -18px rgba(38,38,31,.5); font-size: 14px; line-height: 1.45; }
   #chat[hidden] { display: none; }
   #chat header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
   #chat header div { flex: 1; min-width: 0; } #chat header strong { display: block; font-size: 15px; }
@@ -66,6 +72,8 @@
       <div><button type="button" id="chatModel" title="El modelo de Claude que contesta. Solo Pablo lo cambia, con su contraseña"></button><button class="primary" id="chatSend">Enviar</button></div></form>`;
   document.body.appendChild(box);
 
+  const narrow = () => window.matchMedia('(max-width: 1100px)').matches;
+  let restored = false;
   let last = null;      // the server's last answer (model, list of models)
   let timer = 0, running = false, sig = '', shown = null, started = 0, available = false;
   const note = m => { $('chatNote').textContent = m || ''; };
@@ -145,7 +153,11 @@
     try { d = await api('GET', '?branch=' + encodeURIComponent(b)); } catch (e) { timer = setTimeout(refresh, 5000); return; }
     if (b !== SITE.branch()) return refresh();
     available = !!d.available; btn.hidden = !available;
-    if (!available) { box.hidden = true; return; }
+    if (!available) { box.hidden = true; document.body.classList.remove('chat-open'); return; }
+    if (!restored) {      // the first answer: open the panel again if it was open when the page was left
+      restored = true;
+      try { if (localStorage.getItem('ed-chat')) return open(true); } catch (e) {}
+    }
     const was = running && shown === b;
     running = !!d.running; shown = b; started = d.live ? d.live.started : 0;
     btn.classList.toggle('busy', running || !!d.busy);
@@ -162,6 +174,8 @@
 
   function open(on) {
     box.hidden = !on; btn.classList.toggle('open', on);
+    document.body.classList.toggle('chat-open', on);
+    if (!narrow()) window.dispatchEvent(new Event('resize'));     // the page preview fits itself to the room that is left
     try { localStorage.setItem('ed-chat', on ? '1' : ''); } catch (e) {}
     if (on) { sig = ''; refresh(); $('chatText').focus(); }
   }
@@ -184,6 +198,7 @@
     const ta = $('chatText'), message = ta.value.trim(), b = SITE.branch();
     note('');
     if (!message || running || !b) return;
+    if ($('branch').value === '__new') return note('Estás creando una rama nueva: ponle nombre y pulsa «Crear y abrir» (a la derecha), o cancela.');
     if (b === 'main') return note('Estás en main, que es la web publicada: abre una rama (arriba) y pídeselo ahí.');
     if (SITE.busy()) return note('Espera a que termine el guardado.');
     if (SITE.dirty()) return note('Guarda o descarta tus cambios antes: Claude trabaja sobre lo último guardado.');
@@ -212,6 +227,11 @@
     try { await api('POST', '/model', { model: $('chatModelSel').value, password: $('chatModelPw').value }); modelForm(false); refresh(); }
     catch (err) { $('chatModelErr').textContent = err.message; }
   };
+  // narrow window: the chat lies over the right panel, so close it whenever that panel asks something
+  // (a new branch's name, «Volver a este punto», «Publicar», a save conflict)
+  new MutationObserver(() => {
+    if (!box.hidden && narrow() && $('props').querySelector('#revGo, #nbName, #pubGo, #cfReload')) open(false);
+  }).observe($('props'), { childList: true, subtree: true });
   btn.onclick = () => open(box.hidden);
   $('chatClose').onclick = () => open(false);
   $('chatForm').onsubmit = e => { e.preventDefault(); send(); };
@@ -223,5 +243,5 @@
   };
   $('branch').addEventListener('change', () => setTimeout(() => { sig = ''; refresh(); }, 600));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
-  refresh().then(() => { try { if (available && localStorage.getItem('ed-chat')) open(true); } catch (e) {} });
+  refresh();
 })();

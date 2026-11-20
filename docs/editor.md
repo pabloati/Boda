@@ -83,6 +83,10 @@ then reloads the branch, the Historial shows the save, and «Volver a este punto
   `assets/`). No shell, no web, no git. `_dev/`, `.github/` and the two generated files
   (`css/editor.css`, `js/flores-layout.js`) are read-only; `.git` and `.claude` are hidden. The
   guard is `_dev/chat_guard.py`, a hook that checks every tool call.
+- **Place.** The panel is a column of its own at the right, under the bar: the page and both side
+  panels shrink, so what the right panel asks (a new branch's name, «Volver a este punto»,
+  «Publicar») stays in view. In a window under 1100 px it lies over the editor instead and closes
+  itself when the right panel asks something.
 - **Rules.** It needs a name, a branch other than `main` (the published site) and nothing unsaved
   in the editor. One request runs at a time on the whole server, for at most 10 minutes; while it
   runs, saves, go-backs, sync and publish on that branch are refused. «Parar», a timeout or an
