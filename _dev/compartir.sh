@@ -20,7 +20,7 @@ if [ ! -x "$CF" ]; then
 fi
 LOG=$(mktemp)
 LINKF=$(mktemp)    # the tunnel's address, for the editor's "Ver en mi móvil" (serve.py reads it)
-BODA_EDITOR_PASSWORD_FILE="$PWF" BODA_PUBLIC_LINK_FILE="$LINKF" python3 _dev/serve.py "$PORT" & SRV=$!
+BODA_ADMIN_PASSWORD_FILE="${BODA_ADMIN_PASSWORD_FILE:-$HOME/.config/boda-editor/admin_password}" BODA_EDITOR_PASSWORD_FILE="$PWF" BODA_PUBLIC_LINK_FILE="$LINKF" python3 _dev/serve.py "$PORT" & SRV=$!
 "$CF" tunnel --no-autoupdate --url "http://localhost:$PORT" >"$LOG" 2>&1 & TUN=$!
 trap 'kill $SRV $TUN 2>/dev/null; rm -f "$LOG" "$LINKF"' EXIT INT TERM
 for _ in $(seq 40); do

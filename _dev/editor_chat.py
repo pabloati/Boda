@@ -17,10 +17,13 @@ Each branch has its own conversation (with the Claude session id, so a follow-up
 
 Needs the `claude` program on the machine that runs the server, logged in (on a computer: `claude` once; in the
 container: CLAUDE_CODE_OAUTH_TOKEN, see _dev/compartir.md). Without it the editor shows no chat button.
-Environment: BODA_CLAUDE (path to the program, or "off"), BODA_CLAUDE_MODEL (default opus),
+Environment: BODA_CLAUDE (path to the program, or "off"), BODA_CLAUDE_MODEL (the model until one is picked in the panel, default opus; the pick needs the admin
+password, BODA_ADMIN_PASSWORD in serve.py), BODA_CLAUDE_MODELS (the list offered),
 BODA_CLAUDE_UNTIL (unix time after which the chat is off; the container sets it to 30 days after the token).
 """
 import datetime
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -33,7 +36,8 @@ import time
 import editor_api
 
 DEV = os.path.dirname(os.path.abspath(__file__))
-MODEL = os.environ.get('BODA_CLAUDE_MODEL', 'opus')
+MODEL = os.environ.get('BODA_CLAUDE_MODEL', 'opus')      # the default until Pablo picks another one in the panel
+MODELS = tuple(m for m in os.environ.get('BODA_CLAUDE_MODELS', 'fable,opus,sonnet,haiku').split(',') if re.fullmatch(r'[a-z0-9.-]{1,40}', m))
 TIMEOUT = 10 * 60
 MAX_MESSAGE = 4000
 TOOLS = 'Read,Glob,Grep,Edit,Write'
@@ -97,6 +101,52 @@ def _store(repo, branch, chat):
     os.chmod(path, 0o600)
 
 
+# ---------- the model: one for the whole server, changed only with the admin password ----------
+
+_ADMIN_FAILS = []
+
+
+def _settings_file(repo):
+    common = editor_api.run(repo, 'rev-parse', '--path-format=absolute', '--git-common-dir').strip()
+    return os.path.join(common, 'boda-chat-settings.json')
+
+
+def model(repo):
+    try:
+        with open(_settings_file(repo), encoding='utf-8') as f:
+            m = json.load(f).get('model')
+    except (OSError, ValueError, AttributeError):
+        m = None
+    return m if m in MODELS else MODEL
+
+
+def set_model(repo, name, given, admin, shared):
+    """Change the model every request uses from now on. `admin` is the admin password (BODA_ADMIN_PASSWORD):
+    a shared server without one refuses every change; on Pablo's own computer (not shared) none is needed.
+    Five wrong passwords lock the change for ten minutes."""
+    if name not in MODELS:
+        raise editor_api.EditorError('Modelo no válido')
+    if shared or admin:
+        if not admin:
+            raise editor_api.EditorError('Este servidor no tiene contraseña de administrador: el modelo no se puede cambiar desde aquí')
+        now = time.time()
+        with LOCK:
+            _ADMIN_FAILS[:] = [t for t in _ADMIN_FAILS if now - t < 600]
+            if len(_ADMIN_FAILS) >= 5:
+                raise editor_api.EditorError('Demasiados intentos. Espera 10 minutos.')
+        ok = hmac.compare_digest(hashlib.sha256(str(given or '').encode()).digest(), hashlib.sha256(admin.encode()).digest())
+        if not ok:
+            with LOCK:
+                _ADMIN_FAILS.append(now)
+            time.sleep(1)
+            raise editor_api.EditorError('Contraseña de administrador incorrecta')
+    path = _settings_file(repo)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump({'model': name}, f)
+    return {'ok': True, 'model': name}
+
+
 def _branch(branch):
     if not isinstance(branch, str) or not editor_api.BRANCH.match(branch):
         raise editor_api.EditorError('Nombre de rama no válido')
@@ -113,7 +163,7 @@ def status(repo, branch):
         if running == branch:
             live = {'steps': JOB['steps'][-12:], 'text': JOB['text'], 'started': JOB['started'], 'message': JOB['message']}
     return {'available': True, 'turns': chat['turns'], 'running': live is not None, 'live': live,
-            'busy': running if running and running != branch else None, 'model': MODEL, 'until': until()}
+            'busy': running if running and running != branch else None, 'model': model(repo), 'models': MODELS, 'until': until()}
 
 
 def new_chat(repo, branch):
@@ -204,7 +254,7 @@ def start(repo, branch, payload):
         chat = _load(repo, branch)
         args = [binary, '-p', '--output-format', 'stream-json', '--verbose', '--tools', TOOLS,
                 '--strict-mcp-config', '--setting-sources', '', '--permission-mode', 'acceptEdits',
-                '--settings', json.dumps(SETTINGS), '--model', MODEL,
+                '--settings', json.dumps(SETTINGS), '--model', model(repo),
                 '--append-system-prompt', system_prompt(wt, branch, who, view)]
         if chat.get('session'):
             args += ['--resume', chat['session']]

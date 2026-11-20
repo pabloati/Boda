@@ -26,6 +26,8 @@ Shared mode (to edit from another computer through a tunnel, see _dev/compartir.
   (or BODA_EDITOR_PASSWORD_FILE=path). Then every page, the editor and the API need a login at
   /_dev/login; a session lasts 30 days; 8 wrong passwords from one address lock it for 10 minutes.
   A page opened without a session (e.g. a branch preview from the editor's QR) goes back there after the login.
+  BODA_ADMIN_PASSWORD=... (or BODA_ADMIN_PASSWORD_FILE=path): a second password, asked only to change the
+  model the chat with Claude uses. A shared server without it does not let anyone change the model.
   BODA_PUBLIC_LINK_FILE=path: a file where the tunnel's https address appears once it is up
   (compartir.sh and the container set it); GET /_dev/api/public returns it, so the editor's QR
   points there even when the editor itself is open on localhost.
@@ -146,6 +148,19 @@ def _password():
 
 
 PASSWORD = _password()
+
+
+def _admin_password():
+    """A second password, Pablo's only: it changes the model the chat with Claude uses (editor_chat.set_model)."""
+    pw = os.environ.get('BODA_ADMIN_PASSWORD', '')
+    f = os.environ.get('BODA_ADMIN_PASSWORD_FILE', '')
+    if not pw and f and os.path.isfile(os.path.expanduser(f)):
+        with open(os.path.expanduser(f)) as fh:
+            pw = fh.read().strip()
+    return pw
+
+
+ADMIN_PASSWORD = _admin_password()
 SESSIONS = {}                     # token -> expiry
 FAILS = {}                        # address -> [timestamps of wrong passwords]
 LOCK = threading.Lock()
@@ -356,6 +371,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(editor_chat.start(HERE, req['branch'], req))
             if p == '/_dev/api/chat/stop':
                 return self.send_json(editor_chat.stop())
+            if p == '/_dev/api/chat/model':  # the model for every request: needs the admin password
+                return self.send_json(editor_chat.set_model(HERE, req.get('model'), req.get('password'), ADMIN_PASSWORD, bool(PASSWORD)))
             if p == '/_dev/api/chat/new':
                 return self.send_json(editor_chat.new_chat(HERE, req['branch']))
             if req.get('branch') and req.get('branch') == editor_chat.busy_branch():
@@ -401,7 +418,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                        'sections': editor_api.sections(wt),
                                        'fonts': editor_api.FONTS, 'font_fallback': editor_api.FONT_FALLBACK})
             if p == '/_dev/api/chat':      # the conversation with Claude on this branch, and whether it is working
-                return self.send_json(editor_chat.status(HERE, q['branch'][0]))
+                st = editor_chat.status(HERE, q['branch'][0])
+                st['model_password'] = bool(PASSWORD or ADMIN_PASSWORD)   # False: this is Pablo's own computer, no password asked
+                return self.send_json(st)
             if p == '/_dev/api/history':
                 return self.send_json(editor_api.history(HERE, q['branch'][0]))
             if p == '/_dev/api/sync':      # what is waiting each way; the sync itself is a POST

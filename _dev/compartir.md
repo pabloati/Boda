@@ -76,6 +76,10 @@ bash _dev/docker/run.sh                 # says "Chat con Claude activado hasta e
   token. So a copy stolen from the box would keep working after the month. If a break-in is ever
   suspected, stop the container and ask Anthropic support how to invalidate it. A stricter set-up
   (an API key with a spending cap, which can be deleted at any time) is possible but not built.
+- **The model.** The chat answers with one model for everybody (`opus` until changed). To be able
+  to change it from the panel, give the box a second password that only Pablo knows:
+  `~/.config/boda-editor/admin_password` (mode 600), then `run.sh`. Without that file nobody can
+  change the model from the editor. `compartir.sh` reads the same file.
 - **Where it lives.** In the container's environment, like the other two secrets. Claude's own
   process gets it (it needs it) but has no shell and cannot read outside the branch folder. With
   the chat on, the box gets 2 GB of memory instead of 512 MB.

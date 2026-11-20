@@ -21,7 +21,7 @@
   css.textContent = `
   #chatBtn.busy .ic { animation: spin 1.6s linear infinite; color: var(--acc); }
   #chatBtn.open { background: #f1efe8; }
-  #chat { position: fixed; top: 52px; right: 0; bottom: 0; width: min(400px, 100vw); z-index: 30; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -14px 0 30px -18px rgba(38,38,31,.5); font-size: 14px; line-height: 1.45; }
+  #chat { position: fixed; top: 52px; right: 0; bottom: 0; width: min(400px, 100vw); z-index: 15; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -14px 0 30px -18px rgba(38,38,31,.5); font-size: 14px; line-height: 1.45; }
   #chat[hidden] { display: none; }
   #chat header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
   #chat header div { flex: 1; min-width: 0; } #chat header strong { display: block; font-size: 15px; }
@@ -42,6 +42,11 @@
   #chatForm { border-top: 1px solid var(--line); padding: 10px 12px 12px; }
   #chatForm textarea { min-height: 0; height: 74px; resize: none; font-size: 14px; border-radius: 8px; padding: 8px; }
   #chatForm textarea:focus { outline: 0; border-color: var(--acc); }
+  #chatModel { border: 0; background: transparent; padding: 0; color: var(--soft); font-size: 12px; text-decoration: underline dotted; cursor: pointer; }
+  #chatModelForm { display: grid; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: #fff; font-size: 13px; }
+  #chatModelForm[hidden] { display: none; } #chatModelForm label { color: var(--soft); font-size: 12px; }
+  #chatModelForm select, #chatModelForm input { font: inherit; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  #chatModelForm div { display: flex; gap: 6px; justify-content: flex-end; } #chatModelForm p { margin: 0; color: #a22; font-size: 12.5px; } #chatModelForm p:empty { display: none; }
   #chatNote { color: #a22; font-size: 12.5px; margin: 0 0 6px; } #chatNote:empty { display: none; }
   #chatForm div { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; color: var(--soft); font-size: 12px; }`;
   document.head.appendChild(css);
@@ -51,12 +56,17 @@
   box.innerHTML = `<header><div><strong>Claude</strong><span id="chatSub"></span></div>
       <button id="chatNew" title="Empezar una conversación nueva: Claude olvida esta, los cambios se quedan">Nueva</button>
       <button id="chatClose" title="Cerrar (Esc)" aria-label="Cerrar">✕</button></header>
+    <form id="chatModelForm" hidden><label for="chatModelSel">Modelo de Claude para todas las peticiones</label>
+      <select id="chatModelSel"></select>
+      <input id="chatModelPw" type="password" placeholder="Contraseña de administrador" autocomplete="off">
+      <p id="chatModelErr"></p><div><button type="button" id="chatModelNo">Cancelar</button><button class="primary">Cambiar</button></div></form>
     <div id="chatThread"></div>
     <form id="chatForm"><p id="chatNote"></p>
       <textarea id="chatText" placeholder="Pídele un cambio o pregúntale algo…" maxlength="4000"></textarea>
-      <div><span>Intro envía · Mayús+Intro, línea nueva</span><button class="primary" id="chatSend">Enviar</button></div></form>`;
+      <div><button type="button" id="chatModel" title="El modelo de Claude que contesta. Solo Pablo lo cambia, con su contraseña"></button><button class="primary" id="chatSend">Enviar</button></div></form>`;
   document.body.appendChild(box);
 
+  let last = null;      // the server's last answer (model, list of models)
   let timer = 0, running = false, sig = '', shown = null, started = 0, available = false;
   const note = m => { $('chatNote').textContent = m || ''; };
 
@@ -142,6 +152,7 @@
     $('chatSend').disabled = running || !!d.busy;
     $('chatSub').textContent = b === 'main' ? 'main es la web publicada: abre una rama para pedirle cambios'
       : d.busy ? 'Ocupado con la rama ' + d.busy + ': espera a que termine' : 'Cambia la rama ' + b + ' · solo la web' + left(d.until);
+    last = d; $('chatModel').textContent = 'Modelo: ' + d.model;
     const s = JSON.stringify([b, d.turns.length, d.live, d.busy]);
     if (s !== sig && !box.hidden) { sig = s; draw(d); tick(); }
     if (was && !running) finished(d);
@@ -186,6 +197,21 @@
     refresh();
   }
 
+  // the model: shown under the text box; changing it asks for the admin password (not on Pablo's own computer)
+  const modelForm = on => { $('chatModelForm').hidden = !on; $('chatModelErr').textContent = ''; $('chatModelPw').value = ''; };
+  $('chatModel').onclick = () => {
+    if (!last) return;
+    if (!$('chatModelForm').hidden) return modelForm(false);
+    $('chatModelSel').innerHTML = last.models.map(m => `<option${m === last.model ? ' selected' : ''}>${esc(m)}</option>`).join('');
+    $('chatModelPw').hidden = !last.model_password;
+    modelForm(true); (last.model_password ? $('chatModelPw') : $('chatModelSel')).focus();
+  };
+  $('chatModelNo').onclick = () => modelForm(false);
+  $('chatModelForm').onsubmit = async e => {
+    e.preventDefault();
+    try { await api('POST', '/model', { model: $('chatModelSel').value, password: $('chatModelPw').value }); modelForm(false); refresh(); }
+    catch (err) { $('chatModelErr').textContent = err.message; }
+  };
   btn.onclick = () => open(box.hidden);
   $('chatClose').onclick = () => open(false);
   $('chatForm').onsubmit = e => { e.preventDefault(); send(); };

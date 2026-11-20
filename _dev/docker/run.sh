@@ -6,6 +6,8 @@
 # Secrets (never in git, never in the image):
 #   ~/.config/boda-editor/password     the editor password
 #   ~/.config/boda-editor/deploy_key   private half of a GitHub deploy key with write access to the repo
+#   ~/.config/boda-editor/admin_password optional: a second password, only Pablo's, asked to change the
+#                                      model the chat uses; without it nobody can change it from the editor
 #   ~/.config/boda-editor/claude_token optional: a Claude Code token (`claude setup-token`), turns on the
 #                                      editor's chat with Claude; without it the box runs as before.
 #                                      Used for 30 days from the day the file was written: after that the
@@ -40,6 +42,10 @@ case "${1:-start}" in
         CHAT=(--memory 2g --pids-limit 1024 -e CLAUDE_CODE_OAUTH_TOKEN -e BODA_CLAUDE_UNTIL)
         echo "Chat con Claude activado hasta el $(date -d @$UNTIL +%d/%m/%Y)."
       fi
+    fi
+    # optional: Pablo's own password to change the chat's model ($CFG/admin_password)
+    if [ -s "$CFG/admin_password" ]; then
+      export BODA_ADMIN_PASSWORD; BODA_ADMIN_PASSWORD=$(cat "$CFG/admin_password"); CHAT+=(-e BODA_ADMIN_PASSWORD)
     fi
     BODA_EDITOR_PASSWORD=$(cat "$CFG/password") BODA_DEPLOY_KEY_B64=$(base64 -w0 "$CFG/deploy_key") \
     docker run -d --name $NAME --restart unless-stopped \

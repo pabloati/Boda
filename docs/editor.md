@@ -92,12 +92,17 @@ then reloads the branch, the Historial shows the save, and «Volver a este punto
   Claude is told the view (phone or desktop), the section on screen and the selected text.
 - **Where it works.** On a server whose machine has the `claude` program logged in (`serve.py` or
   `compartir.sh` on a computer with Claude Code). Elsewhere the button stays hidden. Requests use
-  that machine's Claude account. `BODA_CLAUDE=off` hides it; `BODA_CLAUDE_MODEL` picks the model
-  (default `opus`). The container has it when it is given a token, for 30 days at a time
+  that machine's Claude account. `BODA_CLAUDE=off` hides it.
+- **Model.** One for the whole server, shown under the text box («Modelo: opus»). Clicking it
+  offers the list (`fable`, `opus`, `sonnet`, `haiku`) and asks for the **admin password**, a
+  second password only Pablo has (`BODA_ADMIN_PASSWORD`, see `_dev/compartir.md`); five wrong ones
+  lock the change for ten minutes. A shared server without that password lets nobody change it;
+  on Pablo's own computer (no shared mode) none is asked. The pick is kept in
+  `<git dir>/boda-chat-settings.json`; until there is one, `BODA_CLAUDE_MODEL` (default `opus`). The container has it when it is given a token, for 30 days at a time
   (`_dev/compartir.md`).
 
 Code: `_dev/editor_chat.py` (the run and the save), `_dev/chat_guard.py`, `_dev/editor-chat.js`
-(the panel), routes `GET/POST /_dev/api/chat`, `POST /_dev/api/chat/stop` and `/chat/new`.
+(the panel), routes `GET/POST /_dev/api/chat`, `POST /_dev/api/chat/stop`, `/chat/new` and `/chat/model`.
 
 ## Adding and deleting sections
 
