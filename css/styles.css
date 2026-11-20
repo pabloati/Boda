@@ -1130,6 +1130,24 @@ button {
   text-align: center;
 }
 
+/* The two venues share their rows (drawing, time, name, address, link), so the
+   names start at the same height and both "Ver en el mapa" links line up; the
+   shorter address takes the extra space. Older browsers keep the plain columns. */
+@supports (grid-template-rows: subgrid) {
+  .location {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    align-content: start;
+  }
+  .location > .location-art { grid-row: 1; }
+  .location > .hand-label { grid-row: 2; }
+  .location > .location-name { grid-row: 3; }
+  .location > .location-address { grid-row: 4; }
+  .location > .text-link { grid-row: 5; justify-self: center; align-self: start; }
+}
+
 /* Both drawings share one box height and rest on its bottom edge, so the labels line up */
 .location-art {
   display: block;
