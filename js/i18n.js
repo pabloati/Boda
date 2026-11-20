@@ -31,7 +31,7 @@ window.I18N = (function () {
     'rsvp.thanksNo': 'Gracias por avisarnos, te echaremos de menos.',
     'rsvp.error': 'No hemos podido guardar tu respuesta. Inténtalo de nuevo en un momento y, si sigue fallando, escríbenos por WhatsApp.',
     'copy.done': '¡Copiado!',
-    'ics.summary': 'Boda de Mª Ángeles & Pablo',
+    'ics.summary': 'Boda de Emilia & Paco',
     'ics.description': 'Ceremonia en la Parroquia de San José (C. Alcalá 43) a las 12:30 y convite en el Complejo La Cigüeña (Arganda del Rey) a las 14:30.',
     'lang.switchTo': 'Cambiar a inglés',
     // --- mapa.js ---
@@ -98,7 +98,7 @@ window.I18N = (function () {
     'hero.scrollAria': 'Scroll to keep reading',
     // --- intro ---
     'story.title': 'Our story',
-    'story.lead': 'The postcard you have just seen is the one that marked the start of our new era. Behind that seemingly simple postcard, a whole world was hiding. It brought together the past, because we bought it on our first big trip, and the future, because on it I wrote the words I used to ask Mª Ángeles to marry me.',
+    'story.lead': 'The postcard you have just seen is the one that marked the start of our new era. Behind that seemingly simple postcard, a whole world was hiding. It brought together the past, because we bought it on our first big trip, and the future, because on it I wrote the words I used to ask Emilia to marry me.',
     'story.hint': 'Tap a photo to turn it over',
     'story.stageHint': 'Tap the photo to turn it, or outside to close',
     'story.1.cap': 'Madrid',
@@ -176,7 +176,7 @@ window.I18N = (function () {
     'gifts.showIban': 'Show bank account',
     'gifts.copy': 'Copy',
     'gifts.copyAria': 'Copy the IBAN',
-    'gifts.meta': 'Pablo Atienza &amp; María de los Ángeles Quijano<br>Reference: Boda Mª Ángeles y Pablo + your name',
+    'gifts.meta': 'Pablo Atienza &amp; María de los Ángeles Quijano<br>Reference: Boda Emilia y Paco + your name',
     'copy.done': 'Copied!',
     // --- playlist (static) ---
     'pl.title': 'The playlist',
@@ -262,7 +262,7 @@ window.I18N = (function () {
     'top.aria': 'Back to top',
     'lang.switchTo': 'Cambiar a español',
     // --- calendar file ---
-    'ics.summary': 'Wedding of Mª Ángeles & Pablo',
+    'ics.summary': 'Wedding of Emilia & Paco',
     'ics.description': 'Ceremony at Parroquia de San José (C. Alcalá 43) at 12:30 and reception at Complejo La Cigüeña (Arganda del Rey) at 14:30.'
   };
 

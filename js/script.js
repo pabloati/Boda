@@ -1,6 +1,6 @@
 /**
  * WEDDING INVITATION INTERACTIVITY ENGINE
- * Mª Ángeles & Pablo - 13 de marzo de 2027
+ * Emilia & Paco - 13 de marzo de 2027
  */
 
 (function () {
@@ -219,7 +219,7 @@
       const icsData = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Boda Maria Angeles y Pablo//Invitacion Digital//ES',
+        'PRODID:-//Boda Emilia y Paco//Invitacion Digital//ES',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         'BEGIN:VEVENT',
@@ -239,7 +239,7 @@
       const url = window.URL.createObjectURL(blob);
       const tempLink = document.createElement('a');
       tempLink.href = url;
-      tempLink.setAttribute('download', 'Boda-MariAngeles-y-Pablo.ics');
+      tempLink.setAttribute('download', 'Boda-Emilia-y-Paco.ics');
       document.body.appendChild(tempLink);
       tempLink.click();
       document.body.removeChild(tempLink);
