@@ -893,6 +893,14 @@ button {
   margin: 0 auto;
 }
 
+/* A blank line (two line breaks) between paragraphs becomes a smaller gap
+   instead of a whole empty line (browsers that ignore this keep the full line) */
+.historia-lead br + br {
+  display: block;
+  content: "";
+  margin-top: 0.6em;
+}
+
 /* the three prints laid out like a page of an album */
 .historia-album {
   display: flex;
