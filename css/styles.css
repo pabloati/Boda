@@ -894,11 +894,12 @@ button {
 }
 
 /* A blank line (two line breaks) between paragraphs becomes a smaller gap
-   instead of a whole empty line (browsers that ignore this keep the full line) */
-.historia-lead br + br {
+   instead of a whole empty line: js/script.js (12) hides the second break and
+   adds an empty .lead-gap block after it. Without the script the full line stays. */
+.historia-lead br.lead-br-hidden { display: none; }
+.historia-lead .lead-gap {
   display: block;
-  content: "";
-  margin-top: 0.6em;
+  height: 0.5em;
 }
 
 /* the three prints laid out like a page of an album */
