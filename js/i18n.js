@@ -111,7 +111,7 @@ window.I18N = (function () {
     'story.3.aria': 'Valencia: turn the photo over',
     'story.3.text': '[Valencia: where you are now. Two or three sentences of your own.]',
     // --- countdown ---
-    'countdown.title': 'Only a few days to go',
+    'countdown.title': 'A few days to go',
     'countdown.days': 'days',
     'countdown.hours': 'hours',
     'countdown.min': 'min',
@@ -134,7 +134,7 @@ window.I18N = (function () {
     'tl.4.desc': "Don't let the party stop!",
     // --- rsvp ---
     'rsvp.title': 'Will you join us?',
-    'rsvp.lead': 'Please reply by 1 February 2027. One reply per person.',
+    'rsvp.lead': 'Please reply by 13 January 2027. One reply per person.',
     'rsvp.name': 'Full name',
     'rsvp.phone': 'Phone <span class="optional">(in case we need to call you)</span>',
     'rsvp.coming': 'Are you coming?',
