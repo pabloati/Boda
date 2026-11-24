@@ -125,11 +125,25 @@
   const VIEWS = {
     todo: { stops: ['iglesia', 'cibeles', 'avamerica', 'ciguena'], refs: ['A-4', 'Arganda del Rey'] },
     iglesia: { stops: ['iglesia', 'cibeles'], min: 45, card: 'iglesia' },
-    salida: { stops: ['iglesia', 'cibeles'], min: 45, card: 'cibeles' },
+    salida: { stops: ['cibeles'], fit: ['iglesia', 'cibeles'], centre: 'cibeles', min: 45, card: 'cibeles' },
     convite: { stops: ['ciguena'], min: 90, card: 'ciguena' },
     vuelta: { stops: ['cibeles', 'avamerica'], fit: ['iglesia', 'cibeles', 'avamerica'], card: 'vuelta' }
   };
   const VIEW_OF_STOP = { iglesia: 'iglesia', cibeles: 'salida', ciguena: 'convite' };
+
+  // --- Trips that follow the dotted bus line instead of jumping straight: which route joins two
+  //     views, and the stop at each end (to: null = the end of the route). Pairs not listed here
+  //     (Salida and Vuelta, Iglesia and Salida...) jump as before. Either direction works.
+  const LEGS = {
+    'iglesia>convite': { route: 'out', from: 'iglesia', to: 'ciguena' },
+    'salida>convite': { route: 'out', from: 'cibeles', to: 'ciguena' },
+    'convite>vuelta': { route: 'ret', from: 'ciguena', to: 'avamerica' }
+  };
+  // the view a tapped stop counts as, for those trips
+  const PLACE_OF_STOP = { iglesia: 'iglesia', cibeles: 'salida', ciguena: 'convite', avamerica: 'vuelta' };
+  let routes = { out: [], ret: [] };    // the two bus routes as lists of points (map units), read from the SVG
+  let at = null;                        // the view the map is showing; null once the guest moves it by hand
+  let flying = false;
 
   let svg = null;
   let W = 1707, H = 1600, geo = null;
@@ -202,12 +216,20 @@
     });
     if (!boxes.length) return null;
     const m = 14, mBottom = 64;                     // free edge in pixels; the bottom one clears the buttons
+    const cs = v.centre ? stopById(v.centre) : null;
+    const cen = cs ? project(cs.lat, cs.lon) : null;
     const span = function (u) {
       const o = { l: Infinity, r: -Infinity, t: Infinity, b: -Infinity };
       boxes.forEach(function (q) {
         o.l = Math.min(o.l, q.x / u + q.l); o.r = Math.max(o.r, q.x / u + q.r);
         o.t = Math.min(o.t, q.y / u + q.t); o.b = Math.max(o.b, q.y / u + q.b);
       });
+      if (cen) {
+        // v.centre: the span is made even around that stop, so it ends up in the middle
+        const cx = cen.x / u, cy = cen.y / u, l = o.l, r = o.r, tp = o.t, b = o.b;
+        o.l = Math.min(l, 2 * cx - r); o.r = Math.max(r, 2 * cx - l);
+        o.t = Math.min(tp, 2 * cy - b); o.b = Math.max(b, 2 * cy - tp);
+      }
       return o;
     };
     const fits = function (u) {
@@ -239,6 +261,7 @@
     const from = { cx: view.x + view.w / 2, cy: view.y + view.w * ratio / 2, w: view.w };
     const to = { cx: target.x + target.w / 2, cy: target.y + target.w * ratio / 2, w: target.w };
     const start = performance.now(), dur = 900;
+    flying = true;
     (function step(now) {
       let p = Math.min(1, (now - start) / dur);
       p = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;      // ease in and out
@@ -248,8 +271,135 @@
       const cx = from.cx + (to.cx - from.cx) * q, cy = from.cy + (to.cy - from.cy) * q;
       view = { w: w, x: cx - w / 2, y: cy - w * ratio / 2 };
       apply();
-      if (p < 1) anim = requestAnimationFrame(step);
+      if (p < 1) anim = requestAnimationFrame(step); else flying = false;
     })(start);
+  }
+
+  // --- Trips along the bus line --------------------------------------------------------
+  // a route of the SVG (only M and L commands) as a list of points
+  function readRoute(name) {
+    const path = svg.querySelector('.m-route-' + name + ' .m-route-line') || svg.querySelector('.m-route-' + name + ' path');
+    const nums = ((path && path.getAttribute('d')) || '').match(/-?\d+(?:\.\d+)?/g) || [];
+    const pts = [];
+    for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: +nums[i], y: +nums[i + 1] });
+    return pts;
+  }
+
+  // The point of a route by a stop. A bus can circle a block by its stop (the end at Avenida de
+  // América does), so among the points about as close as the nearest one this takes the last at
+  // the start of a trip (last: true) and the first at its end: the loop is left out.
+  function nearest(pts, p, last) {
+    const d = pts.map(function (q) { return Math.hypot(q.x - p.x, q.y - p.y); });
+    const lim = Math.min.apply(null, d) + 3;      // 3 map units, about 80 m
+    let best = -1;
+    d.forEach(function (x, i) { if (x <= lim && (last || best === -1)) best = i; });
+    return best;
+  }
+
+  // The line the camera follows: the bus line evened out, so it does not swing round every
+  // roundabout and small bend. The two ends stay where they are.
+  function smoothLine(line) {
+    const pts = [line[0]];
+    for (let i = 1; i < line.length; i++) {          // a point every map unit
+      const a = line[i - 1], b = line[i], n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y));
+      for (let k = 1; k <= n; k++) pts.push({ x: a.x + (b.x - a.x) * k / n, y: a.y + (b.y - a.y) * k / n });
+    }
+    const n = pts.length, R = Math.max(1, Math.min(18, Math.floor(n / 6)));   // averaged over ±18 units (about 500 m)
+    const sx = [0], sy = [0];
+    pts.forEach(function (q, i) { sx.push(sx[i] + q.x); sy.push(sy[i] + q.y); });
+    return pts.map(function (q, i) {
+      const r = Math.min(R, i, n - 1 - i);         // narrower by the ends, so they do not move
+      const c = 2 * r + 1;
+      return { x: (sx[i + r + 1] - sx[i - r]) / c, y: (sy[i + r + 1] - sy[i - r]) / c };
+    });
+  }
+
+  // the stretch of bus line between two views, in the order of the trip (null: they are not joined)
+  function legPath(a, b) {
+    if (!a || !b || a === b) return null;
+    let leg = LEGS[a + '>' + b], rev = false;
+    if (!leg) { leg = LEGS[b + '>' + a]; rev = true; }
+    if (!leg) return null;
+    const pts = routes[leg.route] || [];
+    if (pts.length < 2) return null;
+    const ends = [leg.from, leg.to].map(function (id) {
+      const s = id ? stopById(id) : null;
+      return s ? project(s.lat, s.lon) : null;
+    });
+    const i0 = ends[0] ? nearest(pts, ends[0], true) : 0;
+    const i1 = ends[1] ? nearest(pts, ends[1], false) : pts.length - 1;
+    const line = pts.slice(Math.min(i0, i1), Math.max(i0, i1) + 1);
+    if (i0 > i1) line.reverse();
+    if (ends[0]) line.unshift(ends[0]);          // the church is a short walk off the line
+    if (ends[1]) line.push(ends[1]);
+    if (rev) line.reverse();
+    return smoothLine(line);
+  }
+
+  // Like flyTo, but the centre runs along the line: the map pulls back on the way so the road
+  // ahead stays in sight, and the distance covered follows the zoom, so it slides at an even pace.
+  function flyAlong(line, target) {
+    cancelAnimationFrame(anim);
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !line || line.length < 2) { flyTo(target, reduce); return; }
+    const f = frameSize(), ratio = f.h / f.w;
+    const cum = [0];
+    for (let i = 1; i < line.length; i++) {
+      cum.push(cum[i - 1] + Math.hypot(line[i].x - line[i - 1].x, line[i].y - line[i - 1].y));
+    }
+    const L = cum[cum.length - 1];
+    if (L < 1) { flyTo(target); return; }
+    const from = { cx: view.x + view.w / 2, cy: view.y + view.w * ratio / 2, w: view.w };
+    const to = { cx: target.x + target.w / 2, cy: target.y + target.w * ratio / 2, w: target.w };
+    const a = line[0], b = line[line.length - 1];
+    // how far the centre of each view sits from its end of the line
+    const off0 = { x: from.cx - a.x, y: from.cy - a.y }, off1 = { x: to.cx - b.x, y: to.cy - b.y };
+    // the width: it pulls back a little in the first fifth of the trip (while it already moves),
+    // keeps that height, and comes close again in the last fifth. Not too far, so the streets
+    // and the dotted line stay readable on the way.
+    const l0 = Math.log(from.w), l1 = Math.log(to.w);
+    const top = Math.log(Math.max(from.w, to.w, Math.min(L * 0.22, W)));
+    // smootherstep: starts and ends with no jolt in speed either
+    const ramp = function (x) { x = Math.max(0, Math.min(1, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
+    const logW = function (p) {
+      if (p < 0.3) return l0 + (top - l0) * ramp(p / 0.3);
+      if (p > 0.7) return top + (l1 - top) * ramp((p - 0.7) / 0.3);
+      return top;
+    };
+    const N = 120, acc = [0];
+    for (let i = 1; i <= N; i++) acc.push(acc[i - 1] + Math.exp(logW((i - 0.5) / N)));
+    const along = function (p) {
+      const k = p * N, i = Math.min(N - 1, Math.floor(k));
+      return (acc[i] + (acc[i + 1] - acc[i]) * (k - i)) / acc[N];
+    };
+    let seg = 1;
+    const pointAt = function (s) {
+      while (seg > 1 && cum[seg - 1] > s) seg--;
+      while (seg < cum.length - 1 && cum[seg] < s) seg++;
+      const len = cum[seg] - cum[seg - 1] || 1, r = Math.max(0, Math.min(1, (s - cum[seg - 1]) / len));
+      return { x: line[seg - 1].x + (line[seg].x - line[seg - 1].x) * r, y: line[seg - 1].y + (line[seg].y - line[seg - 1].y) * r };
+    };
+    // longer trips take longer, but never more than 2 s
+    const start = performance.now(), dur = Math.min(2000, Math.max(1000, 500 + L * 1.5));
+    flying = true;
+    (function step(now) {
+      let p = Math.min(1, (now - start) / dur);
+      p = 0.5 - 0.5 * Math.cos(Math.PI * p);      // a soft start and stop, steady in between
+      const q = along(p), c = pointAt(q * L), w = Math.exp(logW(p));
+      const cx = c.x + off0.x + (off1.x - off0.x) * q, cy = c.y + off0.y + (off1.y - off0.y) * q;
+      view = { w: w, x: cx - w / 2, y: cy - w * ratio / 2 };
+      apply();
+      if (p < 1) anim = requestAnimationFrame(step); else flying = false;
+    })(start);
+  }
+
+  // go to a view: along the bus line when it joins where the map is now, straight otherwise
+  function goTo(place, target) {
+    if (!target) return;
+    if (flying) at = null;                      // stopped halfway: it is not at any view
+    const line = legPath(at, place);
+    if (line) flyAlong(line, target); else flyTo(target);
+    at = place || null;
   }
 
   function el(name, attrs, parent) {
@@ -377,9 +527,12 @@
   }
 
   function renderCard() {
+    // the hint lives above the map; the card under it only holds a stop's details
+    const hint = document.getElementById('mapa-hint');
+    if (hint) hint.textContent = t('map.hint');
     if (!card) return;
     if (!selected) {
-      card.innerHTML = '<p class="mapa-card-hint">' + esc(t('map.hint')) + '</p>';
+      card.innerHTML = '';
       return;
     }
     const s = stopById(selected);
@@ -428,7 +581,7 @@
       const p = project.apply(null, STOPS.filter(function (x) { return x.id === id; }).map(function (x) { return [x.lat, x.lon]; })[0]);
       target.x = p.x - target.w / 2;
       target.y = p.y - target.w * (f.h / f.w) * 0.62;
-      flyTo(target);
+      goTo(PLACE_OF_STOP[id] || null, target);
     }
   }
 
@@ -482,6 +635,7 @@
   box.addEventListener('pointerdown', function (e) {
     if (!svg || (e.pointerType === 'mouse' && e.button !== 0)) return;
     cancelAnimationFrame(anim);
+    if (flying) { flying = false; at = null; }
     pointers.set(e.pointerId, local(e));
     if (pointers.size === 1) moved = 0;
     oneFinger = (e.pointerType === 'touch' && pointers.size === 1 && !isOpen()) ? local(e) : null;
@@ -506,6 +660,7 @@
       const dx = pts[0].x - gesture.x, dy = pts[0].y - gesture.y;
       moved += Math.abs(dx) + Math.abs(dy);
       if (moved > 6) {
+        at = null;
         try { box.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is already gone */ }
         box.classList.add('is-dragging');
       }
@@ -518,6 +673,7 @@
       const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
       const cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
       moved += 10;
+      at = null;
       view.x -= (cx - gesture.x) * u;
       view.y -= (cy - gesture.y) * u;
       apply();
@@ -547,6 +703,7 @@
     const pt = local(e), now = Date.now();
     if (!g && lastTap && now - lastTap.t < 350 && Math.hypot(pt.x - lastTap.x, pt.y - lastTap.y) < 32) {
       lastTap = null;
+      at = null;
       const f = frameSize(), u = view.w / f.w, w2 = Math.max(7, view.w / 2.2), u2 = w2 / f.w;
       // the spot under the finger stays under the finger
       flyTo({ w: w2, x: view.x + pt.x * u - pt.x * u2, y: view.y + pt.y * u - pt.y * u2 });
@@ -565,6 +722,9 @@
   box.addEventListener('wheel', function (e) {
     if (!svg || !(isOpen() || e.ctrlKey)) return;
     e.preventDefault();
+    cancelAnimationFrame(anim);
+    flying = false;
+    at = null;
     const p = local(e);
     zoomAt(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0018)), p.x, p.y);
   }, { passive: false });
@@ -594,12 +754,16 @@
     const b = e.target.closest ? e.target.closest('[data-mapa]') : null;
     if (!b || !svg) return;
     const what = b.getAttribute('data-mapa');
-    if (what === 'in') zoomAt(1 / 1.7);
-    else if (what === 'out') zoomAt(1.7);
+    if (what === 'in' || what === 'out') {
+      cancelAnimationFrame(anim);
+      flying = false;
+      at = null;
+      zoomAt(what === 'in' ? 1 / 1.7 : 1.7);
+    }
     else if (what === 'expand') setOpen(!isOpen());
     else if (VIEWS[what]) {
       select(VIEWS[what].card || null);
-      flyTo(viewFor(VIEWS[what]));
+      goTo(what, viewFor(VIEWS[what]));
       markView(what);
     }
   });
@@ -645,10 +809,12 @@
       svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
       svg.setAttribute('aria-hidden', 'false');
       box.appendChild(svg);
+      routes = { out: readRoute('out'), ret: readRoute('ret') };
       sizeUp();
       drawOverlay();
       renderCard();
       flyTo(viewFor(VIEWS.todo), true);
+      at = 'todo';
       if (section) section.classList.add('is-ready');
     })
     .catch(function () {

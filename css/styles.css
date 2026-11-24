@@ -2302,6 +2302,11 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg[data-z="1"] .z3,
 .mapa-svg[data-z="2"] .z3 { display: none; }
 
+/* far view: only the motorways, and softer, so the south-west of Madrid
+   is not a tangle of roads; the main roads come back on zooming in */
+.mapa-svg[data-z="1"] .m-primary { display: none; }
+.mapa-svg[data-z="1"] .m-motorway path { stroke: #c2bfa6; stroke-width: 1.3px; }
+
 /* close up the streets become wide, like on a street map */
 .mapa-svg[data-z="2"] .m-primary path { stroke-width: 2.2px; stroke: #c9c2aa; }
 .mapa-svg[data-z="2"] .m-motorway path { stroke-width: 2.6px; }
@@ -2421,6 +2426,15 @@ html.rsvp-modal-open { overflow: hidden; }
   margin: 40px 0 6px;
 }
 
+/* «Todo el día» and the hint, above the map */
+.mapa-views-top { margin: 14px 0 0; }
+.mapa-hint {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
 .mapa-views .link-button { font-size: 1.3rem; color: var(--ink-soft); border-bottom-color: transparent; }
 .mapa-views .link-button.is-on { color: var(--terracotta); border-bottom-color: currentColor; }
 
@@ -2429,6 +2443,9 @@ html.rsvp-modal-open { overflow: hidden; }
   padding: 14px 10px 0;
   text-align: center;
 }
+
+/* nothing tapped yet: no blank box under the buttons */
+.mapa-card:empty { min-height: 0; padding: 0; }
 
 .mapa-card .hand-label { margin-bottom: 2px; }
 .mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
@@ -2483,11 +2500,14 @@ body.mapa-open .lang-toggle { display: none; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
 .mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
 .mapa-section.is-open .mapa-card { padding-bottom: 14px; }
+.mapa-section.is-open .mapa-views-top { margin-top: 12px; }
+.mapa-section.is-open .mapa-hint { margin-bottom: 8px; }
 
 @media (max-width: 768px) {
   .mapa-canvas { aspect-ratio: 4 / 5; }
   .mapa-frame { margin-bottom: 30px; }
   .mapa-views { gap: 10px 20px; margin-top: 40px; }
+  .mapa-views-top { margin-top: 10px; }
   .mapa-views .link-button { font-size: 1.2rem; }
   .mapa-card { min-height: 150px; }
   .mapa-buses li { font-size: 1.05rem; gap: 12px; }
