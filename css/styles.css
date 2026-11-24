@@ -141,6 +141,54 @@ button {
   color: var(--cream-text);
 }
 
+.band-sage {
+  background: var(--olive-soft);
+}
+
+/* ---------- Paper and torn edges ----------
+   The page is one long sheet of handmade paper: soft blotches and a few fibres, drawn once
+   (an inline SVG tile) and laid over every section below the hero photo. It scrolls with the
+   page, unlike the fine grain of body::before, which stays still. */
+.main-content::after {
+  content: "";
+  position: absolute;
+  top: 200vh;
+  top: 200svh;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.014' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.40 0 0 0 0 0.34 0 0 0 0 0.22 0.5 0 0 0 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23m%29'/%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cpath d='M140 175q3 -2 6 2M30 225q6 6 9 8M133 286q8 1 13 -3M154 129q4 4 5 3M119 104q7 2 9 -3M454 470q4 -2 7 -6M279 147q2 2 7 -3M438 463q2 1 10 6M380 471q4 2 7 5M326 167q4 -2 12 -1M428 42q3 -4 4 -4M293 351q3 3 11 3M54 231q4 -2 9 2M243 402q7 2 13 -3M71 449q2 2 6 2M461 141q2 -1 7 -2M41 202q8 -6 10 -9M365 187q2 -3 6 -1M353 230q6 8 11 11' stroke='%235d5238' stroke-width='.5' opacity='.17'/%3E%3Cpath d='M170 336q2 1 6 5M326 101q5 0 11 1M206 421q7 -5 16 -3M126 237q0 -1 6 -5M324 366q4 1 8 1M184 38q1 5 5 3M353 122q5 -3 10 -5M132 235q7 1 10 -4M275 116q1 -2 4 -4M415 138q2 -1 8 6M181 309q1 6 4 5' stroke='%23fffdf6' stroke-width='.7' opacity='.4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 520px 520px;
+}
+
+/* Where two sections of different colour meet, the upper one ends in a torn edge that hangs
+   over the lower one. js/script.js (10d) compares the colours, also the ones the site editor
+   sets, and gives the lower section .has-edge and --edge-bg (the colour of the sheet above). */
+.section,
+.historia,
+.footer-section {
+  position: relative;
+}
+
+.has-edge {
+  box-shadow: inset 0 20px 16px -16px rgba(70, 60, 38, 0.2);
+}
+
+.has-edge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 14px;
+  pointer-events: none;
+  background: var(--edge-bg, transparent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='14' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 8.0 7 9.9 14 9.7 23 8.0 32 7.9 41 9.4 44 9.2 48 7.0 60 7.7 69 10.2 76 11.0 85 11.8 94 9.3 103 7.0 106 5.4 110 5.9 117 5.0 126 6.8 135 5.4 140 5.4 152 4 164 4 173 6.6 176 7.7 181 9.0 190 7.9 193 8.2 196 7.7 201 7.1 204 8.9 207 7.4 210 7.3 222 6.7 225 7.1 229 8.5 234 7.7 239 6.8 246 8.2 249 6.3 261 4.2 264 4.0 271 4 280 4 289 4 301 5.4 308 6.1 311 5.6 315 4 324 4 327 4 334 6.6 343 7.3 346 4.9 350 4 355 4 364 4 369 4 372 4 381 4.7 384 5.2 389 5.9 393 8.3 400 10.0 404 11.9 408 12.6 413 13 422 11.7 426 9.9 438 12.2 442 13 449 13 458 10.8 461 8.7 464 8.8 469 7.5 481 6.9 488 8.6 497 8.5 506 6.8 518 9.3 522 7.9 531 8.7 540 9.3 545 7.8 549 9.1 552 7.9 559 6.6 562 4.9 567 5.1 571 4 575 6.0 580 6.8 592 7.0 596 7.4 599 7.3 604 8.3 607 5.9 619 4 622 5.2 627 4 630 4 639 4 642 6.1 654 7.3 658 8.8 663 8.1 675 7.9 678 9.9 685 12.2 688 13 697 10.5 709 9.9 718 7.3 721 5.1 733 4 738 6.0 750 5.1 762 6.1 769 5.8 778 4 787 4 796 4 799 4 811 4 820 4.8 827 4 830 4 834 4.9 838 5.0 843 5.9 850 5.8 854 4.9 866 4 878 4 882 6.0 889 4.5 894 4 898 4 901 5.1 906 6.8 909 6.5 914 8.7 921 8.1 930 8.1 935 9.2 944 9.0 947 10.7 952 12.6 955 13 960 13 965 13 974 10.5 978 10.0 982 7.5 987 6.2 991 7.7 1003 5.7 1006 6.4 1018 7.1 1023 9.5 1035 7.9 1042 6.7 1054 4.1 1061 4.3 1064 4 1069 5.4 1078 6.5 1087 6.5 1091 5.9 1103 8.0 1106 7.6 1118 7.0 1125 6.7 1137 8.8 1140 8.1 1149 8.9 1158 10.5 1163 10.3 1175 12.8 1178 13 1190 13 1193 11.5 1200 8.0L1200 0Z'/%3E%3C/svg%3E") repeat-x 0 0 / 1200px 100%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='14' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 8.0 7 9.9 14 9.7 23 8.0 32 7.9 41 9.4 44 9.2 48 7.0 60 7.7 69 10.2 76 11.0 85 11.8 94 9.3 103 7.0 106 5.4 110 5.9 117 5.0 126 6.8 135 5.4 140 5.4 152 4 164 4 173 6.6 176 7.7 181 9.0 190 7.9 193 8.2 196 7.7 201 7.1 204 8.9 207 7.4 210 7.3 222 6.7 225 7.1 229 8.5 234 7.7 239 6.8 246 8.2 249 6.3 261 4.2 264 4.0 271 4 280 4 289 4 301 5.4 308 6.1 311 5.6 315 4 324 4 327 4 334 6.6 343 7.3 346 4.9 350 4 355 4 364 4 369 4 372 4 381 4.7 384 5.2 389 5.9 393 8.3 400 10.0 404 11.9 408 12.6 413 13 422 11.7 426 9.9 438 12.2 442 13 449 13 458 10.8 461 8.7 464 8.8 469 7.5 481 6.9 488 8.6 497 8.5 506 6.8 518 9.3 522 7.9 531 8.7 540 9.3 545 7.8 549 9.1 552 7.9 559 6.6 562 4.9 567 5.1 571 4 575 6.0 580 6.8 592 7.0 596 7.4 599 7.3 604 8.3 607 5.9 619 4 622 5.2 627 4 630 4 639 4 642 6.1 654 7.3 658 8.8 663 8.1 675 7.9 678 9.9 685 12.2 688 13 697 10.5 709 9.9 718 7.3 721 5.1 733 4 738 6.0 750 5.1 762 6.1 769 5.8 778 4 787 4 796 4 799 4 811 4 820 4.8 827 4 830 4 834 4.9 838 5.0 843 5.9 850 5.8 854 4.9 866 4 878 4 882 6.0 889 4.5 894 4 898 4 901 5.1 906 6.8 909 6.5 914 8.7 921 8.1 930 8.1 935 9.2 944 9.0 947 10.7 952 12.6 955 13 960 13 965 13 974 10.5 978 10.0 982 7.5 987 6.2 991 7.7 1003 5.7 1006 6.4 1018 7.1 1023 9.5 1035 7.9 1042 6.7 1054 4.1 1061 4.3 1064 4 1069 5.4 1078 6.5 1087 6.5 1091 5.9 1103 8.0 1106 7.6 1118 7.0 1125 6.7 1137 8.8 1140 8.1 1149 8.9 1158 10.5 1163 10.3 1175 12.8 1178 13 1190 13 1193 11.5 1200 8.0L1200 0Z'/%3E%3C/svg%3E") repeat-x 0 0 / 1200px 100%;
+}
+
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
   position: relative;
@@ -871,13 +919,12 @@ button {
 
 /* ========================================================
    OUR STORY (#intro): a short welcome and three prints (Madrid, Copenhague, Valencia)
-   that turn over to show their text, then the countdown (no gap between the two).
+   that turn over to show their text.
 ======================================================== */
 .historia {
   padding: 64px 0;
 }
 
-.historia + .countdown-section { padding-top: 0; }
 
 .historia-lead {
   font-size: clamp(1.25rem, 4.2vw, 1.5rem);
@@ -1086,22 +1133,31 @@ button {
 /* ========================================================
    COUNTDOWN
 ======================================================== */
+.countdown-section {
+  padding: 68px 0 64px;
+}
+
 .countdown-grid {
   display: flex;
   justify-content: center;
-  gap: clamp(18px, 6vw, 44px);
   margin: 0 auto 32px;
 }
 
+/* a hairline between the four numbers */
 .countdown-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 56px;
+  padding: 2px clamp(11px, 3.6vw, 26px) 0;
+}
+
+.countdown-item + .countdown-item {
+  border-left: 1px solid rgba(59, 56, 47, 0.2);
 }
 
 .countdown-number {
-  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  font-size: clamp(2.7rem, 11vw, 4rem);
   font-weight: 500;
   color: var(--ink);
   line-height: 1;
@@ -1112,8 +1168,8 @@ button {
   font-size: 0.8rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-top: 6px;
+  color: var(--ink-soft);
+  margin-top: 8px;
 }
 
 /* ========================================================

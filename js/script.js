@@ -605,6 +605,45 @@
     }
   }
 
+  // --- 10d. TORN EDGES: where two neighbouring sections differ in colour ---
+  // The lower section of each pair gets .has-edge and --edge-bg (the colour of the one above),
+  // and css/styles.css draws the torn border with them. The colours are read from the page, so
+  // sections the site editor recolours, adds, hides or moves are followed too.
+  const edgeHost = document.getElementById('main-content');
+  if (edgeHost) {
+    const solid = function (el) {
+      const c = getComputedStyle(el).backgroundColor;
+      return !c || c === 'transparent' || /,\s*0\)$/.test(c) ? '' : c;
+    };
+    const markEdges = function () {
+      const pageBg = solid(document.body) || solid(document.documentElement);
+      let prev = '';
+      Array.prototype.forEach.call(edgeHost.children, function (el) {
+        if (!/^(SECTION|FOOTER)$/.test(el.tagName) || !el.offsetHeight) return;
+        const bg = solid(el) || pageBg;
+        const torn = !!prev && bg !== prev;
+        if (el.classList.contains('has-edge') !== torn) el.classList.toggle('has-edge', torn);
+        if (torn) { if (el.style.getPropertyValue('--edge-bg') !== prev) el.style.setProperty('--edge-bg', prev); }
+        else if (el.style.getPropertyValue('--edge-bg')) el.style.removeProperty('--edge-bg');
+        prev = bg;
+      });
+    };
+    let edgeFrame = 0;
+    const edgesSoon = function () {
+      if (edgeFrame) return;
+      edgeFrame = requestAnimationFrame(function () { edgeFrame = 0; markEdges(); });
+    };
+    markEdges();
+    window.addEventListener('load', markEdges);
+    if (window.MutationObserver) {
+      // the editor writes colours as a <style> in the head or as tokens on <html>, and moves sections
+      const mo = new MutationObserver(edgesSoon);
+      mo.observe(document.head, { childList: true, subtree: true, characterData: true });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+      mo.observe(edgeHost, { childList: true, attributes: true, attributeFilter: ['class', 'hidden'] , subtree: false });
+    }
+  }
+
   // --- 10c. OUR STORY: the three prints turn over ---
   // Each .hfoto-card has the photo on the front and its text on the back. A tap moves the card to
   // a fixed layer over the page (so no section can clip it or paint over it), where it flies to
