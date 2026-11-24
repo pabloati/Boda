@@ -276,6 +276,11 @@ button {
   font-size: 0.95rem;
 }
 
+/* "Añadir al calendario" stays terracotta even on a green countdown band
+   (two ids, so it beats the editor's #countdown colour rule) */
+#countdown #btn-add-calendar { color: var(--terracotta); }
+#countdown #btn-add-calendar:hover { color: var(--terracotta-deep); }
+
 .band-olive .link-button {
   color: var(--cream-text);
 }
@@ -932,6 +937,15 @@ button {
   margin: 0 auto;
 }
 
+/* A blank line (two line breaks) between paragraphs becomes a smaller gap
+   instead of a whole empty line: js/script.js (12) hides the second break and
+   adds an empty .lead-gap block after it. Without the script the full line stays. */
+.historia-lead br.lead-br-hidden { display: none; }
+.historia-lead .lead-gap {
+  display: block;
+  height: 0.5em;
+}
+
 /* the three prints laid out like a page of an album */
 .historia-album {
   display: flex;
@@ -1125,6 +1139,36 @@ button {
   .hfoto { flex: 0 0 46%; }
   .hfoto:nth-child(2) { margin-top: 18px; }
   .hfoto:nth-child(3) { margin-top: -5%; }
+}
+
+/* Desktop: the text on the left, the three prints on the right in a triangle
+   (two side by side, the third below between them), the hint under the prints */
+@media (min-width: 769px) {
+  .historia .container.narrow {
+    max-width: 1040px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 56px;
+    align-items: center;
+  }
+  .historia .container > .text-center {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    text-align: left;
+  }
+  .historia .text-center > .h-script { margin-left: 0; }
+  .historia-lead { max-width: none; margin: 0; }
+  .historia-album {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: wrap;
+    gap: 0 6%;
+    margin-top: 0;
+  }
+  .historia .hfoto { flex: 0 0 44%; }
+  .historia .hfoto:nth-child(2) { margin-top: 22px; }
+  .historia .hfoto:nth-child(3) { margin-top: -4%; }
+  .historia-hint { grid-column: 2; grid-row: 2; }
 }
 
 /* ========================================================

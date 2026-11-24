@@ -1,7 +1,10 @@
 /* Written by the site editor (_dev/flores.html): edit it there, not by hand.
    Loaded after styles.css. Delete this file to go back to styles.css alone. */
-/* editor-state {"tokens": {}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {}, "space": {}} */
+/* editor-state {"tokens": {}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {"countdown": "olive"}, "space": {}} */
 @media (max-width: 768px), (orientation: portrait) {
   .hero-photo img { object-position: 40.0% 50.0%; }
   .card-back { background-position: 40.0% 50.0%; }
 }
+#countdown { background: var(--olive); color: var(--cream-text); }
+#countdown :where(p, h1, h2, h3, h4, li, .h-script, .link-button, .text-link, .section-note, .countdown-number, .countdown-label, .ruta-time, .iban-code, .hashtag-text):not(.paper-panel *) { color: var(--cream-text); }
+#countdown .h-script::before { background: radial-gradient(ellipse at 50% 60%, rgba(243, 238, 227, 0.16) 0%, rgba(243, 238, 227, 0) 68%); }
