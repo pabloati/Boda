@@ -231,6 +231,11 @@ button {
   font-size: 0.95rem;
 }
 
+/* "Añadir al calendario" stays terracotta even on a green countdown band
+   (two ids, so it beats the editor's #countdown colour rule) */
+#countdown #btn-add-calendar { color: var(--terracotta); }
+#countdown #btn-add-calendar:hover { color: var(--terracotta-deep); }
+
 .band-olive .link-button {
   color: var(--cream-text);
 }
