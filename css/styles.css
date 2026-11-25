@@ -202,10 +202,9 @@ button {
   margin: 0 auto;
   font-family: var(--font-script);   /* the headings' font, in italics */
   font-style: italic;
-  font-size: calc(1.2rem + 9px);   /* nine px over the usual .section-lead size */
-  font-weight: 700;
+  font-size: calc(1.2rem + 11px);   /* the quote: eleven px over the usual .section-lead size */
 }
-#extra-1 .frase-cita { font-weight: 400; }   /* the reference line, not bold */
+#extra-1 .frase-cita { font-size: calc(1.2rem + 9px); }   /* the reference line keeps its size */
 
 .section-note {
   font-size: 1.05rem;
