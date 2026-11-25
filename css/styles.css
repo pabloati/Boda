@@ -1368,16 +1368,44 @@ button {
   object-fit: contain;
   object-position: center bottom;
   margin: 0 auto 18px;
-  /* a translucent white sheet behind each drawing, so it stands out from the background */
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.55);
-  border-radius: 6px;
+}
+
+/* The church (a line drawing, 528 x 640, drawn whole and centred by "contain", so
+   its width is 0.825 of the box height --h): a faint white sheet behind it, cut to
+   the outline of the building (wings, pediment and cross) with a small margin.
+   Each x is the middle of the box plus a share of --h, so the cut follows the
+   drawing at any width. */
+.location-art:not(.location-art-cover) {
+  --h: clamp(150px, 40vw, 230px);
+  background: rgba(255, 255, 255, 0.3);
+  clip-path: polygon(
+    calc(50% - 0.437 * var(--h)) 100%,
+    calc(50% - 0.437 * var(--h)) 22%,
+    calc(50% - 0.239 * var(--h)) 22%,
+    calc(50% - 0.239 * var(--h)) 17%,
+    calc(50% - 0.206 * var(--h)) 11%,
+    calc(50% - 0.083 * var(--h)) 7%,
+    calc(50% - 0.041 * var(--h)) 6%,
+    calc(50% - 0.041 * var(--h)) 0%,
+    calc(50% + 0.008 * var(--h)) 0%,
+    calc(50% + 0.008 * var(--h)) 6%,
+    calc(50% + 0.050 * var(--h)) 7%,
+    calc(50% + 0.182 * var(--h)) 11%,
+    calc(50% + 0.215 * var(--h)) 17%,
+    calc(50% + 0.215 * var(--h)) 22%,
+    calc(50% + 0.437 * var(--h)) 22%,
+    calc(50% + 0.437 * var(--h)) 100%
+  );
 }
 
 /* Wide drawing: fill the box height and crop the sides, keeping the house centred */
 .location-art-cover {
   object-fit: cover;
   object-position: 52% bottom;
+  /* a square picture: rounded into a soft oval, with a faint white rim */
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 42%;
 }
 
 .location-name {
