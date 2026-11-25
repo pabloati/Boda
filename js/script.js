@@ -730,6 +730,15 @@
     };
     const markEdges = function () {
       const pageBg = solid(document.body) || solid(document.documentElement);
+      // a pale green band cannot carry the light text the editor gives to green sections:
+      // those sections get .is-light-band, which turns that text dark (css/styles.css)
+      const probe = document.createElement('i');
+      probe.style.cssText = 'position:absolute;visibility:hidden;background:var(--olive)';
+      document.body.appendChild(probe);
+      const green = getComputedStyle(probe).backgroundColor;
+      document.body.removeChild(probe);
+      const rgb = (green.match(/[\d.]+/g) || []).map(Number);
+      const paleGreen = rgb.length >= 3 && (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255 > 0.8;
       let prev = '';
       let prevEl = null;
       let n = 0;
@@ -741,6 +750,8 @@
         const el = item.el;
         if (!/^(SECTION|FOOTER)$/.test(el.tagName) || !el.offsetHeight) return;
         const bg = solid(el) || pageBg;
+        const lightBand = paleGreen && solid(el) === green;
+        if (el.classList.contains('is-light-band') !== lightBand) el.classList.toggle('is-light-band', lightBand);
         const torn = !!prev && bg !== prev;
         if (el.classList.contains('has-edge') !== torn) el.classList.toggle('has-edge', torn);
         if (torn) { if (el.style.getPropertyValue('--edge-bg') !== prev) el.style.setProperty('--edge-bg', prev); }

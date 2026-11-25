@@ -204,6 +204,17 @@ button {
 }
 .has-edge[data-edge-from="intro"]::before { display: none; }
 
+/* «¿Nos acompañas?» stays on one line on phones: it shrinks just enough to fit the narrow ones */
+@media (max-width: 768px) {
+  #rsvp .h-script {
+    white-space: nowrap;
+    font-size: min(calc(4rem * var(--font-script-scale, 1)), calc((100vw - 44px) / 5.3));
+  }
+}
+
+/* A pale green band (js/script.js, 10d): the light text of the green sections turns dark */
+.is-light-band { --cream-text: var(--ink); }
+
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
   position: relative;
