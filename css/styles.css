@@ -193,17 +193,19 @@ button {
   mask: var(--torn) repeat-x 0 0 / 1200px 100%;
 }
 
-/* Sections whose background is a picture and not a flat colour («Nuestra historia», and «Frase»
-   on phones) tear their own bottom edge instead: the section hangs 14px over the next one and
+/* Sections whose background is a picture and not a flat colour («Nuestra historia», the
+   countdown with its strata, and «Frase» on phones) tear their own bottom edge instead: the section hangs 14px over the next one and
    is cut with the same torn shape, so the edge shows its own background. js/script.js (10d)
    gives the upper section .is-torn-below and the lower one data-edge-from="<id of the upper>". */
-.historia.is-torn-below {
+.historia.is-torn-below,
+#countdown.is-torn-below {
   z-index: var(--edge-z, 1);   /* higher the earlier the section is seen, so it lies over the next one */
   margin-bottom: -14px;
   -webkit-mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
   mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
 }
-.has-edge[data-edge-from="intro"]::before { display: none; }
+.has-edge[data-edge-from="intro"]::before,
+.has-edge[data-edge-from="countdown"]::before { display: none; }
 
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
