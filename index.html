@@ -28,8 +28,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=202611251625-regalo">
-  <link rel="stylesheet" href="css/editor.css?v=202611251625-regalo">
+  <link rel="stylesheet" href="css/styles.css?v=202611251700-ending">
+  <link rel="stylesheet" href="css/editor.css?v=202611251700-ending">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
@@ -546,14 +546,66 @@
         <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
         <p class="section-lead" data-i18n="gifts.lead">Nos encantaría llevaros a todos con nosotros en el avión de la luna de miel, pero ni en uno de Iberia cabemos todos. Por eso, podéis acompañarnos en espíritu con algún que otro detallito ;)</p>
 
-        <details class="iban-details">
-          <summary class="text-link" data-i18n="gifts.showIban">Ver número de cuenta</summary>
-          <div class="iban-box">
-            <p class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</p>
-            <button type="button" id="btn-copy-iban" class="link-button small" aria-label="Copiar el IBAN" data-i18n-aria="gifts.copyAria"><span id="copy-text" data-i18n="gifts.copy">Copiar</span></button>
-            <p class="iban-meta" data-i18n="gifts.meta">Pablo Atienza &amp; María de los Ángeles Quijano<br>Concepto: Boda Mª Ángeles y Pablo + vuestro nombre</p>
+        <!-- The flight to the honeymoon: the plane (tap or drag) follows the dotted route to the
+             postmark and the boarding pass with the bank account appears. Without JavaScript
+             the pass is simply there. Route geometry: viewBox 320 x 120, read by js/script.js (8b). -->
+        <div class="vuelo" id="vuelo">
+          <div class="vuelo-ruta" id="vuelo-ruta">
+            <svg class="vuelo-svg" viewBox="0 0 320 120" aria-hidden="true" focusable="false">
+              <defs>
+                <mask id="vuelo-hecho" maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="120">
+                  <path id="vuelo-mask" d="M30 96 Q150 -22 252 54" fill="none" stroke="#fff" stroke-width="8"/>
+                </mask>
+                <path id="sello-arco-1" d="M249 62 A27 27 0 0 1 303 62"/>
+                <path id="sello-arco-2" d="M245.5 62 A30.5 30.5 0 0 0 306.5 62"/>
+              </defs>
+              <path class="vuelo-linea" id="vuelo-path" d="M30 96 Q150 -22 252 54"/>
+              <path class="vuelo-linea is-done" d="M30 96 Q150 -22 252 54" mask="url(#vuelo-hecho)"/>
+              <circle class="vuelo-punto" cx="30" cy="96" r="2.6"/>
+              <text class="vuelo-ciudad" x="30" y="112" text-anchor="middle" data-i18n="gifts.from">Madrid</text>
+              <g class="vuelo-sello" id="vuelo-sello">
+                <circle cx="276" cy="62" r="36"/>
+                <circle cx="276" cy="62" r="33.5" class="fino"/>
+                <circle cx="276" cy="62" r="20" class="fino"/>
+                <text class="sello-texto"><textPath href="#sello-arco-1" startOffset="50%" text-anchor="middle" data-i18n="gifts.to">Tailandia</textPath></text>
+                <text class="sello-texto sello-texto-2"><textPath href="#sello-arco-2" startOffset="50%" text-anchor="middle" data-i18n="gifts.trip">Luna de miel</textPath></text>
+                <path class="fino" d="M260 56 q4 -4 8 0 t8 0 t8 0 t8 0 M260 62 q4 -4 8 0 t8 0 t8 0 t8 0 M260 68 q4 -4 8 0 t8 0 t8 0 t8 0"/>
+              </g>
+            </svg>
+            <button type="button" class="vuelo-avion" id="vuelo-avion" aria-controls="embarque" aria-expanded="false" aria-label="Despegar hacia Tailandia para ver el número de cuenta" data-i18n-aria="gifts.planeAria">
+              <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <path d="M38 28.5 L24 7 L18.5 7 L27 28.5 Z M38 35.5 L24 57 L18.5 57 L27 35.5 Z"/>
+                <path d="M14.5 28.5 L8 18 L4.5 18 L8 28.5 Z M14.5 35.5 L8 46 L4.5 46 L8 35.5 Z"/>
+                <path d="M26 16.5 h6.5 a1.6 1.6 0 0 1 0 3.2 h-5.2 Z M26 47.5 h6.5 a1.6 1.6 0 0 0 0 -3.2 h-5.2 Z"/>
+                <path d="M5 32 C5 29.6 9 28.5 15 28.5 L46 28.5 C53 28.5 60 30.4 60 32 C60 33.6 53 35.5 46 35.5 L15 35.5 C9 35.5 5 34.4 5 32 Z"/>
+                <path class="fino" d="M16 32 H46" stroke-dasharray="1.4 2.6"/>
+                <path class="fino" d="M51 30.2 q3.5 0.4 5 1.8 q-1.5 1.4 -5 1.8"/>
+              </svg>
+            </button>
           </div>
-        </details>
+          <p class="hand-label vuelo-hint" data-i18n="gifts.hint">Toca el avión para despegar</p>
+
+          <div class="embarque paper-panel" id="embarque">
+            <div class="embarque-cuerpo">
+              <p class="embarque-cabecera"><span data-i18n="gifts.pass">Tarjeta de embarque</span><span data-i18n="gifts.trip">Luna de miel</span></p>
+              <p class="embarque-trayecto"><span data-i18n="gifts.from">Madrid</span><i aria-hidden="true"></i><span data-i18n="gifts.to">Tailandia</span></p>
+              <dl class="embarque-datos">
+                <div><dt data-i18n="gifts.passengers">Pasajeros</dt><dd>Pablo Atienza &amp; María de los Ángeles Quijano</dd></div>
+                <div><dt data-i18n="gifts.ref">Concepto</dt><dd data-i18n="gifts.refValue">Boda Mª Ángeles y Pablo + vuestro nombre</dd></div>
+              </dl>
+            </div>
+            <div class="embarque-resguardo">
+              <p class="embarque-etiqueta" data-i18n="gifts.account">Número de cuenta</p>
+              <button type="button" id="btn-copy-iban" class="embarque-iban" aria-label="Copiar el IBAN" data-i18n-aria="gifts.copyAria">
+                <span class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</span>
+                <span class="embarque-copiar" id="copy-text" aria-live="polite" data-i18n="gifts.copy">Toca el número para copiarlo</span>
+              </button>
+              <div class="embarque-barras" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <p class="vuelo-saltar"><button type="button" class="text-link" id="vuelo-saltar" data-i18n="gifts.showIban">Ver número de cuenta</button></p>
+        </div>
 
       </div>
     </section>
@@ -586,13 +638,13 @@
 
   </main>
 
-  <script src="js/i18n.js?v=202611251625-regalo"></script>
-  <script src="js/rsvp-config.js?v=202611251625-regalo"></script>
-  <script src="js/script.js?v=202611251625-regalo"></script>
-  <script src="js/playlist-config.js?v=202611251625-regalo"></script>
-  <script src="js/playlist.js?v=202611251625-regalo"></script>
-  <script src="js/mapa.js?v=202611251625-regalo"></script>
-  <script src="js/flores-layout.js?v=202611251625-regalo"></script>
-  <script src="js/flores.js?v=202611251625-regalo"></script>
+  <script src="js/i18n.js?v=202611251700-ending"></script>
+  <script src="js/rsvp-config.js?v=202611251700-ending"></script>
+  <script src="js/script.js?v=202611251700-ending"></script>
+  <script src="js/playlist-config.js?v=202611251700-ending"></script>
+  <script src="js/playlist.js?v=202611251700-ending"></script>
+  <script src="js/mapa.js?v=202611251700-ending"></script>
+  <script src="js/flores-layout.js?v=202611251700-ending"></script>
+  <script src="js/flores.js?v=202611251700-ending"></script>
 </body>
 </html>

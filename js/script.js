@@ -535,18 +535,131 @@
   }
 
   if (btnCopyIban && ibanValue) {
+    // the whole number is the button; only the line under it changes, so the number stays put
+    let copyTimer = 0;
     btnCopyIban.addEventListener('click', function () {
       const iban = ibanValue.textContent.trim();
       copyToClipboard(iban, function () {
+        const label = document.getElementById('copy-text');
         btnCopyIban.classList.add('copied');
-        btnCopyIban.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('copy.done');
-
-        setTimeout(() => {
+        if (label) label.textContent = t('copy.done');
+        clearTimeout(copyTimer);
+        copyTimer = setTimeout(function () {
           btnCopyIban.classList.remove('copied');
-          btnCopyIban.innerHTML = '<span id="copy-text" data-i18n="gifts.copy">' + t('gifts.copy') + '</span>';
+          if (label) label.innerHTML = t('gifts.copy');
         }, 2500);
       });
     });
+  }
+
+  // --- 8b. GIFT: the plane flies to the postmark and the boarding pass appears ---
+  // The plane is a button laid over the route SVG (viewBox 320 x 120). A tap flies the whole
+  // route; it can also be dragged, and wherever it is let go it finishes the trip by itself.
+  // Without this block the boarding pass is simply visible (.is-ready is what hides it).
+  const vuelo = document.getElementById('vuelo');
+  const vueloRuta = document.getElementById('vuelo-ruta');
+  const vueloPath = document.getElementById('vuelo-path');
+  const vueloAvion = document.getElementById('vuelo-avion');
+  if (vuelo && vueloRuta && vueloPath && vueloAvion && vueloPath.getTotalLength) {
+    const vueloMask = document.getElementById('vuelo-mask');
+    const vueloSaltar = document.getElementById('vuelo-saltar');
+    const embarque = document.getElementById('embarque');
+    const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const total = vueloPath.getTotalLength();
+    const START = 0.1;   // a little after the dot of Madrid, so the dot and its name show
+    let progress = START;
+    let landed = false;
+    let flight = 0;
+
+    const place = function (p) {
+      progress = Math.max(0, Math.min(1, p));
+      const at = vueloPath.getPointAtLength(total * progress);
+      const a = vueloPath.getPointAtLength(Math.max(0, total * progress - 1));
+      const b = vueloPath.getPointAtLength(Math.min(total, total * progress + 1));
+      const angle = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      vueloAvion.style.left = (at.x / 320 * 100) + '%';
+      vueloAvion.style.top = (at.y / 120 * 100) + '%';
+      vueloAvion.style.transform = 'translate(-50%, -50%) rotate(' + angle.toFixed(1) + 'deg)';
+      if (vueloMask) {
+        vueloMask.setAttribute('stroke-dasharray', total);
+        vueloMask.setAttribute('stroke-dashoffset', total * (1 - progress));
+      }
+    };
+
+    const land = function () {
+      if (landed) return;
+      landed = true;
+      cancelAnimationFrame(flight);
+      place(1);
+      vuelo.classList.remove('is-flying');
+      vuelo.classList.add('is-landed');
+      vueloAvion.setAttribute('aria-expanded', 'true');
+      vueloAvion.disabled = true;
+      if (embarque && embarque.scrollIntoView) {
+        setTimeout(function () {
+          const r = embarque.getBoundingClientRect();
+          if (r.bottom > window.innerHeight) embarque.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'end' });
+        }, calm ? 0 : 450);
+      }
+    };
+
+    const fly = function () {
+      if (landed) return;
+      if (calm) { land(); return; }
+      cancelAnimationFrame(flight);
+      vuelo.classList.add('is-flying');
+      const from = progress;
+      const duration = 600 + 1700 * (1 - from);
+      let start = 0;
+      const step = function (now) {
+        if (!start) start = now;
+        const k = Math.min(1, (now - start) / duration);
+        const eased = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        place(from + (1 - from) * eased);
+        if (k < 1) flight = requestAnimationFrame(step); else land();
+      };
+      flight = requestAnimationFrame(step);
+    };
+
+    // dragging: the finger's horizontal place on the route decides how far the plane is
+    let drag = null;
+    const xToProgress = function (clientX) {
+      const box = vueloRuta.getBoundingClientRect();
+      const x = (clientX - box.left) / box.width * 320;
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 18; i += 1) {   // the route only moves right, so a bisection finds it
+        const mid = (lo + hi) / 2;
+        if (vueloPath.getPointAtLength(total * mid).x < x) lo = mid; else hi = mid;
+      }
+      return (lo + hi) / 2;
+    };
+    vueloAvion.addEventListener('pointerdown', function (e) {
+      if (landed || (e.button != null && e.button > 0)) return;
+      cancelAnimationFrame(flight);
+      drag = { id: e.pointerId, x: e.clientX, moved: false };
+      if (vueloAvion.setPointerCapture) { try { vueloAvion.setPointerCapture(e.pointerId); } catch (err) { /* the tap still works */ } }
+    });
+    vueloAvion.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id || landed) return;
+      if (!drag.moved && Math.abs(e.clientX - drag.x) < 6) return;
+      drag.moved = true;
+      vuelo.classList.add('is-flying');
+      place(Math.max(progress, xToProgress(e.clientX)));   // only forwards
+      if (progress > 0.985) { drag = null; land(); }
+    });
+    const release = function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      fly();
+    };
+    vueloAvion.addEventListener('pointerup', release);
+    vueloAvion.addEventListener('pointercancel', release);
+    // the keyboard (and any browser without pointer events) gets a plain click
+    vueloAvion.addEventListener('click', function () { if (!drag) fly(); });
+    if (vueloSaltar) vueloSaltar.addEventListener('click', land);
+
+    place(START);
+    vuelo.classList.add('is-ready');
   }
 
   // Photos: without an album link in the HTML the section hides
