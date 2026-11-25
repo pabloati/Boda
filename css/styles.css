@@ -2789,6 +2789,13 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg .m-mid path { stroke: #d6cfba; stroke-width: 1px; }
 .mapa-svg .m-local path { stroke: #ddd6c2; stroke-width: 1.6px; }
 
+/* clean map: only roads (and the bus routes, stops and names) are shown;
+   woods, parks, water and rivers stay in the SVG but are hidden */
+.mapa-svg .m-forest,
+.mapa-svg .m-park,
+.mapa-svg .m-water,
+.mapa-svg .m-river { display: none; }
+
 .mapa-svg[data-z="1"] .z2,
 .mapa-svg[data-z="1"] .z3,
 .mapa-svg[data-z="2"] .z3 { display: none; }
