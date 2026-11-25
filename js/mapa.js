@@ -435,11 +435,12 @@
           el('circle', { r: 8.5, 'class': 'm-metro-mark' }, g);
           el('text', { 'text-anchor': 'middle', y: 4.2, 'class': 'm-metro-m' }, g).textContent = pl.mark;
         } else {                                                     // metro: a simplified Madrid metro rhombus
-          el('polygon', { points: '-11,0 0,-7 11,0 0,7', 'class': 'm-metro-rombo' }, g);
+          el('polygon', { points: '-13,0 0,-8.5 13,0 0,8.5', 'class': 'm-metro-rombo' }, g);
+          el('text', { 'text-anchor': 'middle', y: 3.3, 'class': 'm-metro-rombo-m' }, g).textContent = 'M';
         }
         const side = (!narrow && pl.atWide) || pl.at || 'b';
         const lab = el('text', { 'text-anchor': side === 'l' ? 'end' : (side === 'r' ? 'start' : 'middle'),
-          x: side === 'l' ? -15 : (side === 'r' ? 15 : 0), y: side === 't' ? -13 : (side === 'b' ? 23 : 4.5) }, g);
+          x: side === 'l' ? -17 : (side === 'r' ? 17 : 0), y: side === 't' ? -14 : (side === 'b' ? 24 : 4.5) }, g);
         lab.textContent = pl.name;
         return;
       }
