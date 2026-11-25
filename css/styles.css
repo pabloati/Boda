@@ -1214,9 +1214,10 @@ button {
 .hfoto-city {
   margin: 0 0 4cqw;
   font-family: var(--font-script);
-  font-size: 2rem;
-  font-size: 15cqw;
+  font-size: 2.6rem;
+  font-size: 19cqw;
   line-height: 1;
+  white-space: nowrap;   /* "Copenhague" stays on one line */
   color: var(--olive-deep);
 }
 
