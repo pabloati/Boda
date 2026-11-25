@@ -1180,9 +1180,21 @@ button {
   .hfoto-card, .hfoto-stage, .hfoto-stage .hfoto-card { transition: none; }
 }
 
-/* Desktop: the same column, the diamond a little larger */
+/* Desktop: the four prints in one row (postcard, Madrid, Copenhague, Valencia),
+   slightly tilted, each one's corner over the one before */
 @media (min-width: 769px) {
-  .historia-album { max-width: 540px; }
+  .historia .container.narrow { max-width: 1040px; }
+  .historia-album {
+    flex-wrap: nowrap;
+    gap: 0;
+    max-width: 960px;
+  }
+  .historia .hfoto { flex: 0 0 26%; margin: 0; }
+  .historia .hfoto + .hfoto { margin-left: -4%; }
+  .historia .hfoto:nth-child(1) { --tilt: -3deg; }
+  .historia .hfoto:nth-child(2) { --tilt: 2deg; margin-top: 16px; }
+  .historia .hfoto:nth-child(3) { --tilt: -1.5deg; margin-top: 4px; }
+  .historia .hfoto:nth-child(4) { --tilt: 2.6deg; margin-top: 18px; }
 }
 
 /* ========================================================
