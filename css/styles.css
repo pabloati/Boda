@@ -959,8 +959,8 @@ button {
   padding: 64px 0;
   /* sandstone strata in the light colours of the top-left corner of the hero photo
      (a background chosen in the editor's «Secciones» tab replaces it) */
-  background: #f8d2a6 url('../assets/patron-historia.svg') repeat;
-  background-size: 320px 160px;
+  background: #f7c993 url('../assets/patron-historia.svg') repeat;
+  background-size: 400px 200px;
 }
 
 .historia + .countdown-section { padding-top: 0; }
