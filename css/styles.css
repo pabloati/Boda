@@ -1305,12 +1305,21 @@ button {
   /* its own green, a little lighter and softer than the editor's «Verde»; the strata
      in patron-cuenta.svg are drawn in greens that go with it */
   background-color: #c3e3a8;
+  color: var(--ink);
   /* the same light veil as «Nuestra historia», over the strata */
   background-image:
     linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
     url('../assets/patron-cuenta.svg') !important;
   background-repeat: no-repeat, repeat !important;
   background-size: auto, 400px 200px !important;
+}
+/* on this light green the texts are dark, like on the paper sections (instead of the
+   cream the editor gives green bands); "Añadir al calendario" stays terracotta */
+#main-content #countdown :is(p, h1, h2, h3, h4, li, .h-script, .section-note, .countdown-number, .countdown-label) {
+  color: var(--ink);
+}
+#main-content #countdown .h-script::before {
+  background: radial-gradient(ellipse at 50% 60%, var(--olive-wash) 0%, rgba(142, 145, 102, 0) 68%);
 }
 
 .countdown-grid {
