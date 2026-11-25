@@ -2482,7 +2482,7 @@ html.rsvp-modal-open { overflow: hidden; }
    white. Inside the map --paper is that light colour too, so the halos around the
    names and the stops' badges match it. */
 .mapa-canvas {
-  --paper: #fcfbf6;
+  --paper: #f4f1e6;
   background: var(--paper);
   position: relative;
   aspect-ratio: 4 / 3;
@@ -2600,6 +2600,7 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
 .m-stop-dot { fill: var(--terracotta); stroke: var(--paper); stroke-width: 1.5px; }
 .m-stop-badge { fill: var(--paper); stroke: var(--olive-deep); stroke-width: 1.5px; }
+.mapa-canvas .m-stop-badge { fill: #fcfbf6; }   /* the stops' circles a touch lighter than the map, so they stand out */
 .m-stop.is-on .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
 .m-stop:focus-visible .m-stop-badge { stroke: var(--terracotta); stroke-width: 3px; }
 
