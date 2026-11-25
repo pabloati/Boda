@@ -1011,6 +1011,9 @@ button {
 .hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; position: relative; z-index: 1; }   /* alone on its row, centred, in front of the two below */
 /* the postcard (2:3, its title at the foot) is shown whole rather than cropped */
 .hfoto-front[data-slot="tarjeta.jpg"] img { object-fit: contain; }
+/* its back holds a longer text than the others: smaller letters so it fits the card */
+.hfoto:nth-child(1) .hfoto-text { font-size: 4cqw; line-height: 1.32; }
+.hfoto:nth-child(1) .hfoto-city { margin-bottom: 2.5cqw; }
 .hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
 .hfoto:nth-child(4) { --tilt: 3deg; margin-top: -5%; }
 

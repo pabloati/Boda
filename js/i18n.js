@@ -103,7 +103,7 @@ window.I18N = (function () {
     'story.stageHint': 'Tap the photo to turn it, or outside to close',
     'story.0.cap': 'The postcard',
     'story.0.aria': 'The postcard: turn the photo over',
-    'story.0.text': 'Write the text of the postcard here.',
+    'story.0.text': 'On that postcard you just saw coming out of the envelope, Pablo wrote the words he would use to ask me to marry him, in the middle of our living room on the first day we moved in together.<br>We met in Madrid some 8-9 years ago, thanks to an international science outreach association with a keen interest in the effects of alcohol on young people\'s bodies, travelling and having good friends, among other serious matters. It is called IAAS. With such good taste in common... it was only a matter of time before we found each other.<br>At every event since then, the spark stayed alive. Like magnets, we always ended up side by side.<br>Pablo went on Erasmus, and life went on for both of us until...',
     'story.1.cap': 'Madrid',
     'story.1.aria': 'Madrid: turn the photo over',
     'story.1.text': 'Our story also began with a message. After we met through friends at university, our paths went separate ways, until I wrote to her again and she gave me a chance.',
