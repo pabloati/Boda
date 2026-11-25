@@ -216,14 +216,27 @@ button {
    "Frase" section continues the canyon floor at the bottom of that photo, as if
    the photo went on. Same width and horizontal place as the hero photo (cover on
    a 100svh stage, 3:4 photo, object-position 40%), and only its bottom 3% (sand,
-   below the feet) stretched to the height of the section. Dark text on the sand.
+   below the feet) stretched to the height of the section. The strip is flipped
+   upside down, so the first row of the section is the photo's last row and the
+   seam does not show. Dark text on the sand.
    #main-content so it wins over the background chosen in the editor. */
 @media (max-width: 768px), (orientation: portrait) {
   #main-content #extra-1 {
-    background: #d98b5f url('../assets/hero-mobile.jpg') no-repeat;
+    position: relative;
+    isolation: isolate;
+    background: #d98b5f;
+  }
+  #main-content #extra-1::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: url('../assets/hero-mobile.jpg') no-repeat;
     background-size: max(100vw, 75vh) 3300%;
     background-size: max(100vw, 75svh) 3300%;
     background-position: 40% 100%;
+    transform: scaleY(-1);
   }
   #main-content #extra-1 .section-lead,
   #main-content #extra-1 .section-lead * { color: #3d1d10; }
