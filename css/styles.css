@@ -200,8 +200,8 @@ button {
 #extra-1 .h-script { display: none; }
 #extra-1 .section-lead {
   margin: 0 auto;
-  font-family: var(--font-script);   /* the headings' font, in italics */
-  font-style: italic;
+  font-family: var(--font-script);   /* the headings' font, upright */
+  font-style: normal;
   font-size: calc(1.2rem + 15px);   /* the quote: fifteen px over the usual .section-lead size */
   line-height: 1.15;                /* the two lines close together (the usual is 1.6) */
 }
