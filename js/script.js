@@ -566,7 +566,7 @@
     const embarque = document.getElementById('embarque');
     const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const total = vueloPath.getTotalLength();
-    const START = 0.1;   // a little after the dot of Madrid, so the dot and its name show
+    const START = 0.15;   // a little after the dot of Madrid, so the dot and its name show
     let progress = START;
     let landed = false;
     let flight = 0;

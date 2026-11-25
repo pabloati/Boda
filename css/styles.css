@@ -1791,7 +1791,7 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .vuelo-ciudad {
   font-family: var(--font-hand);
-  font-size: 8px;
+  font-size: 11.5px;
   fill: var(--ink-soft);
 }
 
@@ -1810,15 +1810,16 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .sello-texto {
   font-family: var(--font-serif);
-  font-size: 7.4px;
+  font-size: 8.6px;
   font-weight: 600;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   fill: var(--terracotta-deep);
   stroke: none;
 }
 
-.sello-texto-2 { font-size: 5.4px; letter-spacing: 1.3px; dominant-baseline: hanging; }
+/* along the bottom of the rim, between the inner ring and the two outer ones */
+.sello-texto-2 { font-size: 6px; letter-spacing: 1.5px; }
 
 .vuelo.is-landed .vuelo-sello { animation: sello-golpe 0.5s ease-out; }
 
@@ -1830,9 +1831,9 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .vuelo-avion {
   position: absolute;
-  left: 9.4%;
-  top: 80%;
-  width: clamp(46px, 15%, 64px);
+  left: 17%;
+  top: 62%;
+  width: clamp(60px, 21%, 88px);
   aspect-ratio: 1;
   padding: 0;
   border: 0;
@@ -1865,10 +1866,8 @@ html.rsvp-modal-open { overflow: hidden; }
 .vuelo.is-ready:not(.is-flying):not(.is-landed) .vuelo-avion svg { animation: avion-espera 2.6s ease-in-out infinite; }
 .vuelo.is-flying .vuelo-avion { cursor: grabbing; }
 .vuelo.is-flying .vuelo-avion svg { transform: scale(1.12); }
-/* arrived: the plane fades into the postmark, which stays readable */
-.vuelo-avion { transition: opacity 0.45s ease 0.15s; }
-.vuelo.is-landed .vuelo-avion { opacity: 0; }
-.vuelo.is-landed .vuelo-avion svg { transform: scale(0.7); }
+/* arrived: it stays parked in the middle of the postmark, small enough to leave the rim's words free */
+.vuelo.is-landed .vuelo-avion svg { transform: scale(0.62); }
 
 @keyframes avion-espera {
   0%, 55%, 100% { transform: translateX(0); }
@@ -1876,7 +1875,7 @@ html.rsvp-modal-open { overflow: hidden; }
   85% { transform: translateX(0); }
 }
 
-.vuelo-hint { margin: 10px 0 0; }
+.vuelo-hint { margin: 18px 0 0; }
 .vuelo-saltar { margin: 14px 0 0; }
 .vuelo-saltar .text-link { border-width: 0 0 1px; background: none; font-family: inherit; cursor: pointer; }
 
@@ -1913,24 +1912,30 @@ html.rsvp-modal-open { overflow: hidden; }
   --muesca: 9px;
   background: #fbf9f3;
   padding: 18px 22px;
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 50.5% 100%;
+  mask-size: 50.5% 100%;
+  -webkit-mask-position: left, right;
+  mask-position: left, right;
 }
 
+/* each notch is cut by its own gradient, which paints its half of the piece */
 .embarque-cuerpo {
   border-radius: 10px 10px 0 0;
   padding-bottom: 16px;
-  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 97%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 97%, #000);
-  mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 97%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 97%, #000);
+  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 96%, #000);
+  mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 96%, #000);
 }
 
 .embarque-resguardo {
   position: relative;
+  margin-top: -1px;   /* over the body by a pixel, so no hairline shows where the two pieces meet */
   border-radius: 0 0 10px 10px;
-  padding-top: 16px;
+  padding-top: 17px;
   text-align: center;
-  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 97%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 97%, #000);
-  mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 97%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 97%, #000);
+  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 96%, #000);
+  mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 96%, #000);
 }
 
 /* the perforation */
@@ -1938,8 +1943,8 @@ html.rsvp-modal-open { overflow: hidden; }
   content: "";
   position: absolute;
   top: 0;
-  right: 14px;
-  left: 14px;
+  right: 20px;   /* well clear of the notches */
+  left: 20px;
   border-top: 1.5px dashed var(--paper-line);
 }
 
