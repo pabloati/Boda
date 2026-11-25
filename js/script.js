@@ -618,6 +618,8 @@
     const markEdges = function () {
       const pageBg = solid(document.body) || solid(document.documentElement);
       let prev = '';
+      let prevEl = null;
+      let n = 0;
       // in the order they are seen: the editor moves sections with the CSS `order` property
       const seen = Array.prototype.map.call(edgeHost.children, function (el, i) {
         return { el: el, i: i, order: parseInt(getComputedStyle(el).order, 10) || 0 };
@@ -630,8 +632,22 @@
         if (el.classList.contains('has-edge') !== torn) el.classList.toggle('has-edge', torn);
         if (torn) { if (el.style.getPropertyValue('--edge-bg') !== prev) el.style.setProperty('--edge-bg', prev); }
         else if (el.style.getPropertyValue('--edge-bg')) el.style.removeProperty('--edge-bg');
+        // who is above, for the sections that tear their own bottom edge (a picture as background)
+        const from = torn && prevEl && prevEl.id ? prevEl.id : '';
+        if ((el.getAttribute('data-edge-from') || '') !== from) {
+          if (from) el.setAttribute('data-edge-from', from); else el.removeAttribute('data-edge-from');
+        }
+        if (prevEl && prevEl.classList.contains('is-torn-below') !== torn) prevEl.classList.toggle('is-torn-below', torn);
+        // each one over the next: sections with the same z-index paint in the order they are seen
+        if (prevEl && torn) {
+          const z = String(seen.length + 1 - n);
+          if (prevEl.style.getPropertyValue('--edge-z') !== z) prevEl.style.setProperty('--edge-z', z);
+        }
+        n += 1;
         prev = bg;
+        prevEl = el;
       });
+      if (prevEl && prevEl.classList.contains('is-torn-below')) prevEl.classList.remove('is-torn-below');
     };
     let edgeFrame = 0;
     const edgesSoon = function () {
