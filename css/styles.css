@@ -1008,7 +1008,7 @@ button {
   aspect-ratio: 4 / 5.5;
   perspective: 900px;
 }
-.hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; }   /* alone on its row, centred */
+.hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; position: relative; z-index: 1; }   /* alone on its row, centred, in front of the two below */
 /* the postcard (2:3, its title at the foot) is shown whole rather than cropped */
 .hfoto-front[data-slot="tarjeta.jpg"] img { object-fit: contain; }
 .hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
