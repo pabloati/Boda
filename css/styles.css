@@ -534,7 +534,7 @@ button {
 .envelope-back {
   background-color: var(--olive);
   background-blend-mode: luminosity;
-  filter: brightness(1.38);
+  filter: brightness(1.19) saturate(0.75);   /* halfway between the sage photo and the token's light green */
 }
 
 /* z1 — pocket interior, visible once the flap is up: plain paper shifted up and darkened */
@@ -679,7 +679,7 @@ button {
 .envelope-side {
   z-index: 3;
   background-position: 0 -40.7cqw;
-  filter: brightness(1.397);   /* the 1.38 of the green tint, plus 1%: that paper is ~1% darker than the paper beside it */
+  filter: brightness(1.202) saturate(0.75);   /* the green tint above, plus 1%: that paper is ~1% darker than the paper beside it */
 }
 
 .envelope-side-left {
