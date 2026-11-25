@@ -214,6 +214,8 @@ button {
 
 /* A pale green band (js/script.js, 10d): the light text of the green sections turns dark */
 .is-light-band { --cream-text: var(--ink); }
+/* ...but links and handwritten labels keep their terracotta, as on the paper sections */
+#main-content .is-light-band :is(.text-link, .link-button, .hand-label):not(.paper-panel *) { color: var(--terracotta); }
 
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
@@ -1759,10 +1761,19 @@ html.rsvp-modal-open { overflow: hidden; }
   color: var(--terracotta-deep);
 }
 
+/* the logo on a white disc, so it shows on any background */
 .rsvp-contact-link .wa-logo {
   flex: none;
-  color: var(--olive);
+  box-sizing: content-box;
+  padding: 4px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--olive-deep);
 }
+
+/* the inside of the form in the green of the sections; its fields keep the paper colour */
+#rsvp .rsvp-form.paper-panel { background-color: var(--olive); }
+#rsvp .rsvp-form :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) { background-color: var(--paper); }
 
 .rsvp-contact-name::after {
   content: "\00B7";
