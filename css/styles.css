@@ -151,8 +151,9 @@ button {
    _dev/papel_build.py), laid over whatever colour the section has. !important keeps it when a
    later rule, like the ones the site editor writes, sets the colour with the `background`
    shorthand. Cards, fields and the map sit on top and stay clean.
-   Two sections keep a background of their own instead: «Nuestra historia» (.historia, the
-   sandstone strata) and, on phones, «Frase» (#extra-1, the sand of the hero photo). */
+   Some sections keep a background of their own instead: «Nuestra historia» (.historia, the
+   sandstone strata), the countdown (#countdown, the same strata mirrored over its colour)
+   and, on phones, «Frase» (#extra-1, the sand of the hero photo). */
 .section,
 .footer-section,
 .has-edge::before {
@@ -1296,11 +1297,13 @@ button {
 /* The countdown keeps its colour (the green chosen in the editor's «Secciones» tab)
    with the strata of "Nuestra historia" over it, mirrored (from the top right) and
    colourless: assets/patron-cuenta.svg only darkens and lightens. Only the image is
-   set, so the editor's colour stays underneath; #main-content beats its rule. */
+   set, so the editor's colour stays underneath. It takes the place of the paper
+   texture every section gets (.section above, with !important), hence the
+   !important and the #main-content. */
 #main-content #countdown {
-  background-image: url('../assets/patron-cuenta.svg');
-  background-repeat: repeat;
-  background-size: 400px 200px;
+  background-image: url('../assets/patron-cuenta.svg') !important;
+  background-repeat: repeat !important;
+  background-size: 400px 200px !important;
 }
 
 .countdown-grid {
