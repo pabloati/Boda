@@ -1015,7 +1015,7 @@ button {
    grows as tall as its text needs (never shorter than the card), centred on the
    card, with the same letters as the others; the photo side keeps its size.
    A class, not :nth-child, because on the stage the card is out of its slot. */
-.hfoto-card--postal .hfoto-back { padding-left: 4%; padding-right: 4%; }
+.hfoto-card--postal .hfoto-back { padding-left: 5.5%; padding-right: 5.5%; }
 .hfoto-stage .hfoto-card--postal .hfoto-back {
   top: 50%;
   bottom: auto;
