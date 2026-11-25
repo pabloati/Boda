@@ -1011,10 +1011,20 @@ button {
 .hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; position: relative; z-index: 1; }   /* alone on its row, centred, in front of the two below */
 /* the postcard (2:3, its title at the foot) is shown whole rather than cropped */
 .hfoto-front[data-slot="tarjeta.jpg"] img { object-fit: contain; }
-/* its back holds a longer text than the others: smaller letters so it fits the card */
-.hfoto:nth-child(1) .hfoto-back { padding: 9% 4%; }   /* narrower side margins, so the text fits */
-.hfoto:nth-child(1) .hfoto-text { font-size: 4.5cqw; line-height: 1.35; }
-.hfoto:nth-child(1) .hfoto-city { margin-bottom: 2.5cqw; }
+/* Its back holds a longer text than the others. Opened on the stage, that face
+   grows as tall as its text needs (never shorter than the card), centred on the
+   card, with the same letters as the others; the photo side keeps its size.
+   A class, not :nth-child, because on the stage the card is out of its slot. */
+.hfoto-card--postal .hfoto-back { padding-left: 4%; padding-right: 4%; }
+.hfoto-stage .hfoto-card--postal .hfoto-back {
+  top: 50%;
+  bottom: auto;
+  height: auto;
+  min-height: 100%;
+  transform: rotateY(180deg) translateY(-50%);
+}
+/* short screens: slightly smaller letters so the tall back still fits on screen */
+.hfoto-stage .hfoto-card--postal .hfoto-text { font-size: min(7cqw, 2.6vh); }
 .hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
 .hfoto:nth-child(4) { --tilt: 3deg; margin-top: -5%; }
 
