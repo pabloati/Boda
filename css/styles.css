@@ -525,6 +525,18 @@ button {
   background: url('../assets/sobre.jpg?v=20261103') 0 0 / 100% 100% no-repeat;
 }
 
+/* The envelope in the green of the sections (--olive): the photo keeps its light and
+   texture (luminosity), the colour comes from the token, and the brightness lifts the
+   sage photo up to the token's lightness. */
+.envelope-front,
+.envelope-flap-top,
+.envelope-side,
+.envelope-back {
+  background-color: var(--olive);
+  background-blend-mode: luminosity;
+  filter: brightness(1.38);
+}
+
 /* z1 — pocket interior, visible once the flap is up: plain paper shifted up and darkened */
 .envelope-back {
   position: absolute;
@@ -532,7 +544,8 @@ button {
   z-index: 1;
   background:
     linear-gradient(180deg, rgba(55, 58, 38, 0.4) 0%, rgba(55, 58, 38, 0.24) 60%),
-    url('../assets/sobre-papel.jpg') center / cover no-repeat;
+    url('../assets/sobre-papel.jpg') center / cover no-repeat var(--olive);
+  background-blend-mode: normal, luminosity;   /* the shade on top as is, the paper tinted (see above) */
   box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
 }
 
@@ -666,7 +679,7 @@ button {
 .envelope-side {
   z-index: 3;
   background-position: 0 -40.7cqw;
-  filter: brightness(1.012);   /* that paper is ~1% darker than the paper beside it */
+  filter: brightness(1.397);   /* the 1.38 of the green tint, plus 1%: that paper is ~1% darker than the paper beside it */
 }
 
 .envelope-side-left {
@@ -1168,8 +1181,9 @@ button {
   height: 21cqw;
   margin: 0;
   font-family: var(--font-hand);
-  font-size: 0.72rem;
-  font-size: 6.4cqw;
+  font-size: 0.9rem;
+  font-size: 8.6cqw;
+  white-space: nowrap;   /* "Copenhague" stays on one line */
   color: var(--ink-soft);
 }
 
