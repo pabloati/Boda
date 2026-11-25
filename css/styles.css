@@ -1298,11 +1298,13 @@ button {
 
 /* The countdown keeps its colour (the green chosen in the editor's «Secciones» tab)
    with the strata of "Nuestra historia" over it, mirrored (from the top right) and
-   colourless: assets/patron-cuenta.svg only darkens and lightens. Only the image is
-   set, so the editor's colour stays underneath. It takes the place of the paper
+   in translucent sage greens and whites (assets/patron-cuenta.svg). It takes the place of the paper
    texture every section gets (.section above, with !important), hence the
    !important and the #main-content. */
 #main-content #countdown {
+  /* its own green, a little lighter and softer than the editor's «Verde»; the strata
+     in patron-cuenta.svg are drawn in greens that go with it */
+  background-color: #c6dab2;
   /* the same light veil as «Nuestra historia», over the strata */
   background-image:
     linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
