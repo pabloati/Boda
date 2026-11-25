@@ -1293,6 +1293,16 @@ button {
   padding: 68px 0 64px;
 }
 
+/* The countdown keeps its colour (the green chosen in the editor's «Secciones» tab)
+   with the strata of "Nuestra historia" over it, mirrored (from the top right) and
+   colourless: assets/patron-cuenta.svg only darkens and lightens. Only the image is
+   set, so the editor's colour stays underneath; #main-content beats its rule. */
+#main-content #countdown {
+  background-image: url('../assets/patron-cuenta.svg');
+  background-repeat: repeat;
+  background-size: 400px 200px;
+}
+
 .countdown-grid {
   display: flex;
   justify-content: center;
