@@ -141,6 +141,52 @@ button {
   color: var(--cream-text);
 }
 
+.band-sage {
+  background: var(--olive-soft);
+}
+
+/* ---------- Paper and torn edges ----------
+   Every section is a sheet of real paper: assets/papel.webp is a photo of recycled paper turned
+   into a see-through tile (only the shadows of its grain and flecks, made with
+   _dev/papel_build.py), laid over whatever colour the section has. !important keeps it when a
+   later rule, like the ones the site editor writes, sets the colour with the `background`
+   shorthand. Cards, fields and the map sit on top and stay clean.
+   Two sections keep a background of their own instead: «Nuestra historia» (.historia, the
+   sandstone strata) and, on phones, «Frase» (#extra-1, the sand of the hero photo). */
+.section,
+.footer-section,
+.has-edge::before {
+  background-image: url('../assets/papel.webp?v=20261124b') !important;
+  background-size: 320px 320px !important;
+  background-repeat: repeat !important;
+}
+
+/* Where two sections of different colour meet, the upper one ends in a torn edge that hangs
+   over the lower one. js/script.js (10d) compares the colours, also the ones the site editor
+   sets, and gives the lower section .has-edge and --edge-bg (the colour of the sheet above). */
+.section,
+.historia,
+.footer-section {
+  position: relative;
+}
+
+.has-edge {
+  box-shadow: inset 0 20px 16px -16px rgba(70, 60, 38, 0.2);
+}
+
+.has-edge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 14px;
+  pointer-events: none;
+  background-color: var(--edge-bg, transparent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='14' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 8.0 7 9.9 14 9.7 23 8.0 32 7.9 41 9.4 44 9.2 48 7.0 60 7.7 69 10.2 76 11.0 85 11.8 94 9.3 103 7.0 106 5.4 110 5.9 117 5.0 126 6.8 135 5.4 140 5.4 152 4 164 4 173 6.6 176 7.7 181 9.0 190 7.9 193 8.2 196 7.7 201 7.1 204 8.9 207 7.4 210 7.3 222 6.7 225 7.1 229 8.5 234 7.7 239 6.8 246 8.2 249 6.3 261 4.2 264 4.0 271 4 280 4 289 4 301 5.4 308 6.1 311 5.6 315 4 324 4 327 4 334 6.6 343 7.3 346 4.9 350 4 355 4 364 4 369 4 372 4 381 4.7 384 5.2 389 5.9 393 8.3 400 10.0 404 11.9 408 12.6 413 13 422 11.7 426 9.9 438 12.2 442 13 449 13 458 10.8 461 8.7 464 8.8 469 7.5 481 6.9 488 8.6 497 8.5 506 6.8 518 9.3 522 7.9 531 8.7 540 9.3 545 7.8 549 9.1 552 7.9 559 6.6 562 4.9 567 5.1 571 4 575 6.0 580 6.8 592 7.0 596 7.4 599 7.3 604 8.3 607 5.9 619 4 622 5.2 627 4 630 4 639 4 642 6.1 654 7.3 658 8.8 663 8.1 675 7.9 678 9.9 685 12.2 688 13 697 10.5 709 9.9 718 7.3 721 5.1 733 4 738 6.0 750 5.1 762 6.1 769 5.8 778 4 787 4 796 4 799 4 811 4 820 4.8 827 4 830 4 834 4.9 838 5.0 843 5.9 850 5.8 854 4.9 866 4 878 4 882 6.0 889 4.5 894 4 898 4 901 5.1 906 6.8 909 6.5 914 8.7 921 8.1 930 8.1 935 9.2 944 9.0 947 10.7 952 12.6 955 13 960 13 965 13 974 10.5 978 10.0 982 7.5 987 6.2 991 7.7 1003 5.7 1006 6.4 1018 7.1 1023 9.5 1035 7.9 1042 6.7 1054 4.1 1061 4.3 1064 4 1069 5.4 1078 6.5 1087 6.5 1091 5.9 1103 8.0 1106 7.6 1118 7.0 1125 6.7 1137 8.8 1140 8.1 1149 8.9 1158 10.5 1163 10.3 1175 12.8 1178 13 1190 13 1193 11.5 1200 8.0L1200 0Z'/%3E%3C/svg%3E") repeat-x 0 0 / 1200px 100%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='14' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 8.0 7 9.9 14 9.7 23 8.0 32 7.9 41 9.4 44 9.2 48 7.0 60 7.7 69 10.2 76 11.0 85 11.8 94 9.3 103 7.0 106 5.4 110 5.9 117 5.0 126 6.8 135 5.4 140 5.4 152 4 164 4 173 6.6 176 7.7 181 9.0 190 7.9 193 8.2 196 7.7 201 7.1 204 8.9 207 7.4 210 7.3 222 6.7 225 7.1 229 8.5 234 7.7 239 6.8 246 8.2 249 6.3 261 4.2 264 4.0 271 4 280 4 289 4 301 5.4 308 6.1 311 5.6 315 4 324 4 327 4 334 6.6 343 7.3 346 4.9 350 4 355 4 364 4 369 4 372 4 381 4.7 384 5.2 389 5.9 393 8.3 400 10.0 404 11.9 408 12.6 413 13 422 11.7 426 9.9 438 12.2 442 13 449 13 458 10.8 461 8.7 464 8.8 469 7.5 481 6.9 488 8.6 497 8.5 506 6.8 518 9.3 522 7.9 531 8.7 540 9.3 545 7.8 549 9.1 552 7.9 559 6.6 562 4.9 567 5.1 571 4 575 6.0 580 6.8 592 7.0 596 7.4 599 7.3 604 8.3 607 5.9 619 4 622 5.2 627 4 630 4 639 4 642 6.1 654 7.3 658 8.8 663 8.1 675 7.9 678 9.9 685 12.2 688 13 697 10.5 709 9.9 718 7.3 721 5.1 733 4 738 6.0 750 5.1 762 6.1 769 5.8 778 4 787 4 796 4 799 4 811 4 820 4.8 827 4 830 4 834 4.9 838 5.0 843 5.9 850 5.8 854 4.9 866 4 878 4 882 6.0 889 4.5 894 4 898 4 901 5.1 906 6.8 909 6.5 914 8.7 921 8.1 930 8.1 935 9.2 944 9.0 947 10.7 952 12.6 955 13 960 13 965 13 974 10.5 978 10.0 982 7.5 987 6.2 991 7.7 1003 5.7 1006 6.4 1018 7.1 1023 9.5 1035 7.9 1042 6.7 1054 4.1 1061 4.3 1064 4 1069 5.4 1078 6.5 1087 6.5 1091 5.9 1103 8.0 1106 7.6 1118 7.0 1125 6.7 1137 8.8 1140 8.1 1149 8.9 1158 10.5 1163 10.3 1175 12.8 1178 13 1190 13 1193 11.5 1200 8.0L1200 0Z'/%3E%3C/svg%3E") repeat-x 0 0 / 1200px 100%;
+}
+
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
   position: relative;
@@ -233,7 +279,7 @@ button {
     --sh: calc(var(--fh) * 0.056);      /* the sand strip: last 5.6% of the photo */
     position: relative;
     isolation: isolate;
-    background: #d98b5f;
+    background: #cd8a4e;   /* the sand's own colour: it only shows in the torn edge over the next section */
   }
   #main-content #extra-1::before,
   #main-content #extra-1::after {
@@ -265,6 +311,20 @@ button {
     -webkit-mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
     mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
   }
+  /* the sand needs both pseudo-elements whole: no paper tile and no torn edge on them */
+  #main-content #extra-1::before,
+  #main-content #extra-1::after {
+    background-image: url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg') !important;
+    background-repeat: no-repeat !important;
+    background-size: var(--fw) var(--fh) !important;
+    background-color: transparent;
+  }
+  #main-content #extra-1::before {
+    height: auto;
+    -webkit-mask: none;
+    mask: none;
+  }
+  #main-content #extra-1.has-edge { box-shadow: none; }
   #main-content #extra-1 .section-lead,
   #main-content #extra-1 .section-lead * {
     color: var(--cream-text);   /* the same light letters as the hero, with a stronger shadow for the light sand */
@@ -957,7 +1017,7 @@ button {
 
 /* ========================================================
    OUR STORY (#intro): a short welcome and three prints (Madrid, Copenhague, Valencia)
-   that turn over to show their text, then the countdown (no gap between the two).
+   that turn over to show their text.
 ======================================================== */
 .historia {
   padding: 64px 0;
@@ -970,7 +1030,6 @@ button {
   background-size: auto, 400px 200px;
 }
 
-.historia + .countdown-section { padding-top: 0; }
 
 /* the four prints laid out like a page of an album, in a diamond: the postcard
    on top, two side by side, the last one below; the top and bottom ones tuck
@@ -1205,22 +1264,31 @@ button {
 /* ========================================================
    COUNTDOWN
 ======================================================== */
+.countdown-section {
+  padding: 68px 0 64px;
+}
+
 .countdown-grid {
   display: flex;
   justify-content: center;
-  gap: clamp(18px, 6vw, 44px);
   margin: 0 auto 32px;
 }
 
+/* a hairline between the four numbers */
 .countdown-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 56px;
+  padding: 2px clamp(11px, 3.6vw, 26px) 0;
+}
+
+.countdown-item + .countdown-item {
+  border-left: 1px solid rgba(59, 56, 47, 0.2);
 }
 
 .countdown-number {
-  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  font-size: clamp(2.7rem, 11vw, 4rem);
   font-weight: 500;
   color: var(--ink);
   line-height: 1;
@@ -1231,8 +1299,8 @@ button {
   font-size: 0.8rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-top: 6px;
+  color: var(--ink-soft);
+  margin-top: 8px;
 }
 
 /* ========================================================
@@ -2377,6 +2445,11 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg[data-z="1"] .z3,
 .mapa-svg[data-z="2"] .z3 { display: none; }
 
+/* far view: only the motorways, and softer, so the south-west of Madrid
+   is not a tangle of roads; the main roads come back on zooming in */
+.mapa-svg[data-z="1"] .m-primary { display: none; }
+.mapa-svg[data-z="1"] .m-motorway path { stroke: #c2bfa6; stroke-width: 1.3px; }
+
 /* close up the streets become wide, like on a street map */
 .mapa-svg[data-z="2"] .m-primary path { stroke-width: 2.2px; stroke: #c9c2aa; }
 .mapa-svg[data-z="2"] .m-motorway path { stroke-width: 2.6px; }
@@ -2496,6 +2569,15 @@ html.rsvp-modal-open { overflow: hidden; }
   margin: 40px 0 6px;
 }
 
+/* «Todo el día» and the hint, above the map */
+.mapa-views-top { margin: 14px 0 0; }
+.mapa-hint {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
 .mapa-views .link-button { font-size: 1.3rem; color: var(--ink-soft); border-bottom-color: transparent; }
 .mapa-views .link-button.is-on { color: var(--terracotta); border-bottom-color: currentColor; }
 
@@ -2504,6 +2586,9 @@ html.rsvp-modal-open { overflow: hidden; }
   padding: 14px 10px 0;
   text-align: center;
 }
+
+/* nothing tapped yet: no blank box under the buttons */
+.mapa-card:empty { min-height: 0; padding: 0; }
 
 .mapa-card .hand-label { margin-bottom: 2px; }
 .mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
@@ -2558,11 +2643,14 @@ body.mapa-open .lang-toggle { display: none; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
 .mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
 .mapa-section.is-open .mapa-card { padding-bottom: 14px; }
+.mapa-section.is-open .mapa-views-top { margin-top: 12px; }
+.mapa-section.is-open .mapa-hint { margin-bottom: 8px; }
 
 @media (max-width: 768px) {
   .mapa-canvas { aspect-ratio: 4 / 5; }
   .mapa-frame { margin-bottom: 30px; }
   .mapa-views { gap: 10px 20px; margin-top: 40px; }
+  .mapa-views-top { margin-top: 10px; }
   .mapa-views .link-button { font-size: 1.2rem; }
   .mapa-card { min-height: 150px; }
   .mapa-buses li { font-size: 1.05rem; gap: 12px; }

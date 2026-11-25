@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paletas · boda</title>
+<!-- Palette trial: the real page in one phone frame per palette, side by side. Each frame gets the
+     palette as CSS tokens on :root (nothing is saved). Palettes are the PALETTES list below, in the
+     same six-colour form as the site editor's flower palettes (paper, alt, green, deep, lead, ink).
+     Open it from a local server: python3 _dev/serve.py, then /_dev/paletas.html -->
+<style>
+  body { margin: 0; font: 15px/1.4 system-ui, sans-serif; background: #2b2b2b; color: #eee; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 16px; background: #1d1d1d; }
+  header button { font: inherit; padding: 5px 12px; border-radius: 99px; border: 1px solid #666; background: none; color: #eee; cursor: pointer; }
+  header button:hover { background: #444; }
+  header label { margin-left: auto; }
+  #row { display: flex; gap: 22px; padding: 18px 16px 40px; overflow-x: auto; align-items: flex-start; }
+  .col { flex: none; }
+  .col h2 { font-size: 15px; margin: 0 0 4px; }
+  .col p { margin: 0 0 8px; font-size: 13px; color: #bbb; max-width: 300px; min-height: 3.9em; }
+  .chips { display: flex; margin-bottom: 8px; border-radius: 6px; overflow: hidden; width: 300px; }
+  .chips b { flex: 1; height: 26px; }
+  .frame { width: 300px; height: 620px; overflow: hidden; border-radius: 18px; background: #fff; }
+  .frame iframe { width: 390px; height: 806px; border: 0; transform: scale(.7692); transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Paletas</strong>
+  <span id="jumps"></span>
+  <label><input type="checkbox" id="en"> English</label>
+</header>
+<div id="row"></div>
+<script>
+(function () {
+  'use strict';
+  // paper = fondo, alt = secciones alternas, green = bandas, deep = banda oscura, lead = botón y enlaces, ink = texto
+  const PALETTES = [
+    { name: 'La de ahora', note: 'Oliva y terracota, para comparar.', c: null },
+    { name: '1 · Salvia del sobre y cañón', note: 'El verde gris del sobre y el naranja quemado de la foto del cañón. La más parecida a la de ahora, más cálida.',
+      c: { paper: '#f6f0e3', alt: '#e8e3d0', green: '#7f866b', deep: '#5c634b', lead: '#b25a2a', ink: '#3a3229' } },
+    { name: '2 · Postal del Gran Cañón', note: 'El azul petróleo del cielo de la postal y el rojo de su roca, sobre el crema del cartón.',
+      c: { paper: '#f6efdf', alt: '#eadfc6', green: '#46606b', deep: '#2f444e', lead: '#a4472f', ink: '#2e2a2b' } },
+    { name: '3 · Arenisca', note: 'Todo cálido, sacado de la foto del cañón: bandas de arcilla y un granate oscuro para botón y enlaces.',
+      c: { paper: '#faf1e6', alt: '#f1dfc9', green: '#a15b31', deep: '#7c4020', lead: '#7a2e12', ink: '#3b261b' } },
+    { name: '4 · Marino y cobre', note: 'El azul marino del vestido de la foto del baile, con cobre para botón y enlaces.',
+      c: { paper: '#f9f5ee', alt: '#ece4d8', green: '#2c3d55', deep: '#1c2940', lead: '#b5633a', ink: '#232a35' } },
+    { name: '5 · Cielo de Copenhague', note: 'El azul claro del cielo de las fotos con el naranja del cañón: lo contrario del cálido, más ligera.',
+      c: { paper: '#f7f4ee', alt: '#e3e8ee', green: '#6c83a3', deep: '#4a607f', lead: '#b55f33', ink: '#2c3340' } },
+  ];
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const toHex = c => '#' + c.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  const mix = (a, b, t) => toHex(hex(a).map((v, i) => v + (hex(b)[i] - v) * t));
+  // same derivation as fromFlower() in _dev/editor-site.js
+  function tokens(c) {
+    return { paper: c.paper, 'paper-deep': c.alt, 'paper-line': mix(c.alt, c.ink, 0.12), olive: c.green, 'olive-deep': c.deep,
+      'olive-soft': mix(c.green, c.paper, 0.55), terracotta: c.lead, 'terracotta-deep': mix(c.lead, '#000000', 0.2), ink: c.ink,
+      'ink-soft': mix(c.ink, c.paper, 0.35), 'ink-faint': mix(c.ink, c.paper, 0.55), 'cream-text': mix(c.paper, '#ffffff', 0.3),
+      'olive-wash': 'rgba(' + hex(c.green).join(', ') + ', 0.16)' };
+  }
+  const row = document.getElementById('row'), frames = [];
+  PALETTES.forEach(function (p) {
+    const col = document.createElement('div'); col.className = 'col';
+    const t = p.c ? tokens(p.c) : null;
+    const chips = p.c ? ['paper', 'alt', 'green', 'deep', 'lead', 'ink'].map(k => '<b style="background:' + p.c[k] + '" title="' + k + ' ' + p.c[k] + '"></b>').join('')
+      : ['#f3eee3', '#e9e2d1', '#8e9166', '#6c6f48', '#b3613f', '#3b382f'].map(v => '<b style="background:' + v + '"></b>').join('');
+    col.innerHTML = '<h2></h2><p></p><div class="chips">' + chips + '</div><div class="frame"><iframe loading="eager"></iframe></div>';
+    col.querySelector('h2').textContent = p.name; col.querySelector('p').textContent = p.note;
+    const f = col.querySelector('iframe');
+    f.addEventListener('load', function () {
+      const d = f.contentDocument; if (!d) return;
+      const st = d.createElement('style');
+      st.textContent = '#envelope-overlay{display:none!important}' + (t ? ':root{' + Object.keys(t).map(k => '--' + k + ':' + t[k]).join(';') + '}' : '');
+      d.head.appendChild(st);
+      d.body.classList.remove('envelope-closed', 'no-scroll');
+      d.documentElement.style.overflow = 'auto'; d.body.style.overflow = 'visible';
+    });
+    f.src = '../index.html';
+    frames.push(f); row.appendChild(col);
+  });
+  // jump every frame to the same section
+  const jumps = document.getElementById('jumps');
+  [['hero', 'Portada'], ['intro', 'Historia'], ['countdown', 'Cuenta atrás'], ['locations', 'Dónde'], ['timeline', 'Hoja de ruta'], ['mapa', 'Mapa'], ['rsvp', 'Confirmar'], ['playlist', 'Playlist'], ['gifts', 'Regalo'], ['footer', 'Final']].forEach(function (j) {
+    const b = document.createElement('button'); b.textContent = j[1];
+    b.onclick = function () {
+      frames.forEach(function (f) {
+        const d = f.contentDocument; if (!d) return;
+        const el = j[0] === 'footer' ? d.querySelector('.footer-section') : d.getElementById(j[0]);
+        if (el) f.contentWindow.scrollTo(0, el.getBoundingClientRect().top + f.contentWindow.scrollY - (j[0] === 'hero' ? 0 : 150));
+      });
+    };
+    jumps.appendChild(b);
+  });
+  document.getElementById('en').onchange = function (e) {
+    frames.forEach(function (f) { const w = f.contentWindow; if (w && w.I18N && w.I18N.set) w.I18N.set(e.target.checked ? 'en' : 'es'); });
+  };
+})();
+</script>
+</body>
+</html>
