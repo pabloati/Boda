@@ -28,8 +28,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=202611251745-ending">
-  <link rel="stylesheet" href="css/editor.css?v=202611251745-ending">
+  <link rel="stylesheet" href="css/styles.css?v=202611251830-postal">
+  <link rel="stylesheet" href="css/editor.css?v=202611251830-postal">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
@@ -638,20 +638,50 @@
     <!-- FOOTER -->
     <footer class="footer-section band-olive">
       <div class="container narrow text-center">
-        <p class="footer-title h-script light" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
-        <p class="footer-date">13 · 03 · 2027</p>
+        <!-- The farewell is the back of a postcard: the message and the signature on the left,
+             the stamp, its postmark (with the wedding date) and the address lines on the right.
+             js/script.js (10e) stamps the postmark when the card comes into view. -->
+        <div class="postal" id="postal">
+          <div class="postal-mensaje">
+            <p class="postal-texto" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
+            <p class="postal-firma" data-i18n="footer.sign">Mª Ángeles y Pablo</p>
+          </div>
+          <div class="postal-senas">
+            <div class="postal-franqueo">
+              <span class="postal-sello" aria-hidden="true"><span>M &amp; P</span></span>
+              <svg class="postal-matasellos" viewBox="0 0 150 80" role="img" aria-label="13 · 03 · 2027">
+                <defs>
+                  <path id="matasellos-arco-1" d="M17 40 A27 27 0 0 1 71 40"/>
+                  <path id="matasellos-arco-2" d="M12.5 40 A31.5 31.5 0 0 0 75.5 40"/>
+                </defs>
+                <circle cx="44" cy="40" r="37"/>
+                <circle cx="44" cy="40" r="34.5" class="fino"/>
+                <circle cx="44" cy="40" r="21" class="fino"/>
+                <text class="matasellos-texto"><textPath href="#matasellos-arco-1" startOffset="50%" text-anchor="middle">Mª Ángeles</textPath></text>
+                <text class="matasellos-texto"><textPath href="#matasellos-arco-2" startOffset="50%" text-anchor="middle">Pablo</textPath></text>
+                <text class="matasellos-fecha" x="44" y="38" text-anchor="middle">13 · 03</text>
+                <text class="matasellos-fecha" x="44" y="48.5" text-anchor="middle">2027</text>
+                <path class="onda" d="M84 26 q8 -6 16 0 t16 0 t16 0 t16 0 M84 36 q8 -6 16 0 t16 0 t16 0 t16 0 M84 46 q8 -6 16 0 t16 0 t16 0 t16 0 M84 56 q8 -6 16 0 t16 0 t16 0 t16 0"/>
+              </svg>
+            </div>
+            <p class="postal-linea"><span class="postal-para" data-i18n="footer.to">Para:</span> <span class="postal-ti" data-i18n="footer.you">ti</span></p>
+            <p class="postal-linea" aria-hidden="true"></p>
+            <p class="postal-linea" aria-hidden="true"></p>
+          </div>
+        </div>
+        <p class="footer-again"><button type="button" class="link-button" id="reabrir-sobre" data-i18n="footer.again">Volver a abrir la invitación</button></p>
       </div>
     </footer>
 
   </main>
 
-  <script src="js/i18n.js?v=202611251745-ending"></script>
-  <script src="js/rsvp-config.js?v=202611251745-ending"></script>
-  <script src="js/script.js?v=202611251745-ending"></script>
-  <script src="js/playlist-config.js?v=202611251745-ending"></script>
-  <script src="js/playlist.js?v=202611251745-ending"></script>
-  <script src="js/mapa.js?v=202611251745-ending"></script>
-  <script src="js/flores-layout.js?v=202611251745-ending"></script>
-  <script src="js/flores.js?v=202611251745-ending"></script>
+  <script src="js/i18n.js?v=202611251830-postal"></script>
+  <script src="js/rsvp-config.js?v=202611251830-postal"></script>
+  <script src="js/script.js?v=202611251830-postal"></script>
+  <script src="js/playlist-config.js?v=202611251830-postal"></script>
+  <script src="js/playlist.js?v=202611251830-postal"></script>
+  <script src="js/mapa.js?v=202611251830-postal"></script>
+  <script src="js/flores-layout.js?v=202611251830-postal"></script>
+  <script src="js/flores.js?v=202611251830-postal"></script>
 </body>
 </html>
