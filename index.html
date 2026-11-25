@@ -28,8 +28,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=202611251306-7e85635">
-  <link rel="stylesheet" href="css/editor.css?v=202611251306-7e85635">
+  <link rel="stylesheet" href="css/styles.css?v=202611251313-4c2c4c8">
+  <link rel="stylesheet" href="css/editor.css?v=202611251313-4c2c4c8">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
@@ -188,6 +188,19 @@
         <p class="historia-hint reveal" data-i18n="story.hint">Toca una foto para darle la vuelta</p>
 
         <div class="historia-album reveal" id="historia-album">
+          <!-- the postcard from the envelope (assets/tarjeta.jpg), on top: the four prints form a diamond -->
+          <div class="hfoto">
+            <div class="hfoto-card" role="button" tabindex="0" aria-expanded="false" aria-label="La postal: dar la vuelta a la foto" data-i18n-aria="story.0.aria">
+              <div class="hfoto-face hfoto-front" data-slot="tarjeta.jpg">
+                <img src="assets/tarjeta.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+                <p class="hfoto-cap"><span data-i18n="story.0.cap">La postal</span></p>
+              </div>
+              <div class="hfoto-face hfoto-back">
+                <p class="hfoto-city" data-i18n="story.0.cap">La postal</p>
+                <p class="hfoto-text" data-i18n="story.0.text">Escribe aquí el texto de la postal.</p>
+              </div>
+            </div>
+          </div>
           <div class="hfoto">
             <div class="hfoto-card" role="button" tabindex="0" aria-expanded="false" aria-label="Madrid: dar la vuelta a la foto" data-i18n-aria="story.1.aria">
               <div class="hfoto-face hfoto-front" data-slot="historia-1.jpg">
@@ -571,13 +584,13 @@
 
   </main>
 
-  <script src="js/i18n.js?v=202611251306-7e85635"></script>
-  <script src="js/rsvp-config.js?v=202611251306-7e85635"></script>
-  <script src="js/script.js?v=202611251306-7e85635"></script>
-  <script src="js/playlist-config.js?v=202611251306-7e85635"></script>
-  <script src="js/playlist.js?v=202611251306-7e85635"></script>
-  <script src="js/mapa.js?v=202611251306-7e85635"></script>
-  <script src="js/flores-layout.js?v=202611251306-7e85635"></script>
-  <script src="js/flores.js?v=202611251306-7e85635"></script>
+  <script src="js/i18n.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/rsvp-config.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/script.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/playlist-config.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/playlist.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/mapa.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/flores-layout.js?v=202611251313-4c2c4c8"></script>
+  <script src="js/flores.js?v=202611251313-4c2c4c8"></script>
 </body>
 </html>

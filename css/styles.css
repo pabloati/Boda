@@ -987,25 +987,32 @@ button {
   height: 0.5em;
 }
 
-/* the three prints laid out like a page of an album */
+/* the four prints laid out like a page of an album, in a diamond: the postcard
+   on top, two side by side, the last one below; the top and bottom ones tuck
+   in between the middle two */
 .historia-album {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-start;
-  gap: 34px;
-  margin-top: 56px;
+  gap: 0 5%;
+  max-width: 480px;
+  margin: 56px auto 0;
 }
 
 /* the slot keeps the place in the page while its card is out on the stage */
 .hfoto {
   --tilt: -2.6deg;
-  flex: 0 1 212px;
+  flex: 0 0 46%;
   min-width: 0;
   aspect-ratio: 4 / 5.5;
   perspective: 900px;
 }
-.hfoto:nth-child(2) { --tilt: 1.6deg; margin-top: 26px; }
-.hfoto:nth-child(3) { --tilt: 3deg; }
+.hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; }   /* alone on its row, centred */
+/* the postcard (2:3, its title at the foot) is shown whole rather than cropped */
+.hfoto-front[data-slot="tarjeta.jpg"] img { object-fit: contain; }
+.hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
+.hfoto:nth-child(4) { --tilt: 3deg; margin-top: -5%; }
 
 /* the card: two faces back to back. Its size always comes from its width (aspect-ratio on the
    card, cqw units inside the faces), so it looks the same small in the page and large on the stage. */
@@ -1174,19 +1181,11 @@ button {
 }
 
 @media (max-width: 640px) {
-  /* two prints side by side and the third below, tucked in between them */
-  .historia-album {
-    flex-wrap: wrap;
-    gap: 0 5%;
-    margin-top: 40px;
-  }
-  .hfoto { flex: 0 0 46%; }
-  .hfoto:nth-child(2) { margin-top: 18px; }
-  .hfoto:nth-child(3) { margin-top: -5%; }
+  .historia-album { margin-top: 40px; }
 }
 
-/* Desktop: the text on the left, the three prints on the right in a triangle
-   (two side by side, the third below between them), the hint under the prints */
+/* Desktop: the text on the left, the four prints on the right in their diamond,
+   the hint under the prints */
 @media (min-width: 769px) {
   .historia .container.narrow {
     max-width: 1040px;
@@ -1206,13 +1205,8 @@ button {
   .historia-hint + .historia-album {
     grid-column: 2;
     grid-row: 1;
-    flex-wrap: wrap;
-    gap: 0 6%;
     margin-top: 0;
   }
-  .historia .hfoto { flex: 0 0 44%; }
-  .historia .hfoto:nth-child(2) { margin-top: 22px; }
-  .historia .hfoto:nth-child(3) { margin-top: -4%; }
   .historia-hint { grid-column: 2; grid-row: 2; }
 }
 
