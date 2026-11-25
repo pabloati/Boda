@@ -202,7 +202,7 @@ button {
   margin: 0 auto;
   font-family: var(--font-script);   /* the headings' font, in italics */
   font-style: italic;
-  font-size: calc(1.2rem + 11px);   /* the quote: eleven px over the usual .section-lead size */
+  font-size: calc(1.2rem + 15px);   /* the quote: fifteen px over the usual .section-lead size */
   line-height: 1.15;                /* the two lines close together (the usual is 1.6) */
 }
 /* the reference line keeps its size and the gap above it it had before */
