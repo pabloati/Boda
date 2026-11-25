@@ -1562,7 +1562,7 @@ label[for="guest-message"] .optional { display: block; }
 }
 
 .form-control:focus {
-  border-color: var(--olive);
+  border-color: var(--olive-deep);
   box-shadow: 0 0 0 3px var(--olive-wash);
 }
 
@@ -2219,7 +2219,7 @@ html.rsvp-modal-open { overflow: hidden; }
 .btn-mini {
   padding: 6px 14px;
   background: transparent;
-  border: 1px solid var(--olive);
+  border: 1px solid var(--olive-deep);
   color: var(--olive-deep);
   font-size: 0.95rem;
   border-radius: 999px;
@@ -2228,7 +2228,7 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .btn-mini:hover {
-  background: var(--olive);
+  background: var(--olive-deep);
   color: var(--cream-text);
 }
 
@@ -2473,7 +2473,7 @@ html.rsvp-modal-open { overflow: hidden; }
   display: block;
   margin: 16px auto 0;
   padding: 8px 20px;
-  border: 1px solid var(--olive);
+  border: 1px solid var(--olive-deep);
   border-radius: 999px;
   background: transparent;
   color: var(--olive-deep);
@@ -3042,3 +3042,9 @@ body.mapa-open .lang-toggle { display: none; }
 .flor--front { z-index: 2; }
 @media (max-width: 768px) { .flor--no-m { display: none; } }
 @media (min-width: 769px) { .flor--no-d { display: none; } }
+
+/* Fields and choice pills: a firmer outline than the decorative paper line, so they show on any background */
+.form-control,
+.choice span { border-color: color-mix(in srgb, var(--ink-faint) 65%, var(--paper-line)); }
+.form-control:focus { border-color: var(--olive-deep); }
+.choice input:checked + span { border-color: var(--olive-deep); }
