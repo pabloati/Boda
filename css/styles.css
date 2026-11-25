@@ -968,25 +968,6 @@ button {
 
 .historia + .countdown-section { padding-top: 0; }
 
-.historia-lead {
-  font-size: clamp(1.25rem, 4.2vw, 1.5rem);
-  font-style: italic;
-  line-height: 1.55;
-  color: var(--ink-soft);
-  color: color-mix(in srgb, var(--ink-soft) 70%, var(--ink));   /* a touch darker over the sandstone pattern */
-  max-width: 540px;
-  margin: 0 auto;
-}
-
-/* A blank line (two line breaks) between paragraphs becomes a smaller gap
-   instead of a whole empty line: js/script.js (12) hides the second break and
-   adds an empty .lead-gap block after it. Without the script the full line stays. */
-.historia-lead br.lead-br-hidden { display: none; }
-.historia-lead .lead-gap {
-  display: block;
-  height: 0.5em;
-}
-
 /* the four prints laid out like a page of an album, in a diamond: the postcard
    on top, two side by side, the last one below; the top and bottom ones tuck
    in between the middle two */
@@ -1141,15 +1122,16 @@ button {
   40%, 55% { transform: rotate(var(--tilt, 0deg)) translateY(-6px) rotateY(-128deg); }
 }
 
+/* right under the title (its own bottom margin makes the gap) */
 .historia-hint {
-  margin: 30px 0 0;
+  margin: 0;
   text-align: center;
   font-family: var(--font-hand);
   font-size: 0.72rem;
   color: var(--ink-faint);
 }
 
-/* phones and tablets: the hint comes before the prints, so it sits just above them */
+/* the hint comes before the prints, so it sits just above them */
 .historia-hint + .historia-album { margin-top: 14px; }
 
 /* the stage: a dimmed layer over the page where the open print sits (created by js/script.js) */
@@ -1198,34 +1180,9 @@ button {
   .hfoto-card, .hfoto-stage, .hfoto-stage .hfoto-card { transition: none; }
 }
 
-@media (max-width: 640px) {
-  .historia-album { margin-top: 40px; }
-}
-
-/* Desktop: the text on the left, the four prints on the right in their diamond,
-   the hint under the prints */
+/* Desktop: the same column, the diamond a little larger */
 @media (min-width: 769px) {
-  .historia .container.narrow {
-    max-width: 1040px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 56px;
-    align-items: center;
-  }
-  .historia .container > .text-center {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    text-align: left;
-  }
-  .historia .text-center > .h-script { margin-left: 0; }
-  .historia-lead { max-width: none; margin: 0; }
-  .historia-album,
-  .historia-hint + .historia-album {
-    grid-column: 2;
-    grid-row: 1;
-    margin-top: 0;
-  }
-  .historia-hint { grid-column: 2; grid-row: 2; }
+  .historia-album { max-width: 540px; }
 }
 
 /* ========================================================

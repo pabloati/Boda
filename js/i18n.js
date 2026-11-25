@@ -98,7 +98,6 @@ window.I18N = (function () {
     'hero.scrollAria': 'Scroll to keep reading',
     // --- intro ---
     'story.title': 'Our story',
-    'story.lead': 'The postcard you have just seen is the one that marked the start of our new era. Behind that seemingly simple postcard, a whole world was hiding. It brought together the past, because we bought it on our first big trip, and the future, because on it I wrote the words I used to ask Mª Ángeles to marry me.',
     'story.hint': 'Tap a photo to turn it over',
     'story.stageHint': 'Tap the photo to turn it, or outside to close',
     'story.0.cap': 'The postcard',

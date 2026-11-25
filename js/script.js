@@ -769,27 +769,4 @@
     placeVeil();
   }
 
-  // --- 12. SMALLER PARAGRAPH GAPS ---
-  // In the story text a blank line (two <br>) is a whole empty line. The second
-  // <br> gets hidden and an empty .lead-gap block (CSS height) goes after it.
-  // Both <br> stay in the DOM and the block is a tag the site editor drops, so
-  // editing the text there still saves the same two line breaks.
-  const tightenGaps = function () {
-    document.querySelectorAll('.historia-lead').forEach(function (lead) {
-      lead.querySelectorAll('br').forEach(function (br) {
-        if (br.classList.contains('lead-br-hidden')) return;
-        let next = br.nextSibling;
-        while (next && next.nodeType === 3 && !next.data.trim()) next = next.nextSibling;
-        if (!next || next.nodeName !== 'BR' || next.classList.contains('lead-br-hidden')) return;
-        next.classList.add('lead-br-hidden');
-        const gap = document.createElement('small');
-        gap.className = 'lead-gap';
-        gap.setAttribute('aria-hidden', 'true');
-        next.parentNode.insertBefore(gap, next.nextSibling);
-      });
-    });
-  };
-  tightenGaps();
-  document.addEventListener('langchange', tightenGaps);
-
 })();
