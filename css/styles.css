@@ -2478,7 +2478,12 @@ html.rsvp-modal-open { overflow: hidden; }
   background: var(--paper);
 }
 
+/* The map's own ground, inside the frame: much lighter than the page paper, almost
+   white. Inside the map --paper is that light colour too, so the halos around the
+   names and the stops' badges match it. */
 .mapa-canvas {
+  --paper: #fcfbf6;
+  background: var(--paper);
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
