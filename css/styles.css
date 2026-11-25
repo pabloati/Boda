@@ -2853,6 +2853,8 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-name-metro text { font-size: 13.5px; font-weight: 700; fill: var(--olive-deep); }
 .m-name-metro .m-metro-mark { fill: var(--olive-deep); stroke: var(--paper); stroke-width: 1.5; }
 .m-name-metro text.m-metro-m { font-size: 11px; font-weight: 700; fill: var(--paper); stroke: none; paint-order: normal; }
+/* metro stations: a lying red rhombus with a white inside (simplified Madrid metro sign) */
+.mapa-svg .m-name-metro .m-metro-rombo { fill: #fff; stroke: #d9232e; stroke-width: 2.6px; stroke-linejoin: miter; }
 
 .m-stop { cursor: pointer; outline: none; }
 .m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
