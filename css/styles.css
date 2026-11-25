@@ -1301,9 +1301,12 @@ button {
    texture every section gets (.section above, with !important), hence the
    !important and the #main-content. */
 #main-content #countdown {
-  background-image: url('../assets/patron-cuenta.svg') !important;
-  background-repeat: repeat !important;
-  background-size: 400px 200px !important;
+  /* the same light veil as «Nuestra historia», over the strata */
+  background-image:
+    linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
+    url('../assets/patron-cuenta.svg') !important;
+  background-repeat: no-repeat, repeat !important;
+  background-size: auto, 400px 200px !important;
 }
 
 .countdown-grid {
