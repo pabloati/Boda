@@ -287,6 +287,16 @@ button {
   margin-top: 0.45em;
   font-size: calc(1.2rem + 9px);
 }
+/* Phones: the quote shrinks with the screen so each of its two lines fits on
+   one line (no wrapping), and the reference stays a bit smaller under it */
+@media (max-width: 768px) {
+  #extra-1 .container { padding: 0 12px; }
+  #extra-1 .section-lead {
+    font-size: min(calc(1.2rem + 15px), 6.3vw);
+    white-space: nowrap;
+  }
+  #extra-1 .frase-cita { font-size: min(calc(1.2rem + 9px), 5.2vw); }
+}
 
 /* Phones and portrait screens (where the hero shows hero-mobile.jpg): the
    "Frase" section continues the canyon floor at the bottom of that photo, as if
