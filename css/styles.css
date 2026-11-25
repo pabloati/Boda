@@ -2789,12 +2789,16 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg .m-mid path { stroke: #d6cfba; stroke-width: 1px; }
 .mapa-svg .m-local path { stroke: #ddd6c2; stroke-width: 1.6px; }
 
-/* clean map: only roads (and the bus routes, stops and names) are shown;
-   woods, parks, water and rivers stay in the SVG but are hidden */
+/* clean map: only the motorway layer (motorways + trunk roads: M-30, M-40,
+   M-45, M-50, A-1…A-6 and other autovías) plus the bus routes, stops and
+   names are shown; the rest stays in the SVG but is hidden */
 .mapa-svg .m-forest,
 .mapa-svg .m-park,
 .mapa-svg .m-water,
-.mapa-svg .m-river { display: none; }
+.mapa-svg .m-river,
+.mapa-svg .m-local,
+.mapa-svg .m-mid,
+.mapa-svg .m-primary { display: none; }
 
 .mapa-svg[data-z="1"] .z2,
 .mapa-svg[data-z="1"] .z3,
