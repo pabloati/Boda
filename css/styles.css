@@ -200,8 +200,9 @@ button {
 #extra-1 .h-script { display: none; }
 #extra-1 .section-lead {
   margin: 0 auto;
-  font-family: var(--font-script);   /* the headings' font, in italics, same size as before */
+  font-family: var(--font-script);   /* the headings' font, in italics */
   font-style: italic;
+  font-size: calc(1.2rem + 2px);   /* two px over the usual .section-lead size */
 }
 
 .section-note {
