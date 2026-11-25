@@ -973,6 +973,7 @@ button {
   font-style: italic;
   line-height: 1.55;
   color: var(--ink-soft);
+  color: color-mix(in srgb, var(--ink-soft) 70%, var(--ink));   /* a touch darker over the sandstone pattern */
   max-width: 540px;
   margin: 0 auto;
 }
