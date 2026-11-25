@@ -195,6 +195,11 @@ button {
   margin: -8px auto 32px;
 }
 
+/* The "Frase" section (#extra-1) shows only its quote: the title stays in the
+   page (the editor names the section after it) but is not shown */
+#extra-1 .h-script { display: none; }
+#extra-1 .section-lead { margin: 0 auto; }
+
 .section-note {
   font-size: 1.05rem;
   color: var(--ink-faint);
