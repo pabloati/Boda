@@ -1,19 +1,19 @@
 /* Written by the site editor (_dev/flores.html): edit it there, not by hand.
    Loaded after styles.css. Delete this file to go back to styles.css alone. */
-/* editor-state {"tokens": {"paper": "#f3eee3", "paper-deep": "#e9e2d1", "paper-line": "#d9d0ba", "olive": "#8e9166", "olive-deep": "#6c6f48", "olive-soft": "#c8c9ab", "terracotta": "#b3613f", "terracotta-deep": "#8f4a2f", "ink": "#3b382f", "ink-soft": "#6f6a5c", "ink-faint": "#9b958a", "cream-text": "#f6f2e8", "gold": "#a8853f"}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {"countdown": "olive"}, "space": {}} */
+/* editor-state {"tokens": {"paper": "#fbf1e4", "paper-deep": "#f3d9be", "paper-line": "#dac4af", "olive": "#2e7d74", "olive-deep": "#1f4f4a", "olive-soft": "#9fbdb2", "terracotta": "#c8502a", "terracotta-deep": "#a04022", "ink": "#1f2a44", "ink-soft": "#6c707c", "ink-faint": "#98979c", "cream-text": "#fcf5ec", "gold": "#a8853f"}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [{"name": "Cañón y Fallas", "tokens": {"paper": "#fbf1e4", "paper-deep": "#f3d9be", "paper-line": "#dac4af", "olive": "#2e7d74", "olive-deep": "#1f4f4a", "olive-soft": "#9fbdb2", "terracotta": "#c8502a", "terracotta-deep": "#a04022", "ink": "#1f2a44", "ink-soft": "#6c707c", "ink-faint": "#98979c", "cream-text": "#fcf5ec", "gold": "#a8853f"}}], "fonts": {}, "bg": {"countdown": "olive"}, "space": {}} */
 :root {
-  --paper: #f3eee3;
-  --paper-deep: #e9e2d1;
-  --paper-line: #d9d0ba;
-  --olive: #8e9166;
-  --olive-deep: #6c6f48;
-  --olive-soft: #c8c9ab;
-  --terracotta: #b3613f;
-  --terracotta-deep: #8f4a2f;
-  --ink: #3b382f;
-  --ink-soft: #6f6a5c;
-  --ink-faint: #9b958a;
-  --cream-text: #f6f2e8;
+  --paper: #fbf1e4;
+  --paper-deep: #f3d9be;
+  --paper-line: #dac4af;
+  --olive: #2e7d74;
+  --olive-deep: #1f4f4a;
+  --olive-soft: #9fbdb2;
+  --terracotta: #c8502a;
+  --terracotta-deep: #a04022;
+  --ink: #1f2a44;
+  --ink-soft: #6c707c;
+  --ink-faint: #98979c;
+  --cream-text: #fcf5ec;
   --gold: #a8853f;
 }
 @media (max-width: 768px), (orientation: portrait) {
