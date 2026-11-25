@@ -1368,6 +1368,10 @@ button {
   object-fit: contain;
   object-position: center bottom;
   margin: 0 auto 18px;
+  /* a translucent white sheet behind each drawing, so it stands out from the background */
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 6px;
 }
 
 /* Wide drawing: fill the box height and crop the sides, keeping the house centred */
