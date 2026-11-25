@@ -215,28 +215,55 @@ button {
 /* Phones and portrait screens (where the hero shows hero-mobile.jpg): the
    "Frase" section continues the canyon floor at the bottom of that photo, as if
    the photo went on. Same width and horizontal place as the hero photo (cover on
-   a 100svh stage, 3:4 photo, object-position 40%), and only its bottom 3% (sand,
-   below the feet) stretched to the height of the section. The strip is flipped
-   upside down, so the first row of the section is the photo's last row and the
-   seam does not show. Dark text on the sand.
-   #main-content so it wins over the background chosen in the editor. */
+   a 100svh stage, 3:4 photo, object-position 40%), unstretched.
+   The bottom strip of the photo (--sh: its last 5.6%, the sand below the feet)
+   is laid in bands of its own height, alternately upside down and upright, so
+   every join meets the same row of pixels on both sides and no seam shows:
+   band 0 starts with the photo's last row (continuing the hero), band 1 is the
+   strip upright, band 2 upside down again, and so on (8 bands).
+   ::before paints the upside-down bands (the whole layer is flipped), ::after the
+   upright ones, masked to the odd bands. In both, each band is a copy of the whole
+   photo whose bottom edge sits at the band's end; the copies are stacked so each
+   band shows only its own strip (the copy ending highest is on top).
+   Dark text on the sand. #main-content so it wins over the editor's background. */
 @media (max-width: 768px), (orientation: portrait) {
   #main-content #extra-1 {
+    --fw: max(100vw, 75svh);            /* width of the hero photo on screen */
+    --fh: calc(var(--fw) * 4 / 3);      /* its height (3:4 photo) */
+    --sh: calc(var(--fh) * 0.056);      /* the sand strip: last 5.6% of the photo */
     position: relative;
     isolation: isolate;
     background: #d98b5f;
   }
-  #main-content #extra-1::before {
+  #main-content #extra-1::before,
+  #main-content #extra-1::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: url('../assets/hero-mobile.jpg') no-repeat;
-    background-size: max(100vw, 75vh) 3300%;
-    background-size: max(100vw, 75svh) 3300%;
-    background-position: 40% 100%;
+    background-image: url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg');
+    background-repeat: no-repeat;
+    background-size: var(--fw) var(--fh);
+  }
+  /* bands 0, 2, 4, 6 (upside down): inside the flipped layer they are counted from its bottom */
+  #main-content #extra-1::before {
     transform: scaleY(-1);
+    background-position:
+      left 40% bottom calc(var(--sh) * 6),
+      left 40% bottom calc(var(--sh) * 4),
+      left 40% bottom calc(var(--sh) * 2),
+      left 40% bottom 0px;
+  }
+  /* bands 1, 3, 5, 7 (upright): each copy ends at the bottom of its band */
+  #main-content #extra-1::after {
+    background-position:
+      left 40% top calc(var(--sh) * 2 - var(--fh)),
+      left 40% top calc(var(--sh) * 4 - var(--fh)),
+      left 40% top calc(var(--sh) * 6 - var(--fh)),
+      left 40% top calc(var(--sh) * 8 - var(--fh));
+    -webkit-mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
+    mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
   }
   #main-content #extra-1 .section-lead,
   #main-content #extra-1 .section-lead * { color: #3d1d10; }
