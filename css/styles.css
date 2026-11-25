@@ -1304,7 +1304,7 @@ button {
 #main-content #countdown {
   /* its own green, a little lighter and softer than the editor's «Verde»; the strata
      in patron-cuenta.svg are drawn in greens that go with it */
-  background-color: #c6dab2;
+  background-color: #c3e3a8;
   /* the same light veil as «Nuestra historia», over the strata */
   background-image:
     linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
