@@ -1023,6 +1023,10 @@ button {
   min-height: 100%;
   transform: rotateY(180deg) translateY(-50%);
 }
+/* in the album (the quick swing that hints at the back) the face keeps the card's
+   size, so its letters are smaller and the text stays inside */
+.hfoto .hfoto-card--postal .hfoto-back { overflow: hidden; }
+.hfoto .hfoto-card--postal .hfoto-text { font-size: 4.4cqw; line-height: 1.35; }
 /* short screens: slightly smaller letters so the tall back still fits on screen */
 .hfoto-stage .hfoto-card--postal .hfoto-text { font-size: min(7cqw, 2.6vh); }
 .hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
