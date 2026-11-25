@@ -990,8 +990,9 @@ button {
   perspective: 900px;
 }
 .hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; position: relative; z-index: 1; }   /* alone on its row, centred, in front of the two below */
-/* the postcard has no caption and no white frame: its picture fills the whole face */
-.hfoto-front[data-slot="tarjeta.jpg"] { padding: 0; }
+/* the postcard has no caption and no white frame: its picture fills the face, with a
+   little margin on top in the cream of the postcard's own border */
+.hfoto-front[data-slot="tarjeta.jpg"] { padding: 4% 0 0; background: #eee5cc; }
 /* Its back holds a longer text than the others. Opened on the stage, that face
    grows as tall as its text needs (never shorter than the card), centred on the
    card, with the same letters as the others; the photo side keeps its size.
