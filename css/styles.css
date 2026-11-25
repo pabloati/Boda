@@ -2046,6 +2046,15 @@ html.rsvp-modal-open { overflow: hidden; }
   color: rgba(246, 242, 232, 0.85);
 }
 
+/* Footer in the red earth of the canyon in the hero photo, with cream text.
+   #main-content so it wins over the background chosen in the editor (css/editor.css) */
+#main-content .footer-section { background: #b85a35; }
+#main-content .footer-section .footer-title { color: #fcf5ec; }
+#main-content .footer-section .footer-date { color: rgba(252, 245, 236, 0.85); }
+#main-content .footer-section .h-script::before {
+  background: radial-gradient(ellipse at 50% 60%, rgba(252, 245, 236, 0.16) 0%, rgba(252, 245, 236, 0) 68%);
+}
+
 /* ========================================================
    ICON SHIM
    js/playlist.js and js/script.js set Font Awesome class names.
