@@ -266,7 +266,10 @@ button {
     mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
   }
   #main-content #extra-1 .section-lead,
-  #main-content #extra-1 .section-lead * { color: #3d1d10; }
+  #main-content #extra-1 .section-lead * {
+    color: var(--cream-text);   /* the same light letters as the hero, with its shadow */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 16px rgba(0, 0, 0, 0.35);
+  }
 }
 
 .section-note {
