@@ -1039,6 +1039,9 @@ button {
   color: var(--ink-faint);
 }
 
+/* phones and tablets: the hint comes before the prints, so it sits just above them */
+.historia-hint + .historia-album { margin-top: 14px; }
+
 /* the stage: a dimmed layer over the page where the open print sits (created by js/script.js) */
 .hfoto-stage {
   position: fixed;
@@ -1114,7 +1117,8 @@ button {
   }
   .historia .text-center > .h-script { margin-left: 0; }
   .historia-lead { max-width: none; margin: 0; }
-  .historia-album {
+  .historia-album,
+  .historia-hint + .historia-album {
     grid-column: 2;
     grid-row: 1;
     flex-wrap: wrap;
