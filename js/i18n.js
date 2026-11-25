@@ -263,7 +263,9 @@ window.I18N = (function () {
     'lang.switchTo': 'Cambiar a español',
     // --- calendar file ---
     'ics.summary': 'Wedding of Mª Ángeles & Pablo',
-    'ics.description': 'Ceremony at Parroquia de San José (C. Alcalá 43) at 12:30 and reception at Complejo La Cigüeña (Arganda del Rey) at 14:30.'
+    'ics.description': 'Ceremony at Parroquia de San José (C. Alcalá 43) at 12:30 and reception at Complejo La Cigüeña (Arganda del Rey) at 14:30.',
+    'extra1.title': 'Frase',
+    'extra1.text': 'Por encima de todo, vístanse de amor, que es el vínculo perfecto.<br>- Colosenses 3:14 -',
   };
 
   const dict = { es: ES, en: EN };
