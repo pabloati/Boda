@@ -1474,6 +1474,16 @@ button {
   object-fit: contain;
 }
 
+/* a faint white glow behind each drawing, an oval shaped to the drawing (drawn
+   whole by "contain": the tall church fills the height, the wide ones the width),
+   with a soft edge, so the drawings stand out like the ones in "Dónde y cuándo" */
+.ruta-art img {
+  --glow: rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.22) 62%, rgba(255, 255, 255, 0) 100%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--glow));
+}
+.ruta-art[data-slot="ruta-ceremonia.png"] img { background: radial-gradient(ellipse 32% 50% at 50% 50%, var(--glow)); }
+.ruta-art[data-slot="ruta-fiesta.png"] img { background: radial-gradient(ellipse 50% 44% at 50% 50%, var(--glow)); }
+
 /* empty drawing slot: dashed frame named after the file it waits for */
 .ruta-art.is-empty {
   height: 190px;
