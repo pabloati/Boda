@@ -1,10 +1,17 @@
 /* Written by the site editor (_dev/flores.html): edit it there, not by hand.
    Loaded after styles.css. Delete this file to go back to styles.css alone. */
-/* editor-state {"tokens": {"paper-deep": "#e2ffcc", "olive": "#b2d09b", "paper": "#defac8"}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": ["extra-1", "intro", "countdown", "locations", "timeline", "mapa", "rsvp", "gifts", "playlist", "social", "footer"], "hidden": [], "text": {}, "palettes": [{"name": "Cañón y Fallas", "tokens": {"paper": "#fbf1e4", "paper-deep": "#f3d9be", "paper-line": "#dac4af", "olive": "#2e7d74", "olive-deep": "#1f4f4a", "olive-soft": "#9fbdb2", "terracotta": "#c8502a", "terracotta-deep": "#a04022", "ink": "#1f2a44", "ink-soft": "#6c707c", "ink-faint": "#98979c", "cream-text": "#fcf5ec", "gold": "#a8853f"}}, {"name": "Paleta 2", "tokens": {"paper": "#fff8e7", "paper-deep": "#fce7a8", "paper-line": "#e3d09d", "olive": "#34895a", "olive-deep": "#1e5e3c", "olive-soft": "#a4c6a8", "terracotta": "#f36012", "terracotta-deep": "#c24d0e", "ink": "#2b2a4c", "ink-soft": "#757282", "ink-faint": "#a09ba1", "cream-text": "#fffaee", "gold": "#a8853f"}}, {"name": "Paleta 3", "tokens": {"paper": "#fff7e8", "paper-deep": "#fdf98b", "paper-line": "#dbd6c9", "olive": "#b6d4f2", "olive-deep": "#1e3f73", "olive-soft": "#dee7ed", "terracotta": "#d9621e", "terracotta-deep": "#ae4e18", "ink": "#1f2a44", "ink-soft": "#6d727d", "ink-faint": "#9a9b9e", "cream-text": "#41403e", "gold": "#a8853f"}}], "fonts": {}, "bg": {"countdown": "olive", "timeline": "olive", "rsvp": "olive", "playlist": "olive", "extra-1": "olive", "footer": "paper"}, "space": {"countdown": [0, -1], "extra-1": [-1, -1]}} */
+/* editor-state {"tokens": {"paper": "#fbf7f2", "olive": "#7dc572", "olive-deep": "#476147", "terracotta": "#d13100", "terracotta-deep": "#a72700", "ink": "#2f2a2a", "ink-soft": "#767270", "cream-text": "#fcf9f6", "olive-soft": "#a6d68a", "paper-deep": "#ffe4a8"}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": ["extra-1", "intro", "countdown", "locations", "timeline", "mapa", "rsvp", "gifts", "playlist", "social", "footer"], "hidden": [], "text": {}, "palettes": [{"name": "Cañón y Fallas", "tokens": {"paper": "#fbf1e4", "paper-deep": "#f3d9be", "paper-line": "#dac4af", "olive": "#2e7d74", "olive-deep": "#1f4f4a", "olive-soft": "#9fbdb2", "terracotta": "#c8502a", "terracotta-deep": "#a04022", "ink": "#1f2a44", "ink-soft": "#6c707c", "ink-faint": "#98979c", "cream-text": "#fcf5ec", "gold": "#a8853f"}}, {"name": "Paleta 2", "tokens": {"paper": "#fff8e7", "paper-deep": "#fce7a8", "paper-line": "#e3d09d", "olive": "#34895a", "olive-deep": "#1e5e3c", "olive-soft": "#a4c6a8", "terracotta": "#f36012", "terracotta-deep": "#c24d0e", "ink": "#2b2a4c", "ink-soft": "#757282", "ink-faint": "#a09ba1", "cream-text": "#fffaee", "gold": "#a8853f"}}, {"name": "Paleta 3", "tokens": {"paper": "#fff7e8", "paper-deep": "#fdf98b", "paper-line": "#dbd6c9", "olive": "#b6d4f2", "olive-deep": "#1e3f73", "olive-soft": "#dee7ed", "terracotta": "#d9621e", "terracotta-deep": "#ae4e18", "ink": "#1f2a44", "ink-soft": "#6d727d", "ink-faint": "#9a9b9e", "cream-text": "#41403e", "gold": "#a8853f"}}, {"name": "Verde claro (ending, antes)", "tokens": {"paper-deep": "#e2ffcc", "olive": "#b2d09b", "paper": "#defac8"}}, {"name": "Meri", "tokens": {"paper": "#fbf7f2", "olive": "#7dc572", "olive-deep": "#476147", "terracotta": "#d13100", "terracotta-deep": "#a72700", "ink": "#2f2a2a", "ink-soft": "#767270", "cream-text": "#fcf9f6", "olive-soft": "#a6d68a", "paper-deep": "#ffe4a8"}}], "fonts": {}, "bg": {"countdown": "olive", "timeline": "olive", "rsvp": "olive", "playlist": "olive", "extra-1": "olive", "footer": "paper"}, "space": {"countdown": [0, -1], "extra-1": [-1, -1]}} */
 :root {
-  --paper-deep: #e2ffcc;
-  --olive: #b2d09b;
-  --paper: #defac8;
+  --paper: #fbf7f2;
+  --olive: #7dc572;
+  --olive-deep: #476147;
+  --terracotta: #d13100;
+  --terracotta-deep: #a72700;
+  --ink: #2f2a2a;
+  --ink-soft: #767270;
+  --cream-text: #fcf9f6;
+  --olive-soft: #a6d68a;
+  --paper-deep: #ffe4a8;
 }
 @media (max-width: 768px), (orientation: portrait) {
   .hero-photo img { object-position: 40.0% 50.0%; }
