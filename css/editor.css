@@ -1,6 +1,21 @@
 /* Written by the site editor (_dev/flores.html): edit it there, not by hand.
    Loaded after styles.css. Delete this file to go back to styles.css alone. */
-/* editor-state {"tokens": {}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {"countdown": "olive"}, "space": {}} */
+/* editor-state {"tokens": {"paper": "#f3eee3", "paper-deep": "#e9e2d1", "paper-line": "#d9d0ba", "olive": "#8e9166", "olive-deep": "#6c6f48", "olive-soft": "#c8c9ab", "terracotta": "#b3613f", "terracotta-deep": "#8f4a2f", "ink": "#3b382f", "ink-soft": "#6f6a5c", "ink-faint": "#9b958a", "cream-text": "#f6f2e8", "gold": "#a8853f"}, "frame": {"hero-mobile": [40.0, 50.0]}, "order": [], "hidden": [], "text": {}, "palettes": [], "fonts": {}, "bg": {"countdown": "olive"}, "space": {}} */
+:root {
+  --paper: #f3eee3;
+  --paper-deep: #e9e2d1;
+  --paper-line: #d9d0ba;
+  --olive: #8e9166;
+  --olive-deep: #6c6f48;
+  --olive-soft: #c8c9ab;
+  --terracotta: #b3613f;
+  --terracotta-deep: #8f4a2f;
+  --ink: #3b382f;
+  --ink-soft: #6f6a5c;
+  --ink-faint: #9b958a;
+  --cream-text: #f6f2e8;
+  --gold: #a8853f;
+}
 @media (max-width: 768px), (orientation: portrait) {
   .hero-photo img { object-position: 40.0% 50.0%; }
   .card-back { background-position: 40.0% 50.0%; }
