@@ -820,6 +820,10 @@ button {
 @media (min-width: 769px) and (orientation: portrait) {
   .hero-photo img { object-position: 50% 30%; }
   .card-back { background-image: url('../assets/hero-mobile.jpg?v=202611182322-bd384c6'); background-position: 50% 30%; }
+  /* wider than the photo, so it is cropped top and bottom: keep its foot (the
+     couple's feet and the sand) and crop the top instead. #hero wins over the
+     framing set in the editor's «Fotos» tab, which only matters on phones here. */
+  #hero .hero-photo img { object-position: 40% 100%; }
 }
 
 /* Portrait (phones and tablets): the lettering sits at the top, over the
