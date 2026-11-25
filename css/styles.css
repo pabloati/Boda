@@ -1360,16 +1360,14 @@ button {
   .location > .text-link { grid-row: 5; justify-self: center; align-self: start; }
 }
 
-/* Both drawings sit in a round medallion like the stops of the bus map: a paper
-   disc with a thin dark-green ring, the engraving cropped to the circle */
+/* Both drawings sit in a round medallion like the stops of the bus map: a plain
+   paper disc with no ring, the engraving reaching its edge */
 .location-art {
   display: block;
   box-sizing: border-box;
   width: clamp(132px, 36vw, 210px);
   aspect-ratio: 1;
   height: auto;
-  padding: 5px;
-  border: 2px solid var(--olive-deep);
   border-radius: 50%;
   background: var(--paper);
   object-fit: cover;
