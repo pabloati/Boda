@@ -174,7 +174,7 @@ window.I18N = (function () {
     'rsvp.error': "We couldn't save your reply. Please try again in a moment and, if it keeps failing, message us on WhatsApp.",
     // --- gifts ---
     'gifts.title': 'Gifts',
-    'gifts.lead': "Your presence is the best gift.<br>If you'd also like to give us a little envelope or a present:",
+    'gifts.lead': "We'd love to take you all with us on the honeymoon flight, but not even an Iberia plane has room for everyone. So you can come along in spirit with a little something ;)",
     'gifts.showIban': 'Show bank account',
     'gifts.copy': 'Copy',
     'gifts.copyAria': 'Copy the IBAN',
