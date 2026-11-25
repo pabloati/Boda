@@ -32,6 +32,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 - **Preview of the shared album in the Fotos section** (now only a link, decided 2026-11-17). Google Photos has no embed and no official way to read a shared album, so the options are:
   - *Fixed strip*: a few photos the couple chooses, saved in `assets/`, refreshed by hand. Stable, not live.
   - *Live strip*: a small separate Google Apps Script (not the RSVP one) reads the album's public share page and returns the latest ~6 thumbnail addresses; the site shows them and each opens the album. Unofficial, can break without notice, so it must fall back to the link alone. Not tested against the real album yet. A scheduled GitHub job writing the list to the repo is the alternative, at the cost of one commit per change.
+  - *Empty polaroids, no Google involved* (idea of 2026-11-25, not decided): a small pile of empty prints in the style of «Nuestra historia», with a handwritten «tu foto aquí»; a tap fans them out and opens the album. On wide screens a QR code of the album next to it, since the photos are on the phone (`_dev/qr.js` already draws QR codes). After the wedding the empty prints can give way to the fixed strip.
   - To weigh first: guests' photos would show on a public site, and the album is empty until the wedding (seed it or keep the strip hidden until there are enough photos).
 
 ## D. Before sending the invitations
