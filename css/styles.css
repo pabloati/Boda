@@ -202,7 +202,8 @@ button {
   margin: 0 auto;
   font-family: var(--font-script);   /* the headings' font, in italics */
   font-style: italic;
-  font-size: calc(1.2rem + 5px);   /* five px over the usual .section-lead size */
+  font-size: calc(1.2rem + 7px);   /* seven px over the usual .section-lead size */
+  font-weight: 700;
 }
 
 .section-note {
