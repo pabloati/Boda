@@ -2451,153 +2451,64 @@ html.rsvp-modal-open { overflow: hidden; }
   padding: 64px 0 48px;
 }
 
-/* The farewell: the back of a postcard, a little askew on the band */
-.postal {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr;
-  max-width: 520px;
-  min-height: min(300px, 56vw);   /* the shape of a postcard, also with a short message */
-  margin: 0 auto;
-  padding: 20px 18px;
-  background: #fbf9f3;
-  border-radius: 3px;
-  box-shadow: 0 16px 26px -12px rgba(40, 18, 8, 0.55);
-  transform: rotate(-1.6deg);
-  text-align: left;
-  color: var(--ink);
+.footer-title {
+  margin-bottom: 10px;
 }
 
-.postal-mensaje {
+.footer-date {
+  letter-spacing: 4px;
+  font-size: 1rem;
+  color: rgba(246, 242, 232, 0.85);
+}
+
+/* The farewell is a photo: hero-desktop.jpg fills the band and the sentence sits over its
+   lower, darker part, on a soft shade. The photo is an <img> and not a background because the
+   paper rule owns the band's background-image. */
+#main-content .footer-section {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 6px 16px 6px 4px;
-  border-right: 1px solid var(--paper-line);
+  align-items: flex-end;
+  min-height: min(86svh, 66.7vw);   /* the whole 3:2 photo on wide screens */
+  background-color: #2b2622;   /* while the photo loads; also makes the section above end in a torn edge */
+  padding: 0 0 44px;
+  overflow: hidden;
 }
 
-#main-content .footer-section .postal-texto {
-  font-family: var(--font-hand);
-  font-size: clamp(0.82rem, 3.4vw, 1.05rem);
-  line-height: 2;
-  color: var(--ink);
-}
+.footer-section > .container { position: static; max-width: 900px; }
 
-#main-content .footer-section .postal-firma {
-  margin-top: 8px;
-  font-family: var(--font-script);
-  font-size: clamp(1.7rem, 7vw, 2.2rem);
-  line-height: 1.1;
-  color: var(--terracotta);
-  text-align: right;
-}
-
-.postal-senas { padding-left: 16px; align-self: start; }
-
-/* the stamp (top right) and the postmark that cancels it */
-.postal-franqueo {
-  position: relative;
-  height: 76px;
-  margin-bottom: 12px;
-}
-
-.postal-sello {
+.footer-photo {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 54px;    /* 9 and 11 teeth of 6px */
-  height: 66px;
-  padding: 3px;
-  /* the perforated edge of a stamp: a grid of dots, of which only the outer halves show */
-  background: radial-gradient(circle at center, var(--olive-deep) 2.6px, transparent 3px) 0 0 / 6px 6px;
-}
-
-.postal-sello span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: var(--olive-deep);
-  box-shadow: inset 0 0 0 4px var(--olive-deep), inset 0 0 0 5px rgba(251, 249, 243, 0.7);
-  font-family: var(--font-script);
-  font-size: 1rem;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-  color: #fbf9f3;
+  object-fit: cover;
+  object-position: 44% 30%;   /* both faces and her hands, also in the tall crop of a phone */
 }
 
-.postal-matasellos {
+/* the shade under the words */
+#main-content .footer-section::after {
+  content: "";
   position: absolute;
-  top: 6px;
-  right: 14px;
-  width: 132px;
-  overflow: visible;
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 1.3;
-  opacity: 0.72;
-  transform: rotate(-8deg);
+  inset: 45% 0 0;
+  background: linear-gradient(to bottom, rgba(20, 16, 12, 0), rgba(20, 16, 12, 0.62));
+  pointer-events: none;
 }
 
-.postal-matasellos .fino { stroke-width: 0.7; }
-.postal-matasellos .onda { stroke-width: 1; stroke-linecap: round; }
-
-.matasellos-texto,
-.matasellos-fecha {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  text-transform: uppercase;
-  fill: var(--ink);
-  stroke: none;
+#main-content .footer-section .footer-title,
+#main-content .footer-section .footer-date {
+  position: relative;
+  z-index: 1;
+  color: #fcf5ec;
+  text-shadow: 0 1px 2px rgba(20, 16, 12, 0.6), 0 2px 14px rgba(20, 16, 12, 0.5);
 }
 
-.matasellos-texto { font-size: 7px; letter-spacing: 1.4px; }
-.matasellos-fecha { font-size: 9.5px; letter-spacing: 1px; }
+#main-content .footer-section .footer-date { color: rgba(252, 245, 236, 0.9); }
+#main-content .footer-section .h-script::before { display: none; }
 
-/* waiting for the card to come into view, then stamped */
-.postal.espera .postal-matasellos { opacity: 0; }
-.postal.is-sellada .postal-matasellos { animation: matasellos-golpe 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) 0.35s both; }
+/* the torn edge of the section above stays over the photo */
+.footer-section.has-edge::before { z-index: 2; }
 
-@keyframes matasellos-golpe {
-  0% { opacity: 0; transform: rotate(-16deg) scale(1.9); }
-  60% { opacity: 0.85; transform: rotate(-8deg) scale(0.94); }
-  100% { opacity: 0.72; transform: rotate(-8deg) scale(1); }
-}
-
-#main-content .footer-section .postal-linea {
-  min-height: 1.9em;
-  margin-top: 6px;
-  border-bottom: 1px solid var(--paper-line);
-  font-size: 0.72rem;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.postal-ti {
-  font-family: var(--font-hand);
-  font-size: 1rem;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink);
-  margin-left: 4px;
-}
-
-.footer-again { margin-top: 34px; }
-#main-content .footer-section .footer-again .link-button { font-size: 1rem; color: rgba(252, 245, 236, 0.9); }
-
-@media (max-width: 420px) {
-  .postal { padding: 16px 12px; }
-  .postal-mensaje { padding-right: 12px; }
-  .postal-senas { padding-left: 12px; }
-  .postal-matasellos { width: 112px; right: 8px; }
-}
-
-/* Footer in the red earth of the canyon in the hero photo, with cream text.
-   #main-content so it wins over the background chosen in the editor (css/editor.css) */
-#main-content .footer-section { background: #b85a35; }
-#main-content .footer-section .h-script::before {
-  background: radial-gradient(ellipse at 50% 60%, rgba(252, 245, 236, 0.16) 0%, rgba(252, 245, 236, 0) 68%);
+@media (max-width: 768px), (orientation: portrait) {
+  #main-content .footer-section { min-height: min(78svh, 135vw); padding-bottom: 36px; }
 }
 
 /* ========================================================

@@ -778,30 +778,6 @@
     }
   }
 
-  // --- 10e. FAREWELL: the postmark is stamped when the postcard comes into view ---
-  // .espera hides the postmark until then; without this block it is simply there.
-  const postal = document.getElementById('postal');
-  if (postal && 'IntersectionObserver' in window && !lessMotion) {
-    postal.classList.add('espera');
-    const postalWatcher = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        postal.classList.remove('espera');
-        postal.classList.add('is-sellada');
-        postalWatcher.disconnect();
-      });
-    }, { threshold: 0.6 });
-    postalWatcher.observe(postal);
-  }
-  // the envelope shows on every load, so opening it again is going back to the top and reloading
-  const reabrir = document.getElementById('reabrir-sobre');
-  if (reabrir) {
-    reabrir.addEventListener('click', function () {
-      window.scrollTo(0, 0);
-      window.location.reload();
-    });
-  }
-
   // --- 10c. OUR STORY: the three prints turn over ---
   // Each .hfoto-card has the photo on the front and its text on the back. A tap moves the card to
   // a fixed layer over the page (so no section can clip it or paint over it), where it flies to

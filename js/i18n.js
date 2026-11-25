@@ -268,10 +268,6 @@ window.I18N = (function () {
     'social.album': 'Open the album',
     // --- footer ---
     'footer.title': 'Thank you for being part of our lives',
-    'footer.sign': 'Mª Ángeles &amp; Pablo',
-    'footer.to': 'To:',
-    'footer.you': 'you',
-    'footer.again': 'Open the invitation again',
     // --- controls ---
     'music.aria': 'Play or pause the music',
     'top.aria': 'Back to top',

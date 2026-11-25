@@ -1,0 +1,220 @@
+<!-- Farewell variant: the back of a postcard (tried on the branch `ending`, 2026-11-25, commit f5ff594).
+     Not in use: the couple preferred their photo with the sentence over it. Kept here so it can come back.
+     To restore it: put the MARKUP inside <footer class="footer-section band-olive"><div class="container narrow text-center">,
+     the STYLES in css/styles.css (FOOTER block), the SCRIPT in js/script.js (inside the IIFE; it uses `lessMotion`),
+     and the ENGLISH entries in the EN map of js/i18n.js. -->
+
+<!-- ============ MARKUP ============ -->
+        <!-- The farewell is the back of a postcard: the message and the signature on the left,
+             the stamp, its postmark (with the wedding date) and the address lines on the right.
+             js/script.js (10e) stamps the postmark when the card comes into view. -->
+        <div class="postal" id="postal">
+          <div class="postal-mensaje">
+            <p class="postal-texto" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
+            <p class="postal-firma" data-i18n="footer.sign">Mª Ángeles y Pablo</p>
+          </div>
+          <div class="postal-senas">
+            <div class="postal-franqueo">
+              <span class="postal-sello" aria-hidden="true"><span>M &amp; P</span></span>
+              <svg class="postal-matasellos" viewBox="0 0 150 80" role="img" aria-label="13 · 03 · 2027">
+                <defs>
+                  <path id="matasellos-arco-1" d="M17 40 A27 27 0 0 1 71 40"/>
+                  <path id="matasellos-arco-2" d="M12.5 40 A31.5 31.5 0 0 0 75.5 40"/>
+                </defs>
+                <circle cx="44" cy="40" r="37"/>
+                <circle cx="44" cy="40" r="34.5" class="fino"/>
+                <circle cx="44" cy="40" r="21" class="fino"/>
+                <text class="matasellos-texto"><textPath href="#matasellos-arco-1" startOffset="50%" text-anchor="middle">Mª Ángeles</textPath></text>
+                <text class="matasellos-texto"><textPath href="#matasellos-arco-2" startOffset="50%" text-anchor="middle">Pablo</textPath></text>
+                <text class="matasellos-fecha" x="44" y="38" text-anchor="middle">13 · 03</text>
+                <text class="matasellos-fecha" x="44" y="48.5" text-anchor="middle">2027</text>
+                <path class="onda" d="M84 26 q8 -6 16 0 t16 0 t16 0 t16 0 M84 36 q8 -6 16 0 t16 0 t16 0 t16 0 M84 46 q8 -6 16 0 t16 0 t16 0 t16 0 M84 56 q8 -6 16 0 t16 0 t16 0 t16 0"/>
+              </svg>
+            </div>
+            <p class="postal-linea"><span class="postal-para" data-i18n="footer.to">Para:</span> <span class="postal-ti" data-i18n="footer.you">ti</span></p>
+            <p class="postal-linea" aria-hidden="true"></p>
+            <p class="postal-linea" aria-hidden="true"></p>
+          </div>
+        </div>
+        <p class="footer-again"><button type="button" class="link-button" id="reabrir-sobre" data-i18n="footer.again">Volver a abrir la invitación</button></p>
+
+<!-- ============ STYLES ============ -->
+<style>
+/* The farewell: the back of a postcard, a little askew on the band */
+.postal {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  max-width: 520px;
+  min-height: min(300px, 56vw);   /* the shape of a postcard, also with a short message */
+  margin: 0 auto;
+  padding: 20px 18px;
+  background: #fbf9f3;
+  border-radius: 3px;
+  box-shadow: 0 16px 26px -12px rgba(40, 18, 8, 0.55);
+  transform: rotate(-1.6deg);
+  text-align: left;
+  color: var(--ink);
+}
+
+.postal-mensaje {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 16px 6px 4px;
+  border-right: 1px solid var(--paper-line);
+}
+
+#main-content .footer-section .postal-texto {
+  font-family: var(--font-hand);
+  font-size: clamp(0.82rem, 3.4vw, 1.05rem);
+  line-height: 2;
+  color: var(--ink);
+}
+
+#main-content .footer-section .postal-firma {
+  margin-top: 8px;
+  font-family: var(--font-script);
+  font-size: clamp(1.7rem, 7vw, 2.2rem);
+  line-height: 1.1;
+  color: var(--terracotta);
+  text-align: right;
+}
+
+.postal-senas { padding-left: 16px; align-self: start; }
+
+/* the stamp (top right) and the postmark that cancels it */
+.postal-franqueo {
+  position: relative;
+  height: 76px;
+  margin-bottom: 12px;
+}
+
+.postal-sello {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 54px;    /* 9 and 11 teeth of 6px */
+  height: 66px;
+  padding: 3px;
+  /* the perforated edge of a stamp: a grid of dots, of which only the outer halves show */
+  background: radial-gradient(circle at center, var(--olive-deep) 2.6px, transparent 3px) 0 0 / 6px 6px;
+}
+
+.postal-sello span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--olive-deep);
+  box-shadow: inset 0 0 0 4px var(--olive-deep), inset 0 0 0 5px rgba(251, 249, 243, 0.7);
+  font-family: var(--font-script);
+  font-size: 1rem;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  color: #fbf9f3;
+}
+
+.postal-matasellos {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  width: 132px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.3;
+  opacity: 0.72;
+  transform: rotate(-8deg);
+}
+
+.postal-matasellos .fino { stroke-width: 0.7; }
+.postal-matasellos .onda { stroke-width: 1; stroke-linecap: round; }
+
+.matasellos-texto,
+.matasellos-fecha {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  fill: var(--ink);
+  stroke: none;
+}
+
+.matasellos-texto { font-size: 7px; letter-spacing: 1.4px; }
+.matasellos-fecha { font-size: 9.5px; letter-spacing: 1px; }
+
+/* waiting for the card to come into view, then stamped */
+.postal.espera .postal-matasellos { opacity: 0; }
+.postal.is-sellada .postal-matasellos { animation: matasellos-golpe 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) 0.35s both; }
+
+@keyframes matasellos-golpe {
+  0% { opacity: 0; transform: rotate(-16deg) scale(1.9); }
+  60% { opacity: 0.85; transform: rotate(-8deg) scale(0.94); }
+  100% { opacity: 0.72; transform: rotate(-8deg) scale(1); }
+}
+
+#main-content .footer-section .postal-linea {
+  min-height: 1.9em;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--paper-line);
+  font-size: 0.72rem;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.postal-ti {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  margin-left: 4px;
+}
+
+.footer-again { margin-top: 34px; }
+#main-content .footer-section .footer-again .link-button { font-size: 1rem; color: rgba(252, 245, 236, 0.9); }
+
+@media (max-width: 420px) {
+  .postal { padding: 16px 12px; }
+  .postal-mensaje { padding-right: 12px; }
+  .postal-senas { padding-left: 12px; }
+  .postal-matasellos { width: 112px; right: 8px; }
+}
+
+</style>
+
+<!-- ============ SCRIPT ============ -->
+<script>
+  // --- 10e. FAREWELL: the postmark is stamped when the postcard comes into view ---
+  // .espera hides the postmark until then; without this block it is simply there.
+  const postal = document.getElementById('postal');
+  if (postal && 'IntersectionObserver' in window && !lessMotion) {
+    postal.classList.add('espera');
+    const postalWatcher = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        postal.classList.remove('espera');
+        postal.classList.add('is-sellada');
+        postalWatcher.disconnect();
+      });
+    }, { threshold: 0.6 });
+    postalWatcher.observe(postal);
+  }
+  // the envelope shows on every load, so opening it again is going back to the top and reloading
+  const reabrir = document.getElementById('reabrir-sobre');
+  if (reabrir) {
+    reabrir.addEventListener('click', function () {
+      window.scrollTo(0, 0);
+      window.location.reload();
+    });
+  }
+
+</script>
+
+<!-- ============ ENGLISH (js/i18n.js, EN map) ============
+    'footer.sign': 'Mª Ángeles &amp; Pablo',
+    'footer.to': 'To:',
+    'footer.you': 'you',
+    'footer.again': 'Open the invitation again',
+-->
