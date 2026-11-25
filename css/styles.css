@@ -395,7 +395,7 @@ button {
 
 /* "Añadir al calendario" stays terracotta even on a green countdown band
    (two ids, so it beats the editor's #countdown colour rule) */
-#countdown #btn-add-calendar { color: var(--terracotta); }
+#countdown #btn-add-calendar { color: var(--terracotta); font-size: 1.4rem; }
 #countdown #btn-add-calendar:hover { color: var(--terracotta-deep); }
 
 .band-olive .link-button {
@@ -1383,6 +1383,12 @@ button {
   line-height: 1.15;
 }
 
+/* "Ceremonia" / "Convite": bigger than the venue names under them */
+.location > .hand-label {
+  font-size: clamp(1.45rem, 6.2vw, 2.3rem);
+  line-height: 1.6;
+}
+
 .location-address {
   font-size: clamp(0.95rem, 3.2vw, 1.1rem);
   line-height: 1.45;
@@ -1462,7 +1468,7 @@ button {
 
 .ruta-time {
   display: block;
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 500;
   line-height: 1;
   color: var(--olive-deep);
@@ -1471,19 +1477,21 @@ button {
 
 .ruta-title {
   font-family: var(--font-hand);
-  font-size: 1.1rem;
+  font-size: 1.45rem;
   color: var(--terracotta);
   line-height: 1.6;
   margin: 8px 0 2px;
 }
 
-.ruta-desc { font-size: 1.1rem; }
+.ruta-desc { font-size: 1.4rem; line-height: 1.35; }
 
 @media (max-width: 480px) {
   .ruta-stop { gap: 6px 14px; padding-bottom: 72px; }
   .ruta-stop:not(:last-child)::after { height: 64px; }
   .ruta-art img, .ruta-art.is-empty { height: 150px; }
-  .ruta-time { font-size: 1.6rem; }
+  .ruta-time { font-size: 2.1rem; }
+  .ruta-title { font-size: 1.3rem; }
+  .ruta-desc { font-size: 1.3rem; }
 }
 
 /* ========================================================
@@ -1516,6 +1524,12 @@ button {
   color: var(--ink-faint);
   font-style: italic;
 }
+
+/* the message's light note goes on its own line under "Déjanos un mensajito" */
+label[for="guest-message"] .optional { display: block; }
+
+/* "Abrir el álbum": much bigger than the other text links */
+#album-link { font-size: 1.9rem; }
 
 .form-control {
   width: 100%;

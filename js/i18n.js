@@ -121,8 +121,8 @@ window.I18N = (function () {
     'countdown.calendar': 'Add to calendar',
     // --- where & when ---
     'loc.title': 'Where and when',
-    'loc.ceremony': 'Ceremony · 12:30',
-    'loc.reception': 'Reception · 14:30',
+    'loc.ceremony': 'Ceremony',
+    'loc.reception': 'Reception',
     'loc.map': 'See it on the map',
     // --- timeline ---
     'tl.title': 'The day',
