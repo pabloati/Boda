@@ -1771,9 +1771,13 @@ html.rsvp-modal-open { overflow: hidden; }
   color: var(--olive-deep);
 }
 
-/* the inside of the form in the green of the sections; its fields keep the paper colour */
-#rsvp .rsvp-form.paper-panel { background-color: var(--olive); }
-#rsvp .rsvp-form :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) { background-color: var(--paper); }
+/* the inside of the form in the green of the sections; its fields keep their own colour */
+#rsvp .rsvp-form.paper-panel {
+  background-color: var(--olive);
+  /* the same paper grain as the sections, so the green comes out in exactly their tone */
+  background-image: url('../assets/papel.webp?v=20261124b');
+  background-size: 320px 320px;
+}
 
 .rsvp-contact-name::after {
   content: "\00B7";
