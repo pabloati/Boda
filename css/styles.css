@@ -1012,7 +1012,8 @@ button {
 /* the postcard (2:3, its title at the foot) is shown whole rather than cropped */
 .hfoto-front[data-slot="tarjeta.jpg"] img { object-fit: contain; }
 /* its back holds a longer text than the others: smaller letters so it fits the card */
-.hfoto:nth-child(1) .hfoto-text { font-size: 4.5cqw; line-height: 1.35; }
+.hfoto:nth-child(1) .hfoto-back { padding: 9% 6%; }   /* a little narrower side margins */
+.hfoto:nth-child(1) .hfoto-text { font-size: 4.7cqw; line-height: 1.35; }
 .hfoto:nth-child(1) .hfoto-city { margin-bottom: 2.5cqw; }
 .hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
 .hfoto:nth-child(4) { --tilt: 3deg; margin-top: -5%; }
