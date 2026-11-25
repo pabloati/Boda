@@ -1360,20 +1360,26 @@ button {
   .location > .text-link { grid-row: 5; justify-self: center; align-self: start; }
 }
 
-/* Both drawings share one box height and rest on its bottom edge, so the labels line up */
+/* Both drawings sit in a round medallion like the stops of the bus map: a paper
+   disc with a thin dark-green ring, the engraving cropped to the circle */
 .location-art {
   display: block;
-  width: 100%;
-  height: clamp(150px, 40vw, 230px);
-  object-fit: contain;
-  object-position: center bottom;
+  box-sizing: border-box;
+  width: clamp(132px, 36vw, 210px);
+  aspect-ratio: 1;
+  height: auto;
+  padding: 5px;
+  border: 2px solid var(--olive-deep);
+  border-radius: 50%;
+  background: var(--paper);
+  object-fit: cover;
+  object-position: center 38%;
   margin: 0 auto 18px;
 }
 
-/* Wide drawing: fill the box height and crop the sides, keeping the house centred */
+/* Wide drawing: crop the sides, keeping the house centred */
 .location-art-cover {
-  object-fit: cover;
-  object-position: 52% bottom;
+  object-position: 52% center;
 }
 
 .location-name {
