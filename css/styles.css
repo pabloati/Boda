@@ -959,8 +959,11 @@ button {
   padding: 64px 0;
   /* sandstone strata in the sunny colours of the top-left corner of the hero photo
      (a background chosen in the editor's «Secciones» tab replaces it) */
-  background: #fde6ab url('../assets/patron-historia.svg') repeat;
-  background-size: 400px 200px;
+  /* a light veil over the pattern so the text stands out */
+  background:
+    linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
+    #fde6ab url('../assets/patron-historia.svg') repeat;
+  background-size: auto, 400px 200px;
 }
 
 .historia + .countdown-section { padding-top: 0; }
