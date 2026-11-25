@@ -1029,10 +1029,18 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: rgba(246, 242, 232, 0.85);
+  color: #fff;
   font-size: 0.8rem;
+  font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
+  /* a soft dark halo so it reads over the light parts of the photo */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-indicator .chevron {
+  border-width: 0 2px 2px 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
 
 .scroll-indicator:hover {
