@@ -258,6 +258,9 @@
           rsvpAttendanceDetails.style.display = 'block';
         }
       }
+      // the playlist line under the button only makes sense for those who come
+      const hint = document.getElementById('rsvp-playlist-hint');
+      if (hint) hint.style.display = this.value === 'no_asistire' ? 'none' : '';
     });
   });
 
@@ -442,6 +445,8 @@
   function resetRsvpForm() {
     rsvpForm.reset();
     if (rsvpAttendanceDetails) rsvpAttendanceDetails.style.display = 'block';
+    const hint = document.getElementById('rsvp-playlist-hint');
+    if (hint) hint.style.display = '';
     updateBusFields();
   }
 
@@ -530,18 +535,131 @@
   }
 
   if (btnCopyIban && ibanValue) {
+    // the whole number is the button; only the line under it changes, so the number stays put
+    let copyTimer = 0;
     btnCopyIban.addEventListener('click', function () {
       const iban = ibanValue.textContent.trim();
       copyToClipboard(iban, function () {
+        const label = document.getElementById('copy-text');
         btnCopyIban.classList.add('copied');
-        btnCopyIban.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('copy.done');
-
-        setTimeout(() => {
+        if (label) label.textContent = t('copy.done');
+        clearTimeout(copyTimer);
+        copyTimer = setTimeout(function () {
           btnCopyIban.classList.remove('copied');
-          btnCopyIban.innerHTML = '<span id="copy-text" data-i18n="gifts.copy">' + t('gifts.copy') + '</span>';
+          if (label) label.innerHTML = t('gifts.copy');
         }, 2500);
       });
     });
+  }
+
+  // --- 8b. GIFT: the plane flies to the postmark and the boarding pass appears ---
+  // The plane is a button laid over the route SVG (viewBox 320 x 120). A tap flies the whole
+  // route; it can also be dragged, and wherever it is let go it finishes the trip by itself.
+  // Without this block the boarding pass is simply visible (.is-ready is what hides it).
+  const vuelo = document.getElementById('vuelo');
+  const vueloRuta = document.getElementById('vuelo-ruta');
+  const vueloPath = document.getElementById('vuelo-path');
+  const vueloAvion = document.getElementById('vuelo-avion');
+  if (vuelo && vueloRuta && vueloPath && vueloAvion && vueloPath.getTotalLength) {
+    const vueloMask = document.getElementById('vuelo-mask');
+    const vueloSaltar = document.getElementById('vuelo-saltar');
+    const embarque = document.getElementById('embarque');
+    const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const total = vueloPath.getTotalLength();
+    const START = 0.15;   // a little after the dot of Madrid, so the dot and its name show
+    let progress = START;
+    let landed = false;
+    let flight = 0;
+
+    const place = function (p) {
+      progress = Math.max(0, Math.min(1, p));
+      const at = vueloPath.getPointAtLength(total * progress);
+      const a = vueloPath.getPointAtLength(Math.max(0, total * progress - 1));
+      const b = vueloPath.getPointAtLength(Math.min(total, total * progress + 1));
+      const angle = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      vueloAvion.style.left = (at.x / 320 * 100) + '%';
+      vueloAvion.style.top = (at.y / 120 * 100) + '%';
+      vueloAvion.style.transform = 'translate(-50%, -50%) rotate(' + angle.toFixed(1) + 'deg)';
+      if (vueloMask) {
+        vueloMask.setAttribute('stroke-dasharray', total);
+        vueloMask.setAttribute('stroke-dashoffset', total * (1 - progress));
+      }
+    };
+
+    const land = function () {
+      if (landed) return;
+      landed = true;
+      cancelAnimationFrame(flight);
+      place(1);
+      vuelo.classList.remove('is-flying');
+      vuelo.classList.add('is-landed');
+      vueloAvion.setAttribute('aria-expanded', 'true');
+      vueloAvion.disabled = true;
+      if (embarque && embarque.scrollIntoView) {
+        setTimeout(function () {
+          const r = embarque.getBoundingClientRect();
+          if (r.bottom > window.innerHeight) embarque.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'end' });
+        }, calm ? 0 : 450);
+      }
+    };
+
+    const fly = function () {
+      if (landed) return;
+      if (calm) { land(); return; }
+      cancelAnimationFrame(flight);
+      vuelo.classList.add('is-flying');
+      const from = progress;
+      const duration = 600 + 1700 * (1 - from);
+      let start = 0;
+      const step = function (now) {
+        if (!start) start = now;
+        const k = Math.min(1, (now - start) / duration);
+        const eased = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        place(from + (1 - from) * eased);
+        if (k < 1) flight = requestAnimationFrame(step); else land();
+      };
+      flight = requestAnimationFrame(step);
+    };
+
+    // dragging: the finger's horizontal place on the route decides how far the plane is
+    let drag = null;
+    const xToProgress = function (clientX) {
+      const box = vueloRuta.getBoundingClientRect();
+      const x = (clientX - box.left) / box.width * 320;
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 18; i += 1) {   // the route only moves right, so a bisection finds it
+        const mid = (lo + hi) / 2;
+        if (vueloPath.getPointAtLength(total * mid).x < x) lo = mid; else hi = mid;
+      }
+      return (lo + hi) / 2;
+    };
+    vueloAvion.addEventListener('pointerdown', function (e) {
+      if (landed || (e.button != null && e.button > 0)) return;
+      cancelAnimationFrame(flight);
+      drag = { id: e.pointerId, x: e.clientX, moved: false };
+      if (vueloAvion.setPointerCapture) { try { vueloAvion.setPointerCapture(e.pointerId); } catch (err) { /* the tap still works */ } }
+    });
+    vueloAvion.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id || landed) return;
+      if (!drag.moved && Math.abs(e.clientX - drag.x) < 6) return;
+      drag.moved = true;
+      vuelo.classList.add('is-flying');
+      place(Math.max(progress, xToProgress(e.clientX)));   // only forwards
+      if (progress > 0.985) { drag = null; land(); }
+    });
+    const release = function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      fly();
+    };
+    vueloAvion.addEventListener('pointerup', release);
+    vueloAvion.addEventListener('pointercancel', release);
+    // the keyboard (and any browser without pointer events) gets a plain click
+    vueloAvion.addEventListener('click', function () { if (!drag) fly(); });
+    if (vueloSaltar) vueloSaltar.addEventListener('click', land);
+
+    place(START);
+    vuelo.classList.add('is-ready');
   }
 
   // Photos: without an album link in the HTML the section hides
@@ -597,6 +715,216 @@
         });
       }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
       revealEls.forEach(function (el) { revealWatcher.observe(el); });
+    }
+  }
+
+  // --- 10d. TORN EDGES: where two neighbouring sections differ in colour ---
+  // The lower section of each pair gets .has-edge and --edge-bg (the colour of the one above),
+  // and css/styles.css draws the torn border with them. The colours are read from the page, so
+  // sections the site editor recolours, adds, hides or moves are followed too.
+  const edgeHost = document.getElementById('main-content');
+  if (edgeHost) {
+    const solid = function (el) {
+      const c = getComputedStyle(el).backgroundColor;
+      return !c || c === 'transparent' || /,\s*0\)$/.test(c) ? '' : c;
+    };
+    const markEdges = function () {
+      const pageBg = solid(document.body) || solid(document.documentElement);
+      // a pale green band cannot carry the light text the editor gives to green sections:
+      // those sections get .is-light-band, which turns that text dark (css/styles.css)
+      const probe = document.createElement('i');
+      probe.style.cssText = 'position:absolute;visibility:hidden;background:var(--olive)';
+      document.body.appendChild(probe);
+      const green = getComputedStyle(probe).backgroundColor;
+      document.body.removeChild(probe);
+      const rgb = (green.match(/[\d.]+/g) || []).map(Number);
+      const paleGreen = rgb.length >= 3 && (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255 > 0.8;
+      let prev = '';
+      let prevEl = null;
+      let n = 0;
+      // in the order they are seen: the editor moves sections with the CSS `order` property
+      const seen = Array.prototype.map.call(edgeHost.children, function (el, i) {
+        return { el: el, i: i, order: parseInt(getComputedStyle(el).order, 10) || 0 };
+      }).sort(function (a, b) { return a.order - b.order || a.i - b.i; });
+      seen.forEach(function (item) {
+        const el = item.el;
+        if (!/^(SECTION|FOOTER)$/.test(el.tagName) || !el.offsetHeight) return;
+        const bg = solid(el) || pageBg;
+        const lightBand = paleGreen && solid(el) === green;
+        if (el.classList.contains('is-light-band') !== lightBand) el.classList.toggle('is-light-band', lightBand);
+        const torn = !!prev && bg !== prev;
+        if (el.classList.contains('has-edge') !== torn) el.classList.toggle('has-edge', torn);
+        if (torn) { if (el.style.getPropertyValue('--edge-bg') !== prev) el.style.setProperty('--edge-bg', prev); }
+        else if (el.style.getPropertyValue('--edge-bg')) el.style.removeProperty('--edge-bg');
+        // who is above, for the sections that tear their own bottom edge (a picture as background)
+        const from = torn && prevEl && prevEl.id ? prevEl.id : '';
+        if ((el.getAttribute('data-edge-from') || '') !== from) {
+          if (from) el.setAttribute('data-edge-from', from); else el.removeAttribute('data-edge-from');
+        }
+        if (prevEl && prevEl.classList.contains('is-torn-below') !== torn) prevEl.classList.toggle('is-torn-below', torn);
+        // each one over the next: sections with the same z-index paint in the order they are seen
+        if (prevEl && torn) {
+          const z = String(seen.length + 1 - n);
+          if (prevEl.style.getPropertyValue('--edge-z') !== z) prevEl.style.setProperty('--edge-z', z);
+        }
+        n += 1;
+        prev = bg;
+        prevEl = el;
+      });
+      if (prevEl && prevEl.classList.contains('is-torn-below')) prevEl.classList.remove('is-torn-below');
+    };
+    let edgeFrame = 0;
+    const edgesSoon = function () {
+      if (edgeFrame) return;
+      edgeFrame = requestAnimationFrame(function () { edgeFrame = 0; markEdges(); });
+    };
+    markEdges();
+    window.addEventListener('load', markEdges);
+    if (window.MutationObserver) {
+      // the editor writes colours as a <style> in the head or as tokens on <html>, and moves sections
+      const mo = new MutationObserver(edgesSoon);
+      mo.observe(document.head, { childList: true, subtree: true, characterData: true });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+      mo.observe(edgeHost, { childList: true, attributes: true, attributeFilter: ['class', 'hidden'] , subtree: false });
+    }
+  }
+
+  // --- 10c. OUR STORY: the three prints turn over ---
+  // Each .hfoto-card has the photo on the front and its text on the back. A tap moves the card to
+  // a fixed layer over the page (so no section can clip it or paint over it), where it flies to
+  // the middle of the screen, grows and turns over. There, each tap on the card turns it again
+  // (text, photo, text…); a tap outside, Esc or scrolling away sends it back to its slot. Until the guest opens one, the prints take turns to swing
+  // round and show their back for a moment, as the hint that there is something behind.
+  const album = document.getElementById('historia-album');
+  const albumCards = album ? Array.prototype.slice.call(album.querySelectorAll('.hfoto-card')) : [];
+  if (album && albumCards.length) {
+    const FLIGHT_MS = lessMotion ? 0 : 850;
+    let stage = null, stageHint = null, openTurn = 0, openCard = null, openSlot = null, openScrollY = 0, busy = false;
+    let everOpened = false, peekTimer = null, peekTurn = 0, albumInView = false;
+
+    // where the card sits in its slot, written as a transform of the card on the stage
+    // `turn` is the angle the card has already turned on the stage, so it never unwinds
+    const slotTransform = function (slot, w, turn) {
+      const r = slot.getBoundingClientRect();
+      const dx = r.left + r.width / 2 - window.innerWidth / 2;
+      const dy = r.top + r.height / 2 - window.innerHeight / 2;
+      const tilt = getComputedStyle(slot).getPropertyValue('--tilt').trim() || '0deg';
+      return 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + (r.width / w).toFixed(4) +
+        ') rotateY(' + turn + 'deg) rotate(' + tilt + ')';
+    };
+
+    const stopPeeks = function () {
+      clearTimeout(peekTimer);
+      peekTimer = null;
+      albumCards.forEach(function (c) { c.classList.remove('is-peeking'); });
+    };
+
+    const peekNext = function () {
+      peekTimer = null;
+      if (everOpened || !albumInView || openCard) return;
+      const c = albumCards[peekTurn % albumCards.length];
+      peekTurn += 1;
+      c.classList.remove('is-peeking');
+      void c.offsetWidth;                 // restart the animation
+      c.classList.add('is-peeking');
+      // the first round goes one after the other; after that, one every few seconds
+      peekTimer = setTimeout(peekNext, peekTurn < albumCards.length ? 450 : 4200);
+    };
+
+    const closeAlbumCard = function () {
+      if (!openCard || busy) return;
+      busy = true;
+      const card = openCard, slot = openSlot;
+      // back to the photo side by the shortest way: the nearest full turn
+      card.style.transform = slotTransform(slot, card.offsetWidth, Math.round(openTurn / 360) * 360);
+      stage.classList.remove('is-on');
+      card.setAttribute('aria-expanded', 'false');
+      setTimeout(function () {
+        const hadFocus = document.activeElement === card;
+        card.style.transition = 'none';
+        ['left', 'top', 'width', 'transform'].forEach(function (k) { card.style[k] = ''; });
+        slot.appendChild(card);
+        void card.offsetWidth;
+        card.style.transition = '';
+        if (hadFocus) card.focus({ preventScroll: true });
+        openCard = openSlot = null;
+        busy = false;
+      }, FLIGHT_MS);
+    };
+
+    const openAlbumCard = function (card) {
+      if (openCard || busy) return;
+      const slot = card.parentNode;
+      if (!slot || !slot.classList.contains('hfoto')) return;
+      everOpened = true;
+      stopPeeks();
+      if (!stage) {
+        stage = document.createElement('div');
+        stage.className = 'hfoto-stage';
+        document.body.appendChild(stage);
+        stageHint = document.createElement('p');
+        stageHint.className = 'hfoto-stage-hint';
+        stage.appendChild(stageHint);
+        stage.addEventListener('click', closeAlbumCard);
+      }
+      busy = true;
+      const r = slot.getBoundingClientRect();
+      const ratio = r.height / r.width;
+      const w = Math.min(window.innerWidth * 0.84, 400, window.innerHeight * 0.8 / ratio);
+      const h = w * ratio;
+      card.style.transition = 'none';
+      card.style.left = ((window.innerWidth - w) / 2).toFixed(1) + 'px';
+      card.style.top = ((window.innerHeight - h) / 2).toFixed(1) + 'px';
+      card.style.width = w.toFixed(1) + 'px';
+      card.style.transform = slotTransform(slot, w, 0);
+      stageHint.textContent = t('story.stageHint');
+      stage.insertBefore(card, stageHint);
+      void card.offsetWidth;
+      card.style.transition = '';
+      openTurn = 180;
+      card.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg) rotate(0deg)';
+      stage.classList.add('is-on');
+      card.setAttribute('aria-expanded', 'true');
+      card.focus({ preventScroll: true });
+      openCard = card;
+      openSlot = slot;
+      openScrollY = window.scrollY;
+      setTimeout(function () { busy = false; }, FLIGHT_MS);
+    };
+
+    // on the stage: half a turn more, always the same way round
+    const turnAlbumCard = function () {
+      if (!openCard || busy) return;
+      openTurn += 180;
+      openCard.style.transform = 'translate(0px, 0px) scale(1) rotateY(' + openTurn + 'deg) rotate(0deg)';
+    };
+
+    albumCards.forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        e.stopPropagation();                                         // on the stage, only a tap outside the card closes it
+        if (card.querySelector('[contenteditable="true"]')) return;   // a text being edited in the site editor: the card stays as it is
+        if (openCard === card) turnAlbumCard(); else openAlbumCard(card);
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.target !== card || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        if (openCard === card) turnAlbumCard(); else openAlbumCard(card);
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAlbumCard();
+    });
+    window.addEventListener('scroll', function () {
+      if (openCard && Math.abs(window.scrollY - openScrollY) > 70) closeAlbumCard();
+    }, { passive: true });
+    window.addEventListener('resize', closeAlbumCard);
+
+    if ('IntersectionObserver' in window && !lessMotion) {
+      new IntersectionObserver(function (entries) {
+        albumInView = entries[0].isIntersecting;
+        if (albumInView && !everOpened && !peekTimer) peekTimer = setTimeout(peekNext, 350);
+        if (!albumInView) stopPeeks();
+      }, { threshold: 0, rootMargin: '0px 0px -22% 0px' }).observe(album);   // as soon as the top of the prints is well in view
     }
   }
 

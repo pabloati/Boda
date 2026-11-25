@@ -20,7 +20,7 @@
   <!-- Google Fonts: Cormorant Garamond (text), Allison (script headings), Homemade Apple (handwritten notes) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Allison&family=Homemade+Apple&display=swap" rel="stylesheet">
 
   <!-- Tab icon: two gold rings. SVG for modern browsers, PNGs for the rest and for iOS home screens -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
@@ -28,7 +28,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Main Stylesheet. ?v= busts browser caches after each deploy: bump it whenever css/js change -->
-  <link rel="stylesheet" href="css/styles.css?v=20261118g">
+  <link rel="stylesheet" href="css/styles.css?v=202611270900-merge">
+  <link rel="stylesheet" href="css/editor.css?v=202611270900-merge">
 
   <!-- The envelope is the first thing on screen, so fetch its two images early -->
   <link rel="preload" as="image" href="assets/sobre.jpg?v=20261110v">
@@ -41,14 +42,14 @@
     assets/hero-mobile.jpg    the couple's own photo, Granada (phones)
     assets/eucalyptus.jpg     Iain Robertson    https://unsplash.com/photos/whLbVUIw7JE
     assets/olive.jpg          Sixteen Miles Out https://unsplash.com/photos/IVCI2rmcJE8
-    assets/foto-envio.jpg     the couple's own photo with the "No bitches?" meme caption
+    assets/foto-envio.jpg     the couple's own photo (shown on the RSVP sending card)
     assets/flores/lirio-rosa.png  Lilium speciosum, M. A. Burnett, Plantae utiliores (1842-50), Biodiversity Heritage Library, CC BY 2.0 https://commons.wikimedia.org/wiki/File:BD_n197_w1150_(37940602742).jpg
     assets/flores/*.png (rest)  19th-century botanical plates, public domain (sources in docs/flores/README.md)
   -->
 
   <!-- Background audio: the couple's song, starts on the first tap (the seal) -->
   <audio id="wedding-audio" loop preload="auto">
-    <source src="assets/Para_quedarte_acustico.mp3" type="audio/mpeg">
+    <source src="assets/Fuego_acustico.mp3" type="audio/mpeg">
   </audio>
 
   <!-- ======================================================== -->
@@ -115,7 +116,7 @@
   <div id="rsvp-modal" class="rsvp-modal" role="dialog" aria-modal="true" aria-labelledby="rsvp-modal-title" hidden>
     <div class="rsvp-modal-card">
       <div class="rsvp-modal-photo">
-        <img src="assets/foto-envio.jpg" alt="" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+        <img src="assets/foto-envio.jpg?v=20261120a" alt="" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
       </div>
       <p id="rsvp-modal-title" class="rsvp-modal-title"></p>
       <div id="rsvp-modal-text" class="rsvp-modal-text" aria-live="polite"></div>
@@ -149,7 +150,7 @@
     <header class="hero-section" id="hero">
       <div class="hero-stage">
         <picture class="hero-photo" aria-hidden="true">
-          <source media="(max-width: 768px), (orientation: portrait)" srcset="assets/hero-mobile.jpg">
+          <source media="(max-width: 768px), (orientation: portrait)" srcset="assets/hero-mobile.jpg?v=20261120a">
           <img src="assets/hero-desktop.jpg" alt="" loading="eager" decoding="async">
         </picture>
 
@@ -172,18 +173,76 @@
       </div>
     </header>
 
-    <!-- INTRO BAND (the couple's own words go here; the quote fills it meanwhile) -->
-    <section class="intro-band" id="intro">
-      <div class="container narrow text-center">
-        <p class="intro-text" data-i18n="intro.text">&laquo;En el amor no hay temor, sino que el amor perfecto echa fuera el temor.&raquo;</p>
-        <p class="intro-ref" data-i18n="intro.ref">1 Juan 4:18</p>
+    <!-- OUR STORY: a short welcome and three prints, one per stage (Madrid, Copenhague, Valencia).
+         Each print is a card with two faces: the photo (assets/historia-N.jpg, a dashed frame until
+         the file exists) and, on the back, its text. A tap lifts it to the middle of the screen and
+         turns it over (js/script.js, 10c). Then the countdown. -->
+    <section class="historia" id="intro">
+      <div class="container narrow">
+        <div class="text-center">
+          <h2 class="h-script" data-i18n="story.title">Nuestra historia</h2>
+        </div>
+
+        <!-- the hint, then the prints -->
+        <p class="historia-hint reveal" data-i18n="story.hint">Toca una foto para darle la vuelta</p>
+
+        <div class="historia-album reveal" id="historia-album">
+          <!-- the postcard from the envelope (assets/tarjeta.jpg), on top: the four prints form a diamond -->
+          <div class="hfoto">
+            <div class="hfoto-card hfoto-card--postal" role="button" tabindex="0" aria-expanded="false" aria-label="La postal: dar la vuelta a la foto" data-i18n-aria="story.0.aria">
+              <div class="hfoto-face hfoto-front" data-slot="tarjeta.jpg">
+                <img src="assets/tarjeta.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+              </div>
+              <div class="hfoto-face hfoto-back">
+                <p class="hfoto-city" data-i18n="story.0.cap">La postal</p>
+                <p class="hfoto-text" data-i18n="story.0.text">En esta postal Pablo escribió las palabras con las que me pediría matrimonio el primer día que nos mudamos juntos.<br>Nos conocimos en Madrid hace 8-9 años. Fue gracias a una Asociación de divulgación científica internacional con gran interés en viajar, tener buenos amigos y experimentar los efectos del alcohol en el cuerpo de los jóvenes, entre otras cosas serias. Teníamos buenos gustos en común... solo nos quedó encontrarnos.<br>En cada evento, como imanes, siempre acabábamos al lado del otro.<br>Pablo se fue de Erasmus y la vida de ambos continuó por su camino hasta que...</p>
+              </div>
+            </div>
+          </div>
+          <div class="hfoto">
+            <div class="hfoto-card" role="button" tabindex="0" aria-expanded="false" aria-label="Madrid: dar la vuelta a la foto" data-i18n-aria="story.1.aria">
+              <div class="hfoto-face hfoto-front" data-slot="historia-1.jpg">
+                <img src="assets/historia-1.jpg?v=20261120a" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+                <p class="hfoto-cap"><span data-i18n="story.1.cap">Madrid</span></p>
+              </div>
+              <div class="hfoto-face hfoto-back">
+                <p class="hfoto-city" data-i18n="story.1.cap">Madrid</p>
+                <p class="hfoto-text" data-i18n="story.1.text">Todo resurgió con un mensaje de Pablo. Esta vez por Insta, no en una postal. "Hola, qué tal?". Tuvimos una cita en Avda. de América. Mª Ángeles saliendo de prácticas del máster. Pablo con su TFG. Mascarillas por el COVID... Lo que en principio iba a ser una cita corta por el toque de queda, terminó en muchas noches llegando tarde por quedar y vernos. Tan claro lo teníamos, que en un mes empezamos ya a ser novios. #AntiModernes</p>
+              </div>
+            </div>
+          </div>
+          <div class="hfoto">
+            <div class="hfoto-card" role="button" tabindex="0" aria-expanded="false" aria-label="Copenhague: dar la vuelta a la foto" data-i18n-aria="story.2.aria">
+              <div class="hfoto-face hfoto-front" data-slot="historia-2.jpg">
+                <img src="assets/historia-2.jpg?v=20261120a" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+                <p class="hfoto-cap"><span data-i18n="story.2.cap">Copenhague</span></p>
+              </div>
+              <div class="hfoto-face hfoto-back">
+                <p class="hfoto-city" data-i18n="story.2.cap">Copenhague</p>
+                <p class="hfoto-text" data-i18n="story.2.text">Pablo se fue a hacer un máster en Cophenague que luego se alargó por trabajo. Fueron casi 4 años de amor, aviones, viajes, cariño, complicidad y fuerza de voluntad. Sabiendo que merecía la pena cada esfuerzo. <br>Gracias a todas las personas que nos habéis acompañado en esos años y a Pablo padre, que procuró que gracias a Iberia no fuésemos dos estudiantes en la ruina con tanto viaje.</p>
+              </div>
+            </div>
+          </div>
+          <div class="hfoto">
+            <div class="hfoto-card" role="button" tabindex="0" aria-expanded="false" aria-label="Valencia: dar la vuelta a la foto" data-i18n-aria="story.3.aria">
+              <div class="hfoto-face hfoto-front" data-slot="historia-3.jpg">
+                <img src="assets/historia-3.jpg?v=20261120a" alt="" loading="lazy" onerror="this.parentNode.classList.add('is-empty'); this.remove()">
+                <p class="hfoto-cap"><span data-i18n="story.3.cap">Valencia</span></p>
+              </div>
+              <div class="hfoto-face hfoto-back">
+                <p class="hfoto-city" data-i18n="story.3.cap">Valencia</p>
+                <p class="hfoto-text" data-i18n="story.3.text">Siempre habíamos querido vivir junto al mar, como buenos Madrileños. Cuando a Pablo le salió la oportunidad de volver a España pero en Valencia, nos pareció un avance. Durante un año, nos convertimos en Cowboys de la A3, todos los fines de semana para arriba y para abajo. Pero después de los aviones, el tren o el coche no parecían tanto. Al cabo de un año, Mª Ángeles decidió venirse, sin esperarse la sorpresa que Valencia tenía preparada para ella...</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- COUNTDOWN -->
-    <section class="section countdown-section" id="countdown">
+    <section class="section band-sage countdown-section" id="countdown">
       <div class="container narrow text-center">
-        <h2 class="h-script" data-i18n="countdown.title">Faltan muy pocos días</h2>
+        <h2 class="h-script" data-i18n="countdown.title">Faltan  pocos días</h2>
 
         <div class="countdown-grid" id="countdown-clock" data-target-date="2027-03-13T12:30:00">
           <div class="countdown-item">
@@ -217,16 +276,16 @@
           <article class="location">
             <!-- Drawing of the church: drop the file in assets/ with this name and it appears -->
             <img class="location-art" src="assets/dibujo-iglesia.png?v=20261105b" alt="" onerror="this.remove()">
-            <p class="hand-label" data-i18n="loc.ceremony">Ceremonia · 12:30</p>
-            <h3 class="location-name">Parroquia de San José</h3>
+            <p class="hand-label" data-i18n="loc.ceremony">Ceremonia</p>
+            <h3 class="location-name">Parroquia de <span class="nowrap">San José</span></h3>
             <p class="location-address">C. Alcalá, 43<br>Madrid</p>
             <a href="https://share.google/moPjthgGraOJOiUeF" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver en el mapa</a>
           </article>
 
           <article class="location">
             <img class="location-art location-art-cover" src="assets/dibujo-convite.png?v=20261105b" alt="" onerror="this.remove()">
-            <p class="hand-label" data-i18n="loc.reception">Convite · 14:30</p>
-            <h3 class="location-name">Complejo La Cigüeña</h3>
+            <p class="hand-label" data-i18n="loc.reception">Convite</p>
+            <h3 class="location-name">Complejo <span class="nowrap">La Cigüeña</span></h3>
             <p class="location-address">Ctra. Puente de Arganda a Chinchón, km&nbsp;2<br>Arganda del Rey</p>
             <a href="https://share.google/xqutfRoSoisIk9tlh" target="_blank" rel="noopener noreferrer" class="text-link" data-i18n="loc.map">Ver en el mapa</a>
           </article>
@@ -261,7 +320,7 @@
             <div class="ruta-text">
               <span class="ruta-time">14:30</span>
               <h3 class="ruta-title" data-i18n="tl.2.title">Convite</h3>
-              <p class="ruta-desc" data-i18n="tl.2.desc">Un buen cóctel os espera.</p>
+              <p class="ruta-desc" data-i18n="tl.2.desc">Compartimos la mesa en este día tan especial</p>
             </div>
           </li>
           <li class="ruta-stop">
@@ -271,7 +330,7 @@
             <div class="ruta-text">
               <span class="ruta-time">19:00</span>
               <h3 class="ruta-title" data-i18n="tl.3.title">Fiesta</h3>
-              <p class="ruta-desc" data-i18n="tl.3.desc">Empieza lo bueno.</p>
+              <p class="ruta-desc" data-i18n="tl.3.desc">¡¡A darlo todo!!</p>
             </div>
           </li>
           <li class="ruta-stop">
@@ -295,13 +354,13 @@
       <div class="container">
         <h2 class="h-script text-center" data-i18n="map.title">El mapa</h2>
         <div class="mapa-shell">
+          <!-- above the map: the whole-day view and the hint (js/mapa.js fills #mapa-hint) -->
+          <div class="mapa-views mapa-views-top">
+            <button type="button" class="link-button small is-on" data-mapa="todo" data-i18n="map.view.all">Todo el día</button>
+          </div>
+          <p class="mapa-hint" id="mapa-hint"></p>
           <div class="mapa-frame">
-            <div class="mapa-canvas" id="mapa-canvas" data-src="assets/mapa.svg?v=20261118g"></div>
-            <!-- the frame's four corner ornaments (assets/marco-esquina.png, mirrored; they let taps through) -->
-            <span class="mapa-corner mapa-corner-tl" aria-hidden="true"></span>
-            <span class="mapa-corner mapa-corner-tr" aria-hidden="true"></span>
-            <span class="mapa-corner mapa-corner-bl" aria-hidden="true"></span>
-            <span class="mapa-corner mapa-corner-br" aria-hidden="true"></span>
+            <div class="mapa-canvas" id="mapa-canvas" data-src="assets/mapa.svg?v=20261120a"></div>
             <div class="mapa-plaque">
               <button type="button" class="mapa-tool" data-mapa="out" aria-label="Alejar" data-i18n-aria="map.out">&minus;</button>
               <button type="button" class="mapa-expand" id="mapa-expand" data-mapa="expand">Ampliar</button>
@@ -309,7 +368,6 @@
             </div>
           </div>
           <div class="mapa-views">
-            <button type="button" class="link-button small is-on" data-mapa="todo" data-i18n="map.view.all">Todo el día</button>
             <button type="button" class="link-button small" data-mapa="iglesia" data-i18n="map.view.church">Iglesia</button>
             <button type="button" class="link-button small" data-mapa="salida" data-i18n="map.view.start">Salida</button>
             <button type="button" class="link-button small" data-mapa="convite" data-i18n="map.view.venue">La Cigüeña</button>
@@ -329,7 +387,7 @@
     <section class="section band-olive rsvp-section" id="rsvp">
       <div class="container narrow">
         <h2 class="h-script light text-center" data-i18n="rsvp.title">¿Nos acompañas?</h2>
-        <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 1 de febrero de 2027. Una respuesta por persona.</p>
+        <p class="section-lead text-center" data-i18n="rsvp.lead">Confirma antes del 13 de enero de 2027. Una respuesta por persona.</p>
 
         <form id="rsvp-form" class="rsvp-form paper-panel" novalidate>
           <div class="form-group">
@@ -406,8 +464,6 @@
                 </select>
               </div>
             </div>
-
-            <p class="form-note rsvp-playlist-hint" data-i18n="rsvp.playlistHint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
           </div>
 
           <div class="form-group">
@@ -424,6 +480,9 @@
             <button type="submit" id="btn-submit-direct" class="btn-primary" data-i18n="rsvp.submit">Confirmar</button>
           </div>
 
+          <!-- after the button, so it does not take anyone away from the form before sending it -->
+          <p id="rsvp-playlist-hint" class="form-note rsvp-playlist-hint" data-i18n="rsvp.playlistHint">¿Una canción que no puede faltar? Pídela o vótala en <a href="#playlist">la playlist</a>.</p>
+
           <!-- Contact for questions only (the form cannot be sent by WhatsApp).
                Links are built by js/script.js from whatsappContacts in js/rsvp-config.js. -->
           <div id="rsvp-contact" class="rsvp-contact" style="display:none;">
@@ -432,24 +491,6 @@
           </div>
 
         </form>
-      </div>
-    </section>
-
-    <!-- GIFTS -->
-    <section class="section gifts-section" id="gifts">
-      <div class="container narrow text-center">
-        <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
-        <p class="section-lead" data-i18n="gifts.lead">Tu presencia es el mejor regalo.<br>Si además quieres darnos un sobrecito o un detalle:</p>
-
-        <details class="iban-details">
-          <summary class="text-link" data-i18n="gifts.showIban">Ver número de cuenta</summary>
-          <div class="iban-box">
-            <p class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</p>
-            <button type="button" id="btn-copy-iban" class="link-button small" aria-label="Copiar el IBAN" data-i18n-aria="gifts.copyAria"><span id="copy-text" data-i18n="gifts.copy">Copiar</span></button>
-            <p class="iban-meta" data-i18n="gifts.meta">Pablo Atienza &amp; María de los Ángeles Quijano<br>Concepto: Boda Mª Ángeles y Pablo + vuestro nombre</p>
-          </div>
-        </details>
-
       </div>
     </section>
 
@@ -499,6 +540,81 @@
       </div>
     </section>
 
+    <!-- GIFTS -->
+    <section class="section band-sage gifts-section" id="gifts">
+      <div class="container narrow text-center">
+        <h2 class="h-script" data-i18n="gifts.title">Regalo</h2>
+        <p class="section-lead" data-i18n="gifts.lead">Ojalá llevaros con nosotros en el avión de la luna de miel, pero ni en uno de Iberia cabemos todos. Si quieres ayudarnos de alguna manera...</p>
+
+        <!-- The flight to the honeymoon: the plane (tap or drag) follows the dotted route to the
+             postmark and the boarding pass with the bank account appears. Without JavaScript
+             the pass is simply there. Route geometry: viewBox 320 x 120, read by js/script.js (8b). -->
+        <div class="vuelo" id="vuelo">
+          <div class="vuelo-ruta" id="vuelo-ruta">
+            <svg class="vuelo-svg" viewBox="0 0 320 120" aria-hidden="true" focusable="false">
+              <defs>
+                <!-- the plane flies to the centre of the postmark, but the dotted line stops at its rim -->
+                <mask id="vuelo-fuera" maskUnits="userSpaceOnUse" x="0" y="-20" width="320" height="160">
+                  <rect x="0" y="-20" width="320" height="160" fill="#fff"/>
+                  <circle cx="270" cy="62" r="44.8" fill="#000"/>
+                </mask>
+                <mask id="vuelo-hecho" maskUnits="userSpaceOnUse" x="0" y="-20" width="320" height="160">
+                  <path id="vuelo-mask" d="M30 98 Q140 -24 270 62" fill="none" stroke="#fff" stroke-width="8"/>
+                </mask>
+                <path id="sello-arco-1" d="M240.5 62 A29.5 29.5 0 0 1 299.5 62"/>
+                <path id="sello-arco-2" d="M232.5 62 A37.5 37.5 0 0 0 307.5 62"/>
+              </defs>
+              <g mask="url(#vuelo-fuera)">
+                <path class="vuelo-linea" id="vuelo-path" d="M30 98 Q140 -24 270 62"/>
+                <path class="vuelo-linea is-done" d="M30 98 Q140 -24 270 62" mask="url(#vuelo-hecho)"/>
+              </g>
+              <circle class="vuelo-punto" cx="30" cy="98" r="3"/>
+              <text class="vuelo-ciudad" x="32" y="116" text-anchor="middle" data-i18n="gifts.from">Madrid</text>
+              <g class="vuelo-sello" id="vuelo-sello">
+                <circle cx="270" cy="62" r="44"/>
+                <circle cx="270" cy="62" r="41.2" class="fino"/>
+                <circle cx="270" cy="62" r="25" class="fino"/>
+                <text class="sello-texto"><textPath href="#sello-arco-1" startOffset="50%" text-anchor="middle" data-i18n="gifts.to">Tailandia</textPath></text>
+                <text class="sello-texto sello-texto-2"><textPath href="#sello-arco-2" startOffset="50%" text-anchor="middle" data-i18n="gifts.trip">Luna de miel</textPath></text>
+                <path class="fino" d="M254 55 q4 -4 8 0 t8 0 t8 0 t8 0 M254 62 q4 -4 8 0 t8 0 t8 0 t8 0 M254 69 q4 -4 8 0 t8 0 t8 0 t8 0"/>
+              </g>
+            </svg>
+            <button type="button" class="vuelo-avion" id="vuelo-avion" aria-controls="embarque" aria-expanded="false" aria-label="Despegar hacia Tailandia para ver el número de cuenta" data-i18n-aria="gifts.planeAria">
+              <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <path d="M38 28.5 L24 7 L18.5 7 L27 28.5 Z M38 35.5 L24 57 L18.5 57 L27 35.5 Z"/>
+                <path d="M14.5 28.5 L8 18 L4.5 18 L8 28.5 Z M14.5 35.5 L8 46 L4.5 46 L8 35.5 Z"/>
+                <path d="M26 16.5 h6.5 a1.6 1.6 0 0 1 0 3.2 h-5.2 Z M26 47.5 h6.5 a1.6 1.6 0 0 0 0 -3.2 h-5.2 Z"/>
+                <path d="M5 32 C5 29.6 9 28.5 15 28.5 L46 28.5 C53 28.5 60 30.4 60 32 C60 33.6 53 35.5 46 35.5 L15 35.5 C9 35.5 5 34.4 5 32 Z"/>
+                <path class="fino" d="M16 32 H46" stroke-dasharray="1.4 2.6"/>
+                <path class="fino" d="M51 30.2 q3.5 0.4 5 1.8 q-1.5 1.4 -5 1.8"/>
+              </svg>
+            </button>
+          </div>
+          <p class="hand-label vuelo-hint" data-i18n="gifts.hint">Toca el avión para despegar</p>
+
+          <div class="embarque paper-panel" id="embarque">
+            <div class="embarque-cuerpo">
+              <p class="embarque-cabecera"><span data-i18n="gifts.pass">Tarjeta de embarque</span><span data-i18n="gifts.trip">Luna de miel</span></p>
+              <p class="embarque-trayecto"><span data-i18n="gifts.from">Madrid</span><i aria-hidden="true"></i><span data-i18n="gifts.to">Tailandia</span></p>
+              <dl class="embarque-datos">
+                <div><dt data-i18n="gifts.passengers">Pasajeros</dt><dd>Pablo Atienza &amp; María de los Ángeles Quijano</dd></div>              </dl>
+            </div>
+            <div class="embarque-resguardo">
+              <p class="embarque-etiqueta" data-i18n="gifts.account">Número de cuenta</p>
+              <button type="button" id="btn-copy-iban" class="embarque-iban" aria-label="Copiar el IBAN" data-i18n-aria="gifts.copyAria">
+                <span class="iban-code" id="iban-value">ES00 0000 0000 0000 0000 0000</span>
+                <span class="embarque-copiar" id="copy-text" aria-live="polite" data-i18n="gifts.copy">Toca el número para copiarlo</span>
+              </button>
+              <div class="embarque-barras" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <p class="vuelo-saltar"><button type="button" class="text-link" id="vuelo-saltar" data-i18n="gifts.showIban">Ver número de cuenta</button></p>
+        </div>
+
+      </div>
+    </section>
+
     <!-- PHOTOS: the shared Google Photos album where guests upload their pictures.
          The link is the href below; js/script.js hides the section if it is ever emptied. -->
     <section class="section social-section" id="social">
@@ -509,9 +625,21 @@
       </div>
     </section>
 
+    <!-- EXTRA 1 (added with the site editor) -->
+    <section class="section extra-section" id="extra-1">
+      <div class="container narrow text-center">
+        <h2 class="h-script" data-i18n="extra1.title">Frase</h2>
+        <p class="section-lead" data-i18n="extra1.text">Por encima de todo esto, revestíos de amor,<br>que es el vínculo de la perfección.<br><span class="frase-cita">- Colosenses 3:14 -</span></p>
+      </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="footer-section band-olive">
       <div class="container narrow text-center">
+        <!-- The farewell: the couple's dance photo (the same as the desktop hero) fills the band,
+             with the sentence and the date over its lower part. The postcard that was tried
+             here is kept in docs/despedida-variante-postal.html. -->
+        <img class="footer-photo" src="assets/hero-desktop.jpg" alt="" loading="lazy" decoding="async">
         <p class="footer-title h-script light" data-i18n="footer.title">Gracias por ser parte de nuestras vidas</p>
         <p class="footer-date">13 · 03 · 2027</p>
       </div>
@@ -519,13 +647,13 @@
 
   </main>
 
-  <script src="js/i18n.js?v=20261118g"></script>
-  <script src="js/rsvp-config.js?v=20261118g"></script>
-  <script src="js/script.js?v=20261118g"></script>
-  <script src="js/playlist-config.js?v=20261118g"></script>
-  <script src="js/playlist.js?v=20261118g"></script>
-  <script src="js/mapa.js?v=20261118g"></script>
-  <script src="js/flores-layout.js?v=20261118g"></script>
-  <script src="js/flores.js?v=20261118g"></script>
+  <script src="js/i18n.js?v=202611270900-merge"></script>
+  <script src="js/rsvp-config.js?v=202611270900-merge"></script>
+  <script src="js/script.js?v=202611270900-merge"></script>
+  <script src="js/playlist-config.js?v=202611270900-merge"></script>
+  <script src="js/playlist.js?v=202611270900-merge"></script>
+  <script src="js/mapa.js?v=202611270900-merge"></script>
+  <script src="js/flores-layout.js?v=202611270900-merge"></script>
+  <script src="js/flores.js?v=202611270900-merge"></script>
 </body>
 </html>

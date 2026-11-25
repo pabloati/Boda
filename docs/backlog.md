@@ -9,6 +9,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 | # | What | How to deliver it | Then Claude… |
 | --- | --- | --- | --- |
 | 0b | **Decide what happens with `cambio_meri`** (Mª Ángeles's saves from the editor: flowers placed, colours, one text; 2026-11-10, not published). It was made before the new photos. | Chat: publish, keep working on it, or drop it. | merges or brings it up to date with `main` |
+| 0 | **Our story** (branch `introduccion`, 2026-11-18): the welcome (two sentences), the text behind each of the three prints (Madrid, Copenhague, Valencia; two or three sentences each), The welcome and the Madrid text are in (2026-11-19); Copenhague and Valencia are still placeholders in brackets. The three photos are in as a first trial (2026-11-19): confirm them or pick others. | Texts in the editor (Textos tab) or chat; other photos by chat. | writes the English versions, merges |
 | 1 | **Short texts** for each section (welcome line, intro band, timeline lines, RSVP, gift, playlist, photos, farewell) | Fill the "Textos cortos" table at the end of the data doc (link in `NOTES.local.md`). Empty rows = nothing shown. | applies them, writes the English versions, publishes |
 | 2 | **Flowers**: choose the botanical plates and place them | The editor's Flores tab (`docs/editor.md`), save on a branch. The layout on `main` is still empty. | checks desktop, cleans the cherry / apple / jonquilla cut-outs, merges |
 | 3 | **IBAN** | Write it in the data doc (Regalos table). The site shows `ES00 0000…` until then. | updates the gift section |
@@ -31,6 +32,7 @@ This is the couple's to-do list. Tick or delete a row when it is delivered.
 - **Preview of the shared album in the Fotos section** (now only a link, decided 2026-11-17). Google Photos has no embed and no official way to read a shared album, so the options are:
   - *Fixed strip*: a few photos the couple chooses, saved in `assets/`, refreshed by hand. Stable, not live.
   - *Live strip*: a small separate Google Apps Script (not the RSVP one) reads the album's public share page and returns the latest ~6 thumbnail addresses; the site shows them and each opens the album. Unofficial, can break without notice, so it must fall back to the link alone. Not tested against the real album yet. A scheduled GitHub job writing the list to the repo is the alternative, at the cost of one commit per change.
+  - *Empty polaroids, no Google involved* (idea of 2026-11-25, not decided): a small pile of empty prints in the style of «Nuestra historia», with a handwritten «tu foto aquí»; a tap fans them out and opens the album. On wide screens a QR code of the album next to it, since the photos are on the phone (`_dev/qr.js` already draws QR codes). After the wedding the empty prints can give way to the fixed strip.
   - To weigh first: guests' photos would show on a public site, and the album is empty until the wedding (seed it or keep the strip hidden until there are enough photos).
 
 ## D. Before sending the invitations

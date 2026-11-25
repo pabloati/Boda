@@ -141,6 +141,82 @@ button {
   color: var(--cream-text);
 }
 
+.band-sage {
+  background: var(--olive-soft);
+}
+
+/* ---------- Paper and torn edges ----------
+   Every section is a sheet of real paper: assets/papel.webp is a photo of recycled paper turned
+   into a see-through tile (only the shadows of its grain and flecks, made with
+   _dev/papel_build.py), laid over whatever colour the section has. !important keeps it when a
+   later rule, like the ones the site editor writes, sets the colour with the `background`
+   shorthand. Cards, fields and the map sit on top and stay clean.
+   Two sections keep a background of their own instead: «Nuestra historia» (.historia, the
+   sandstone strata) and, on phones, «Frase» (#extra-1, the sand of the hero photo). */
+.section,
+.footer-section,
+.has-edge::before {
+  background-image: url('../assets/papel.webp?v=20261124b') !important;
+  background-size: 320px 320px !important;
+  background-repeat: repeat !important;
+}
+
+/* Where two sections of different colour meet, the upper one ends in a torn edge that hangs
+   over the lower one. js/script.js (10d) compares the colours, also the ones the site editor
+   sets, and gives the lower section .has-edge and --edge-bg (the colour of the sheet above). */
+.section,
+.historia,
+.footer-section {
+  position: relative;
+}
+
+.has-edge {
+  box-shadow: inset 0 20px 16px -16px rgba(70, 60, 38, 0.2);
+}
+
+/* the torn shape: a strip 1200 x 14, full at the top and ragged at the bottom */
+:root {
+  --torn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='14' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 8.0 7 9.9 14 9.7 23 8.0 32 7.9 41 9.4 44 9.2 48 7.0 60 7.7 69 10.2 76 11.0 85 11.8 94 9.3 103 7.0 106 5.4 110 5.9 117 5.0 126 6.8 135 5.4 140 5.4 152 4 164 4 173 6.6 176 7.7 181 9.0 190 7.9 193 8.2 196 7.7 201 7.1 204 8.9 207 7.4 210 7.3 222 6.7 225 7.1 229 8.5 234 7.7 239 6.8 246 8.2 249 6.3 261 4.2 264 4.0 271 4 280 4 289 4 301 5.4 308 6.1 311 5.6 315 4 324 4 327 4 334 6.6 343 7.3 346 4.9 350 4 355 4 364 4 369 4 372 4 381 4.7 384 5.2 389 5.9 393 8.3 400 10.0 404 11.9 408 12.6 413 13 422 11.7 426 9.9 438 12.2 442 13 449 13 458 10.8 461 8.7 464 8.8 469 7.5 481 6.9 488 8.6 497 8.5 506 6.8 518 9.3 522 7.9 531 8.7 540 9.3 545 7.8 549 9.1 552 7.9 559 6.6 562 4.9 567 5.1 571 4 575 6.0 580 6.8 592 7.0 596 7.4 599 7.3 604 8.3 607 5.9 619 4 622 5.2 627 4 630 4 639 4 642 6.1 654 7.3 658 8.8 663 8.1 675 7.9 678 9.9 685 12.2 688 13 697 10.5 709 9.9 718 7.3 721 5.1 733 4 738 6.0 750 5.1 762 6.1 769 5.8 778 4 787 4 796 4 799 4 811 4 820 4.8 827 4 830 4 834 4.9 838 5.0 843 5.9 850 5.8 854 4.9 866 4 878 4 882 6.0 889 4.5 894 4 898 4 901 5.1 906 6.8 909 6.5 914 8.7 921 8.1 930 8.1 935 9.2 944 9.0 947 10.7 952 12.6 955 13 960 13 965 13 974 10.5 978 10.0 982 7.5 987 6.2 991 7.7 1003 5.7 1006 6.4 1018 7.1 1023 9.5 1035 7.9 1042 6.7 1054 4.1 1061 4.3 1064 4 1069 5.4 1078 6.5 1087 6.5 1091 5.9 1103 8.0 1106 7.6 1118 7.0 1125 6.7 1137 8.8 1140 8.1 1149 8.9 1158 10.5 1163 10.3 1175 12.8 1178 13 1190 13 1193 11.5 1200 8.0L1200 0Z'/%3E%3C/svg%3E");
+}
+
+.has-edge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 14px;
+  pointer-events: none;
+  background-color: var(--edge-bg, transparent);
+  -webkit-mask: var(--torn) repeat-x 0 0 / 1200px 100%;
+  mask: var(--torn) repeat-x 0 0 / 1200px 100%;
+}
+
+/* Sections whose background is a picture and not a flat colour («Nuestra historia», and «Frase»
+   on phones) tear their own bottom edge instead: the section hangs 14px over the next one and
+   is cut with the same torn shape, so the edge shows its own background. js/script.js (10d)
+   gives the upper section .is-torn-below and the lower one data-edge-from="<id of the upper>". */
+.historia.is-torn-below {
+  z-index: var(--edge-z, 1);   /* higher the earlier the section is seen, so it lies over the next one */
+  margin-bottom: -14px;
+  -webkit-mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
+  mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
+}
+.has-edge[data-edge-from="intro"]::before { display: none; }
+
+/* «¿Nos acompañas?» stays on one line on phones: it shrinks just enough to fit the narrow ones */
+@media (max-width: 768px) {
+  #rsvp .h-script {
+    white-space: nowrap;
+    font-size: min(calc(4rem * var(--font-script-scale, 1)), calc((100vw - 44px) / 5.3));
+  }
+}
+
+/* A pale green band (js/script.js, 10d): the light text of the green sections turns dark */
+.is-light-band { --cream-text: var(--ink); }
+/* ...but links and handwritten labels keep their terracotta, as on the paper sections */
+#main-content .is-light-band :is(.text-link, .link-button, .hand-label):not(.paper-panel *) { color: var(--terracotta); }
+
 /* Script heading with a soft wash behind it, like a watercolour blot */
 .h-script {
   position: relative;
@@ -148,7 +224,7 @@ button {
   font-family: var(--font-script);
   font-weight: 400;
   /* --font-script-scale: set by the site editor (css/editor.css) when it swaps the script font */
-  font-size: calc(clamp(3.2rem, 11vw, 4.6rem) * var(--font-script-scale, 1));
+  font-size: calc(clamp(4rem, 13vw, 5.8rem) * var(--font-script-scale, 1));
   line-height: 1;
   color: var(--ink);
   margin-bottom: 28px;
@@ -195,6 +271,115 @@ button {
   margin: -8px auto 32px;
 }
 
+/* The "Frase" section (#extra-1) shows only its quote: the title stays in the
+   page (the editor names the section after it) but is not shown */
+#extra-1 .h-script { display: none; }
+#extra-1 .section-lead {
+  margin: 0 auto;
+  font-family: var(--font-script);   /* the headings' font, upright */
+  font-style: normal;
+  font-size: calc(1.2rem + 15px);   /* the quote: fifteen px over the usual .section-lead size */
+  line-height: 1.15;                /* the two lines close together (the usual is 1.6) */
+}
+/* the reference line keeps its size and the gap above it it had before */
+#extra-1 .frase-cita {
+  display: inline-block;
+  margin-top: 0.45em;
+  font-size: calc(1.2rem + 9px);
+}
+/* Phones: the quote shrinks with the screen so each of its two lines fits on
+   one line (no wrapping), and the reference stays a bit smaller under it */
+@media (max-width: 768px) {
+  #extra-1 .container { padding: 0 8px; }
+  #extra-1 .section-lead {
+    font-size: min(calc(1.2rem + 15px), 6.9vw);
+    white-space: nowrap;
+  }
+  #extra-1 .frase-cita { font-size: min(calc(1.2rem + 9px), 5.6vw); }
+}
+
+/* Phones and portrait screens (where the hero shows hero-mobile.jpg): the
+   "Frase" section continues the canyon floor at the bottom of that photo, as if
+   the photo went on. Same width and horizontal place as the hero photo (cover on
+   a 100svh stage, 3:4 photo, object-position 40%), unstretched.
+   The bottom strip of the photo (--sh: its last 5.6%, the sand below the feet)
+   is laid in bands of its own height, alternately upside down and upright, so
+   every join meets the same row of pixels on both sides and no seam shows:
+   band 0 starts with the photo's last row (continuing the hero), band 1 is the
+   strip upright, band 2 upside down again, and so on (8 bands).
+   ::before paints the upside-down bands (the whole layer is flipped), ::after the
+   upright ones, masked to the odd bands. In both, each band is a copy of the whole
+   photo whose bottom edge sits at the band's end; the copies are stacked so each
+   band shows only its own strip (the copy ending highest is on top).
+   Dark text on the sand. #main-content so it wins over the editor's background. */
+@media (max-width: 768px), (orientation: portrait) {
+  #main-content #extra-1 {
+    --fw: max(100vw, 75svh);            /* width of the hero photo on screen */
+    --fh: calc(var(--fw) * 4 / 3);      /* its height (3:4 photo) */
+    --sh: calc(var(--fh) * 0.056);      /* the sand strip: last 5.6% of the photo */
+    position: relative;
+    isolation: isolate;
+    background: #cd8a4e;   /* the sand's own colour: it only shows in the torn edge over the next section */
+  }
+  #main-content #extra-1::before,
+  #main-content #extra-1::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg');
+    background-repeat: no-repeat;
+    background-size: var(--fw) var(--fh);
+  }
+  /* bands 0, 2, 4, 6 (upside down): inside the flipped layer they are counted from its bottom */
+  #main-content #extra-1::before {
+    transform: scaleY(-1);
+    background-position:
+      left 40% bottom calc(var(--sh) * 6),
+      left 40% bottom calc(var(--sh) * 4),
+      left 40% bottom calc(var(--sh) * 2),
+      left 40% bottom 0px;
+  }
+  /* bands 1, 3, 5, 7 (upright): each copy ends at the bottom of its band */
+  #main-content #extra-1::after {
+    background-position:
+      left 40% top calc(var(--sh) * 2 - var(--fh)),
+      left 40% top calc(var(--sh) * 4 - var(--fh)),
+      left 40% top calc(var(--sh) * 6 - var(--fh)),
+      left 40% top calc(var(--sh) * 8 - var(--fh));
+    -webkit-mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
+    mask-image: repeating-linear-gradient(to bottom, transparent 0, transparent var(--sh), #000 var(--sh), #000 calc(var(--sh) * 2));
+  }
+  /* the sand needs both pseudo-elements whole: no paper tile and no torn edge on them */
+  #main-content #extra-1::before,
+  #main-content #extra-1::after {
+    background-image: url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg'), url('../assets/hero-mobile.jpg') !important;
+    background-repeat: no-repeat !important;
+    background-size: var(--fw) var(--fh) !important;
+    background-color: transparent;
+  }
+  #main-content #extra-1::before {
+    height: auto;
+    -webkit-mask: none;
+    mask: none;
+  }
+  #main-content #extra-1.has-edge { box-shadow: none; }
+  /* its bottom edge is torn out of the sand itself (see .is-torn-below above) */
+  #main-content #extra-1.is-torn-below {
+    z-index: var(--edge-z, 1);
+    margin-bottom: -14px;
+    -webkit-mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
+    mask: var(--torn) repeat-x 0 100% / 1200px 14px, linear-gradient(#000, #000) no-repeat 0 0 / 100% calc(100% - 13px);
+  }
+  #main-content .has-edge[data-edge-from="extra-1"]::before { display: none; }
+  #main-content #extra-1 .section-lead,
+  #main-content #extra-1 .section-lead * {
+    color: var(--cream-text);   /* the same light letters as the hero, with a stronger shadow for the light sand */
+    text-shadow: 0 1px 2px rgba(40, 18, 8, 0.7), 0 2px 6px rgba(40, 18, 8, 0.55), 0 0 22px rgba(40, 18, 8, 0.45);
+  }
+}
+
 .section-note {
   font-size: 1.05rem;
   color: var(--ink-faint);
@@ -230,6 +415,11 @@ button {
 .link-button.small {
   font-size: 0.95rem;
 }
+
+/* "Añadir al calendario" stays terracotta even on a green countdown band
+   (two ids, so it beats the editor's #countdown colour rule) */
+#countdown #btn-add-calendar { color: var(--terracotta); font-size: 1.4rem; }
+#countdown #btn-add-calendar:hover { color: var(--terracotta-deep); }
 
 .band-olive .link-button {
   color: var(--cream-text);
@@ -345,6 +535,18 @@ button {
   background: url('../assets/sobre.jpg?v=20261103') 0 0 / 100% 100% no-repeat;
 }
 
+/* The envelope in the green of the sections (--olive): the photo keeps its light and
+   texture (luminosity), the colour comes from the token, and the brightness lifts the
+   sage photo up to the token's lightness. */
+.envelope-front,
+.envelope-flap-top,
+.envelope-side,
+.envelope-back {
+  background-color: var(--olive);
+  background-blend-mode: luminosity;
+  filter: brightness(1.19) saturate(0.75);   /* halfway between the sage photo and the token's light green */
+}
+
 /* z1 — pocket interior, visible once the flap is up: plain paper shifted up and darkened */
 .envelope-back {
   position: absolute;
@@ -352,7 +554,8 @@ button {
   z-index: 1;
   background:
     linear-gradient(180deg, rgba(55, 58, 38, 0.4) 0%, rgba(55, 58, 38, 0.24) 60%),
-    url('../assets/sobre-papel.jpg') center / cover no-repeat;
+    url('../assets/sobre-papel.jpg') center / cover no-repeat var(--olive);
+  background-blend-mode: normal, luminosity;   /* the shade on top as is, the paper tinted (see above) */
   box-shadow: 0 30px 60px -22px rgba(59, 56, 47, 0.5);
 }
 
@@ -486,7 +689,7 @@ button {
 .envelope-side {
   z-index: 3;
   background-position: 0 -40.7cqw;
-  filter: brightness(1.012);   /* that paper is ~1% darker than the paper beside it */
+  filter: brightness(1.202) saturate(0.75);   /* the green tint above, plus 1%: that paper is ~1% darker than the paper beside it */
 }
 
 .envelope-side-left {
@@ -737,7 +940,11 @@ button {
 /* Portrait tablets use the phone photo too (see the <source> in index.html) */
 @media (min-width: 769px) and (orientation: portrait) {
   .hero-photo img { object-position: 50% 30%; }
-  .card-back { background-image: url('../assets/hero-mobile.jpg'); background-position: 50% 30%; }
+  .card-back { background-image: url('../assets/hero-mobile.jpg?v=202611182322-bd384c6'); background-position: 50% 30%; }
+  /* wider than the photo, so it is cropped top and bottom: keep its foot (the
+     couple's feet and the sand) and crop the top instead. #hero wins over the
+     framing set in the editor's «Fotos» tab, which only matters on phones here. */
+  #hero .hero-photo img { object-position: 40% 100%; }
 }
 
 /* Portrait (phones and tablets): the lettering sits at the top, over the
@@ -845,10 +1052,18 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: rgba(246, 242, 232, 0.85);
+  color: #fff;
   font-size: 0.8rem;
+  font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
+  /* a soft dark halo so it reads over the light parts of the photo */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-indicator .chevron {
+  border-width: 0 2px 2px 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
 
 .scroll-indicator:hover {
@@ -870,47 +1085,281 @@ button {
 }
 
 /* ========================================================
-   INTRO BAND
+   OUR STORY (#intro): a short welcome and three prints (Madrid, Copenhague, Valencia)
+   that turn over to show their text.
 ======================================================== */
-.intro-band {
-  background: var(--olive);
+.historia {
   padding: 64px 0;
+  /* sandstone strata in the sunny colours of the top-left corner of the hero photo
+     (a background chosen in the editor's «Secciones» tab replaces it) */
+  /* a light veil over the pattern so the text stands out */
+  background:
+    linear-gradient(rgba(255, 251, 240, 0.4), rgba(255, 251, 240, 0.4)),
+    #fde6ab url('../assets/patron-historia.svg') repeat;
+  background-size: auto, 400px 200px;
 }
 
-.intro-text {
-  font-size: clamp(1.35rem, 4.5vw, 1.7rem);
+
+/* the four prints laid out like a page of an album, in a diamond: the postcard
+   on top, two side by side, the last one below; the top and bottom ones tuck
+   in between the middle two */
+.historia-album {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0 5%;
+  max-width: 480px;
+  margin: 56px auto 0;
+}
+
+/* the slot keeps the place in the page while its card is out on the stage */
+.hfoto {
+  --tilt: -2.6deg;
+  flex: 0 0 46%;
+  min-width: 0;
+  aspect-ratio: 4 / 5.5;
+  perspective: 900px;
+}
+.hfoto:nth-child(1) { --tilt: 1.2deg; margin: 0 27% -5%; position: relative; z-index: 1; }   /* alone on its row, centred, in front of the two below */
+/* the postcard has no caption and no white frame: its picture fills the face, with a
+   little margin on top in the cream of the postcard's own border */
+.hfoto-front[data-slot="tarjeta.jpg"] { padding: 4% 0 0; background: #eee5cc; }
+/* Its back holds a longer text than the others. Opened on the stage, that face
+   grows as tall as its text needs (never shorter than the card), centred on the
+   card, with the same letters as the others; the photo side keeps its size.
+   A class, not :nth-child, because on the stage the card is out of its slot. */
+.hfoto-card--postal .hfoto-back { padding-left: 5.5%; padding-right: 5.5%; }
+.hfoto-stage .hfoto-card--postal .hfoto-back {
+  top: 50%;
+  bottom: auto;
+  height: auto;
+  min-height: 100%;
+  transform: rotateY(180deg) translateY(-50%);
+}
+/* in the album (the quick swing that hints at the back) the face keeps the card's
+   size, so its letters are smaller and the text stays inside */
+.hfoto .hfoto-card--postal .hfoto-back { overflow: hidden; }
+.hfoto .hfoto-card--postal .hfoto-text { font-size: 4.4cqw; line-height: 1.35; }
+/* short screens: slightly smaller letters so the tall back still fits on screen */
+.hfoto-stage .hfoto-card--postal .hfoto-text { font-size: min(7cqw, 2.6vh); }
+.hfoto:nth-child(3) { --tilt: 1.6deg; margin-top: 18px; }
+.hfoto:nth-child(4) { --tilt: 3deg; margin-top: -5%; }
+
+/* the card: two faces back to back. Its size always comes from its width (aspect-ratio on the
+   card, cqw units inside the faces), so it looks the same small in the page and large on the stage. */
+.hfoto-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5.5;
+  transform-style: preserve-3d;
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hfoto-card:focus-visible { outline: 2px solid var(--terracotta); outline-offset: 6px; }
+
+@media (hover: hover) {
+  .hfoto .hfoto-card:hover { transform: rotate(var(--tilt, 0deg)) translateY(-5px) scale(1.02); }
+}
+
+.hfoto-face {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: #fbf9f3;
+  border: 1px solid var(--paper-line);
+  box-shadow: 0 10px 24px rgba(60, 54, 40, 0.16);
+}
+
+.hfoto-front {
+  display: flex;
+  flex-direction: column;
+  padding: 4.5% 4.5% 0;
+}
+
+.hfoto-front img {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  object-fit: cover;
+}
+
+.hfoto-cap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  height: 21cqw;
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  font-size: 8.6cqw;
+  white-space: nowrap;   /* "Copenhague" stays on one line */
+  color: var(--ink-soft);
+}
+
+/* empty photo slot: dashed frame named after the file it waits for */
+.hfoto-front.is-empty::before {
+  content: attr(data-slot);
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--paper-line);
+  color: var(--ink-faint);
+  font-family: var(--font-hand);
+  font-size: 5cqw;
+}
+
+/* the back: the plain side of the print, with the text written on it */
+.hfoto-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9%;
+  background: #f8f4ea;
+}
+
+.hfoto-city {
+  margin: 0 0 4cqw;
+  font-family: var(--font-script);
+  font-size: 2.6rem;
+  font-size: 19cqw;
+  line-height: 1;
+  white-space: nowrap;   /* "Copenhague" stays on one line */
+  color: var(--olive-deep);
+}
+
+.hfoto-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-size: 7cqw;
   font-style: italic;
   line-height: 1.5;
-  color: var(--cream-text);
-  max-width: 560px;
-  margin: 0 auto 14px;
+  text-align: center;
+  color: var(--ink);
 }
 
-.intro-ref {
+/* the hint that there is something behind: the print swings round far enough to show its back */
+.hfoto-card.is-peeking { animation: hfoto-peek 1.5s cubic-bezier(0.45, 0, 0.3, 1); }
+
+@keyframes hfoto-peek {
+  0%, 100% { transform: rotate(var(--tilt, 0deg)) rotateY(0deg); }
+  40%, 55% { transform: rotate(var(--tilt, 0deg)) translateY(-6px) rotateY(-128deg); }
+}
+
+/* right under the title (its own bottom margin makes the gap) */
+.historia-hint {
+  margin: 0;
+  text-align: center;
   font-family: var(--font-hand);
-  font-size: 0.85rem;
-  color: rgba(246, 242, 232, 0.85);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+/* the hint comes before the prints, so it sits just above them */
+.historia-hint + .historia-album { margin-top: 14px; }
+
+/* the stage: a dimmed layer over the page where the open print sits (created by js/script.js) */
+.hfoto-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  perspective: 1400px;
+  background: rgba(46, 42, 33, 0);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.hfoto-stage.is-on {
+  background: rgba(46, 42, 33, 0.5);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.hfoto-stage .hfoto-card {
+  position: fixed;
+  margin: 0;
+  transition: transform 0.85s cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+
+.hfoto-stage-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(18px, 3.5vh);
+  margin: 0;
+  padding: 0 64px;   /* clear of the music button */
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 0.7rem;
+  color: var(--cream-text);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.hfoto-stage.is-on .hfoto-stage-hint { opacity: 0.9; transition-delay: 0.6s; }
+
+.hfoto-stage .hfoto-face { box-shadow: 0 24px 60px rgba(30, 26, 18, 0.34); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hfoto-card, .hfoto-stage, .hfoto-stage .hfoto-card { transition: none; }
+}
+
+/* Desktop: the four prints in one row (postcard, Madrid, Copenhague, Valencia),
+   slightly tilted, each one's corner over the one before */
+@media (min-width: 769px) {
+  .historia .container.narrow { max-width: 1040px; }
+  .historia-album {
+    flex-wrap: nowrap;
+    gap: 0;
+    max-width: 960px;
+  }
+  .historia .hfoto { flex: 0 0 26%; margin: 0; }
+  .historia .hfoto + .hfoto { margin-left: -4%; }
+  .historia .hfoto:nth-child(1) { --tilt: -3deg; }
+  .historia .hfoto:nth-child(2) { --tilt: 2deg; margin-top: 16px; }
+  .historia .hfoto:nth-child(3) { --tilt: -1.5deg; margin-top: 4px; }
+  .historia .hfoto:nth-child(4) { --tilt: 2.6deg; margin-top: 18px; }
 }
 
 /* ========================================================
    COUNTDOWN
 ======================================================== */
+.countdown-section {
+  padding: 68px 0 64px;
+}
+
 .countdown-grid {
   display: flex;
   justify-content: center;
-  gap: clamp(18px, 6vw, 44px);
   margin: 0 auto 32px;
 }
 
+/* a hairline between the four numbers */
 .countdown-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 56px;
+  padding: 2px clamp(11px, 3.6vw, 26px) 0;
+}
+
+.countdown-item + .countdown-item {
+  border-left: 1px solid rgba(59, 56, 47, 0.2);
 }
 
 .countdown-number {
-  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  font-size: clamp(2.7rem, 11vw, 4rem);
   font-weight: 500;
   color: var(--ink);
   line-height: 1;
@@ -921,8 +1370,8 @@ button {
   font-size: 0.8rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-top: 6px;
+  color: var(--ink-soft);
+  margin-top: 8px;
 }
 
 /* ========================================================
@@ -939,20 +1388,42 @@ button {
   text-align: center;
 }
 
-/* Both drawings share one box height and rest on its bottom edge, so the labels line up */
+/* The two venues share their rows (drawing, time, name, address, link), so the
+   names start at the same height and both "Ver en el mapa" links line up; the
+   shorter address takes the extra space. Older browsers keep the plain columns. */
+@supports (grid-template-rows: subgrid) {
+  .location {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    align-content: start;
+  }
+  .location > .location-art { grid-row: 1; }
+  .location > .hand-label { grid-row: 2; }
+  .location > .location-name { grid-row: 3; }
+  .location > .location-address { grid-row: 4; align-self: center; }
+  .location > .text-link { grid-row: 5; justify-self: center; align-self: start; }
+}
+
+/* Both drawings sit in a round medallion like the stops of the bus map: a plain
+   paper disc with no ring, the engraving reaching its edge */
 .location-art {
   display: block;
-  width: 100%;
-  height: clamp(150px, 40vw, 230px);
-  object-fit: contain;
-  object-position: center bottom;
+  box-sizing: border-box;
+  width: clamp(132px, 36vw, 210px);
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 50%;
+  background: var(--paper);
+  object-fit: cover;
+  object-position: center 38%;
   margin: 0 auto 18px;
 }
 
-/* Wide drawing: fill the box height and crop the sides, keeping the house centred */
+/* Wide drawing: crop the sides, keeping the house centred */
 .location-art-cover {
-  object-fit: cover;
-  object-position: 52% bottom;
+  object-position: 52% center;
 }
 
 .location-name {
@@ -960,6 +1431,12 @@ button {
   color: var(--ink);
   margin-bottom: 6px;
   line-height: 1.15;
+}
+
+/* "Ceremonia" / "Convite": bigger than the venue names under them */
+.location > .hand-label {
+  font-size: clamp(1.45rem, 6.2vw, 2.3rem);
+  line-height: 1.6;
 }
 
 .location-address {
@@ -1041,7 +1518,7 @@ button {
 
 .ruta-time {
   display: block;
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 500;
   line-height: 1;
   color: var(--olive-deep);
@@ -1050,19 +1527,21 @@ button {
 
 .ruta-title {
   font-family: var(--font-hand);
-  font-size: 1.1rem;
+  font-size: 1.45rem;
   color: var(--terracotta);
   line-height: 1.6;
   margin: 8px 0 2px;
 }
 
-.ruta-desc { font-size: 1.1rem; }
+.ruta-desc { font-size: 1.4rem; line-height: 1.35; }
 
 @media (max-width: 480px) {
   .ruta-stop { gap: 6px 14px; padding-bottom: 72px; }
   .ruta-stop:not(:last-child)::after { height: 64px; }
   .ruta-art img, .ruta-art.is-empty { height: 150px; }
-  .ruta-time { font-size: 1.6rem; }
+  .ruta-time { font-size: 2.1rem; }
+  .ruta-title { font-size: 1.3rem; }
+  .ruta-desc { font-size: 1.3rem; }
 }
 
 /* ========================================================
@@ -1096,6 +1575,12 @@ button {
   font-style: italic;
 }
 
+/* the message's light note goes on its own line under "Déjanos un mensajito" */
+label[for="guest-message"] .optional { display: block; }
+
+/* "Abrir el álbum": much bigger than the other text links */
+#album-link { font-size: 1.9rem; }
+
 .form-control {
   width: 100%;
   padding: 10px 12px;
@@ -1110,7 +1595,7 @@ button {
 }
 
 .form-control:focus {
-  border-color: var(--olive);
+  border-color: var(--olive-deep);
   box-shadow: 0 0 0 3px var(--olive-wash);
 }
 
@@ -1309,9 +1794,22 @@ html.rsvp-modal-open { overflow: hidden; }
   color: var(--terracotta-deep);
 }
 
+/* the logo on a white disc, so it shows on any background */
 .rsvp-contact-link .wa-logo {
   flex: none;
-  color: var(--olive);
+  box-sizing: content-box;
+  padding: 4px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--olive-deep);
+}
+
+/* the inside of the form in the green of the sections; its fields keep their own colour */
+#rsvp .rsvp-form.paper-panel {
+  background-color: var(--olive);
+  /* the same paper grain as the sections, so the green comes out in exactly their tone */
+  background-image: url('../assets/papel.webp?v=20261124b');
+  background-size: 320px 320px;
 }
 
 .rsvp-contact-name::after {
@@ -1329,22 +1827,290 @@ html.rsvp-modal-open { overflow: hidden; }
 /* ========================================================
    GIFTS
 ======================================================== */
-.iban-details summary {
-  display: inline-block;
-  list-style: none;
-  cursor: pointer;
+/* The flight: a dotted route from Madrid to a postmark, and a plane (a button) that
+   js/script.js (8b) moves along it. The stage keeps the 320 x 120 shape of the SVG so the
+   plane's left/top percentages land on the route. */
+.vuelo {
+  max-width: 460px;
+  margin: 0 auto;
 }
 
-.iban-details summary::-webkit-details-marker {
-  display: none;
+.vuelo-ruta {
+  position: relative;
+  aspect-ratio: 320 / 120;
+  margin: 4px auto 0;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.iban-box {
+.vuelo-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.vuelo-linea {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 5.2;
+}
+
+/* the stretch already flown */
+.vuelo-linea.is-done {
+  stroke: var(--terracotta);
+  stroke-width: 1.9;
+}
+
+.vuelo-punto { fill: var(--terracotta); }
+
+.vuelo-ciudad {
+  font-family: var(--font-hand);
+  font-size: 11.5px;
+  fill: var(--ink-soft);
+}
+
+/* the postmark: rings, name around the rim, three wavy lines */
+.vuelo-sello {
+  fill: none;
+  stroke: var(--terracotta-deep);
+  stroke-width: 1.3;
+  opacity: 0.8;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(-9deg);
+}
+
+.vuelo-sello .fino { stroke-width: 0.7; }
+
+.sello-texto {
+  font-family: var(--font-serif);
+  font-size: 8.6px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  fill: var(--terracotta-deep);
+  stroke: none;
+}
+
+/* along the bottom of the rim, between the inner ring and the two outer ones */
+.sello-texto-2 { font-size: 6px; letter-spacing: 1.5px; }
+
+.vuelo.is-landed .vuelo-sello { animation: sello-golpe 0.5s ease-out; }
+
+@keyframes sello-golpe {
+  0% { transform: rotate(-9deg) scale(1); }
+  35% { transform: rotate(-9deg) scale(1.12); opacity: 1; }
+  100% { transform: rotate(-9deg) scale(1); }
+}
+
+.vuelo-avion {
+  position: absolute;
+  left: 17%;
+  top: 62%;
+  width: clamp(60px, 21%, 88px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -50%) rotate(-40deg);
+  cursor: grab;
+  touch-action: none;   /* a drag that starts on the plane moves the plane, not the page */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vuelo-avion svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: #fbf9f3;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 5px 4px rgba(59, 56, 47, 0.28));
+  transition: transform 0.3s ease;
+}
+
+.vuelo-avion .fino { fill: none; stroke-width: 0.9; }
+.vuelo-avion:disabled { cursor: default; }
+.vuelo-avion:focus-visible { outline: 1px dashed var(--terracotta); outline-offset: 2px; border-radius: 50%; }
+
+/* waiting on the ground: a small hop so it reads as something to touch */
+.vuelo.is-ready:not(.is-flying):not(.is-landed) .vuelo-avion svg { animation: avion-espera 2.6s ease-in-out infinite; }
+.vuelo.is-flying .vuelo-avion { cursor: grabbing; }
+.vuelo.is-flying .vuelo-avion svg { transform: scale(1.12); }
+/* arrived: it stays parked in the middle of the postmark, small enough to leave the rim's words free */
+.vuelo.is-landed .vuelo-avion svg { transform: scale(0.62); }
+
+@keyframes avion-espera {
+  0%, 55%, 100% { transform: translateX(0); }
+  70% { transform: translateX(5px); }
+  85% { transform: translateX(0); }
+}
+
+.vuelo-hint { margin: 18px 0 0; }
+.vuelo-saltar { margin: 14px 0 0; }
+.vuelo-saltar .text-link { border-width: 0 0 1px; background: none; font-family: inherit; cursor: pointer; }
+
+/* only when the script runs is there a flight to wait for */
+.vuelo:not(.is-ready) .vuelo-hint,
+.vuelo:not(.is-ready) .vuelo-saltar,
+.vuelo.is-landed .vuelo-hint,
+.vuelo.is-landed .vuelo-saltar { display: none; }
+
+.vuelo.is-ready:not(.is-landed) .embarque { display: none; }
+.vuelo.is-landed .embarque { animation: embarque-sale 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) both; }
+
+@keyframes embarque-sale {
+  from { opacity: 0; transform: translateY(26px) rotate(-2.5deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The boarding pass: the body and, under a perforated line with a notch at each end,
+   the stub with the account number (one button: a tap copies it). */
+.embarque.paper-panel {
+  max-width: 400px;
   margin: 22px auto 0;
-  max-width: 420px;
-  padding: 18px 16px;
-  border-top: 1px solid var(--paper-line);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 14px 16px rgba(59, 56, 47, 0.22));
+  text-align: left;
+}
+
+.embarque-cuerpo,
+.embarque-resguardo {
+  --muesca: 9px;
+  background: #fbf9f3;
+  padding: 18px 22px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 50.5% 100%;
+  mask-size: 50.5% 100%;
+  -webkit-mask-position: left, right;
+  mask-position: left, right;
+}
+
+/* each notch is cut by its own gradient, which paints its half of the piece */
+.embarque-cuerpo {
+  border-radius: 10px 10px 0 0;
+  padding-bottom: 16px;
+  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 96%, #000);
+  mask-image: radial-gradient(circle var(--muesca) at 0 100%, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 100%, transparent 96%, #000);
+}
+
+.embarque-resguardo {
+  position: relative;
+  margin-top: -1px;   /* over the body by a pixel, so no hairline shows where the two pieces meet */
+  border-radius: 0 0 10px 10px;
+  padding-top: 17px;
+  text-align: center;
+  -webkit-mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 96%, #000);
+  mask-image: radial-gradient(circle var(--muesca) at 0 0, transparent 96%, #000), radial-gradient(circle var(--muesca) at 100% 0, transparent 96%, #000);
+}
+
+/* the perforation */
+.embarque-resguardo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 20px;   /* well clear of the notches */
+  left: 20px;
+  border-top: 1.5px dashed var(--paper-line);
+}
+
+.embarque .embarque-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--terracotta-deep);
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--paper-line);
+}
+
+.embarque .embarque-trayecto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 8px;
+  font-size: 1.7rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.embarque-trayecto i {
+  flex: 1;
+  border-top: 2px dotted var(--ink-faint);
+}
+
+.embarque-datos { margin: 0; }
+.embarque-datos div + div { margin-top: 6px; }
+
+.embarque-datos dt,
+.embarque .embarque-etiqueta {
+  font-size: 0.68rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.embarque-datos dd {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.embarque-iban {
+  display: block;
+  width: 100%;
+  padding: 2px 0 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.embarque-iban .iban-code {
+  display: block;
+  margin: 0;
+  font-size: clamp(1.02rem, 4.6vw, 1.3rem);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.embarque-iban:hover .iban-code,
+.embarque-iban.copied .iban-code { color: var(--terracotta); }
+.embarque-iban:focus-visible { outline: 1px dashed var(--terracotta); outline-offset: 4px; }
+
+.embarque-copiar {
+  display: block;
+  font-family: var(--font-hand);
+  font-size: 0.72rem;
+  color: var(--terracotta);
+  margin-top: 2px;
+}
+
+/* a strip of bars, like the code on a boarding pass */
+.embarque-barras {
+  height: 22px;
+  margin: 12px auto 0;
+  max-width: 250px;
+  opacity: 0.55;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 9px, var(--ink) 9px 12px, transparent 12px 14px, var(--ink) 14px 15px, transparent 15px 17px);
 }
 
 .iban-code {
@@ -1356,10 +2122,10 @@ html.rsvp-modal-open { overflow: hidden; }
   margin-bottom: 8px;
 }
 
-.iban-meta {
-  font-size: 1rem;
-  margin-top: 12px;
-  line-height: 1.5;
+@media (prefers-reduced-motion: reduce) {
+  .vuelo-avion svg,
+  .vuelo.is-landed .embarque,
+  .vuelo.is-landed .vuelo-sello { animation: none !important; }
 }
 
 /* ========================================================
@@ -1370,7 +2136,8 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .rsvp-playlist-hint {
-  margin-bottom: 22px;
+  margin: 22px 0 0;
+  text-align: center;
 }
 
 .rsvp-playlist-hint a {
@@ -1485,7 +2252,7 @@ html.rsvp-modal-open { overflow: hidden; }
 .btn-mini {
   padding: 6px 14px;
   background: transparent;
-  border: 1px solid var(--olive);
+  border: 1px solid var(--olive-deep);
   color: var(--olive-deep);
   font-size: 0.95rem;
   border-radius: 999px;
@@ -1494,7 +2261,7 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .btn-mini:hover {
-  background: var(--olive);
+  background: var(--olive-deep);
   color: var(--cream-text);
 }
 
@@ -1739,7 +2506,7 @@ html.rsvp-modal-open { overflow: hidden; }
   display: block;
   margin: 16px auto 0;
   padding: 8px 20px;
-  border: 1px solid var(--olive);
+  border: 1px solid var(--olive-deep);
   border-radius: 999px;
   background: transparent;
   color: var(--olive-deep);
@@ -1769,6 +2536,56 @@ html.rsvp-modal-open { overflow: hidden; }
   letter-spacing: 4px;
   font-size: 1rem;
   color: rgba(246, 242, 232, 0.85);
+}
+
+/* The farewell is a photo: hero-desktop.jpg fills the band and the sentence sits over its
+   lower, darker part, on a soft shade. The photo is an <img> and not a background because the
+   paper rule owns the band's background-image. */
+#main-content .footer-section {
+  display: flex;
+  align-items: flex-end;
+  min-height: min(86svh, 66.7vw);   /* the whole 3:2 photo on wide screens */
+  background-color: #2b2622;   /* while the photo loads; also makes the section above end in a torn edge */
+  padding: 0 0 44px;
+  overflow: hidden;
+}
+
+.footer-section > .container { position: static; max-width: 900px; }
+
+.footer-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 44% 30%;   /* both faces and her hands, also in the tall crop of a phone */
+}
+
+/* the shade under the words */
+#main-content .footer-section::after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(to bottom, rgba(20, 16, 12, 0), rgba(20, 16, 12, 0.62));
+  pointer-events: none;
+}
+
+#main-content .footer-section .footer-title,
+#main-content .footer-section .footer-date {
+  position: relative;
+  z-index: 1;
+  color: #fcf5ec;
+  text-shadow: 0 1px 2px rgba(20, 16, 12, 0.6), 0 2px 14px rgba(20, 16, 12, 0.5);
+}
+
+#main-content .footer-section .footer-date { color: rgba(252, 245, 236, 0.9); }
+#main-content .footer-section .h-script::before { display: none; }
+
+/* the torn edge of the section above stays over the photo */
+.footer-section.has-edge::before { z-index: 2; }
+
+@media (max-width: 768px), (orientation: portrait) {
+  #main-content .footer-section { min-height: min(78svh, 135vw); padding-bottom: 36px; }
 }
 
 /* ========================================================
@@ -1825,7 +2642,7 @@ html.rsvp-modal-open { overflow: hidden; }
     padding: 52px 0;
   }
 
-  .intro-band {
+  .historia {
     padding: 48px 0;
   }
 
@@ -1896,7 +2713,7 @@ html.rsvp-modal-open { overflow: hidden; }
   }
 
   .card-back {
-    background-image: url('../assets/hero-mobile.jpg');
+    background-image: url('../assets/hero-mobile.jpg?v=202611182322-bd384c6');
     background-position: 50% 0%;
   }
 
@@ -1969,39 +2786,12 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .mapa-frame {
-  --frame: #2b2822;
-  --fs: 0.56;                   /* scale of the frame drawing (1 = the 213 px corner at full size) */
+  --frame: var(--terracotta);    /* the colour of the dotted bus route */
   position: relative;
   margin: 8px 0 34px;
-  border: calc(3px * var(--fs)) solid var(--frame);
+  border: 2px solid var(--frame);
   background: var(--paper);
 }
-
-/* Corner ornaments: one drawing (the couple's Victorian frame), mirrored on the four corners and
-   painted with the frame colour through a mask. The map fades to paper under each of them. */
-.mapa-corner {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 0;
-  width: calc(213px * var(--fs));
-  height: calc(213px * var(--fs));
-  pointer-events: none;
-  background: radial-gradient(circle calc(213px * var(--fs)) at 0 0, var(--paper) 0, var(--paper) 55%, transparent 100%);
-}
-
-.mapa-corner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--frame);
-  -webkit-mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
-  mask: url('../assets/marco-esquina.png') 0 0 / 100% 100% no-repeat;
-}
-
-.mapa-corner-tr { left: auto; right: 0; transform: scaleX(-1); }
-.mapa-corner-bl { top: auto; bottom: 0; transform: scaleY(-1); }
-.mapa-corner-br { top: auto; left: auto; right: 0; bottom: 0; transform: scale(-1, -1); }
 
 .mapa-canvas {
   position: relative;
@@ -2014,6 +2804,29 @@ html.rsvp-modal-open { overflow: hidden; }
 }
 
 .mapa-canvas.is-dragging { cursor: grabbing; }
+
+/* «use two fingers»: shown for a moment when someone drags the map sideways with one finger */
+.mapa-fingers {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 82%;
+  margin: 0;
+  padding: 10px 18px;
+  background: rgba(59, 56, 47, 0.86);
+  color: var(--paper);
+  font-size: 1.1rem;
+  line-height: 1.3;
+  text-align: center;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.mapa-fingers.is-on { opacity: 1; }
+.mapa-section.is-open .mapa-fingers { display: none; }
 
 .mapa-svg {
   position: absolute;
@@ -2043,6 +2856,11 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-svg[data-z="1"] .z3,
 .mapa-svg[data-z="2"] .z3 { display: none; }
 
+/* far view: only the motorways, and softer, so the south-west of Madrid
+   is not a tangle of roads; the main roads come back on zooming in */
+.mapa-svg[data-z="1"] .m-primary { display: none; }
+.mapa-svg[data-z="1"] .m-motorway path { stroke: #c2bfa6; stroke-width: 1.3px; }
+
 /* close up the streets become wide, like on a street map */
 .mapa-svg[data-z="2"] .m-primary path { stroke-width: 2.2px; stroke: #c9c2aa; }
 .mapa-svg[data-z="2"] .m-motorway path { stroke-width: 2.6px; }
@@ -2070,13 +2888,23 @@ html.rsvp-modal-open { overflow: hidden; }
 .m-name { display: none; }
 .mapa-svg[data-z="1"] .m-name.on1,
 .mapa-svg[data-z="2"] .m-name.on2,
-.mapa-svg[data-z="3"] .m-name.on3 { display: inline; }
+.mapa-svg[data-z="3"] .m-name.on3,
+.mapa-svg[data-s="1"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons1,
+.mapa-svg[data-s="2"] .m-name.ons2 { display: inline; }
 
-.m-name-city text { font-size: 15px; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
-.m-name-town text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
-.m-name-road text { font-size: 11px; font-weight: 700; fill: #8a886e; }
+/* a name that a stop's drawing would cover (js/mapa.js, hideCovered) */
+.mapa-svg .m-over .m-name.is-hid { display: none; }
+
+.m-name-city text { font-size: 18px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; fill: var(--ink); }
+.m-name-town text { font-size: 13.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink); }
+.m-name-road text { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; fill: var(--olive-deep); }
 .m-name-park text { font-style: italic; fill: var(--olive-deep); }
-.m-name-street text { font-style: italic; font-size: 13.5px; }
+.m-name-street text { font-size: 14.5px; font-weight: 600; fill: var(--ink); }
+/* metro stations: an «M» mark and the name beside it */
+.m-name-metro text { font-size: 13.5px; font-weight: 700; fill: var(--olive-deep); }
+.m-name-metro .m-metro-mark { fill: var(--olive-deep); stroke: var(--paper); stroke-width: 1.5; }
+.m-name-metro text.m-metro-m { font-size: 11px; font-weight: 700; fill: var(--paper); stroke: none; paint-order: normal; }
 
 .m-stop { cursor: pointer; outline: none; }
 .m-stop-stem { stroke: var(--ink); stroke-width: 1.2px; }
@@ -2089,7 +2917,7 @@ html.rsvp-modal-open { overflow: hidden; }
 
 .m-stop-label {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 17.5px;
   font-weight: 700;
   fill: var(--ink);
   stroke: var(--paper);
@@ -2152,7 +2980,16 @@ html.rsvp-modal-open { overflow: hidden; }
   margin: 40px 0 6px;
 }
 
-.mapa-views .link-button { color: var(--ink-soft); border-bottom-color: transparent; }
+/* «Todo el día» and the hint, above the map */
+.mapa-views-top { margin: 14px 0 0; }
+.mapa-hint {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.mapa-views .link-button { font-size: 1.3rem; color: var(--ink-soft); border-bottom-color: transparent; }
 .mapa-views .link-button.is-on { color: var(--terracotta); border-bottom-color: currentColor; }
 
 .mapa-card {
@@ -2160,6 +2997,9 @@ html.rsvp-modal-open { overflow: hidden; }
   padding: 14px 10px 0;
   text-align: center;
 }
+
+/* nothing tapped yet: no blank box under the buttons */
+.mapa-card:empty { min-height: 0; padding: 0; }
 
 .mapa-card .hand-label { margin-bottom: 2px; }
 .mapa-card-name { font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
@@ -2190,6 +3030,7 @@ html.rsvp-modal-open { overflow: hidden; }
 .mapa-section.no-map .mapa-shell { display: none; }
 
 /* Full screen: the map fills the screen, the views and the card stay under it */
+html.mapa-open,
 body.mapa-open { overflow: hidden; }
 body.mapa-open .float-btn,
 body.mapa-open .lang-toggle { display: none; }
@@ -2197,6 +3038,8 @@ body.mapa-open .lang-toggle { display: none; }
 .mapa-section.is-open { position: relative; z-index: 9000; }
 
 .mapa-section.is-open .mapa-shell {
+  overscroll-behavior: contain;
+  touch-action: none;
   position: fixed;
   inset: 0;
   max-width: none;
@@ -2207,16 +3050,19 @@ body.mapa-open .lang-toggle { display: none; }
 }
 
 .mapa-section.is-open .mapa-frame { flex: 1; min-height: 0; margin: 0; border: 0; outline: 0; }
-.mapa-section.is-open .mapa-corner { display: none; }
 .mapa-section.is-open .mapa-plaque { bottom: 12px; }
 .mapa-section.is-open .mapa-canvas { aspect-ratio: auto; height: 100%; touch-action: none; }
 .mapa-section.is-open .mapa-views { margin: 12px 8px 0; }
 .mapa-section.is-open .mapa-card { padding-bottom: 14px; }
+.mapa-section.is-open .mapa-views-top { margin-top: 12px; }
+.mapa-section.is-open .mapa-hint { margin-bottom: 8px; }
 
 @media (max-width: 768px) {
-  .mapa-canvas { aspect-ratio: 1 / 1; }
-  .mapa-frame { --fs: 0.4; margin-bottom: 30px; }
-  .mapa-views { gap: 6px 14px; margin-top: 40px; }
+  .mapa-canvas { aspect-ratio: 4 / 5; }
+  .mapa-frame { margin-bottom: 30px; }
+  .mapa-views { gap: 10px 20px; margin-top: 40px; }
+  .mapa-views-top { margin-top: 10px; }
+  .mapa-views .link-button { font-size: 1.2rem; }
   .mapa-card { min-height: 150px; }
   .mapa-buses li { font-size: 1.05rem; gap: 12px; }
 }
@@ -2229,3 +3075,9 @@ body.mapa-open .lang-toggle { display: none; }
 .flor--front { z-index: 2; }
 @media (max-width: 768px) { .flor--no-m { display: none; } }
 @media (min-width: 769px) { .flor--no-d { display: none; } }
+
+/* Fields and choice pills: a firmer outline than the decorative paper line, so they show on any background */
+.form-control,
+.choice span { border-color: color-mix(in srgb, var(--ink-faint) 65%, var(--paper-line)); }
+.form-control:focus { border-color: var(--olive-deep); }
+.choice input:checked + span { border-color: var(--olive-deep); }

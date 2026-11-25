@@ -37,6 +37,7 @@ assets/Sobre.png
 assets/*.svg
 !assets/favicon.svg
 !assets/mapa.svg
+!assets/patron-historia.svg
 *:Zone.Identifier
 
 # Phone screenshots the couple drops in for debugging

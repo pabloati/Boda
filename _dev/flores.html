@@ -811,6 +811,7 @@
     { id: 'se', name: 'iPhone SE', w: 375, h: 548 },
     { id: 'galaxy', name: 'Android pequeño (Galaxy S)', w: 360, h: 650 },
     { id: 'pixel', name: 'Android grande (Pixel)', w: 412, h: 785 },
+    { id: 'realme16', name: 'Realme 16 Pro+ (Pablo)', w: 366, h: 690 },   // 1280 x 2800 px panel; CSS size assumed at 3.5x, not measured on the phone
   ];
   let model = MODELS[0];
   try { model = MODELS.find(m => m.id === localStorage.getItem('ed-model')) || model; } catch (e) {}

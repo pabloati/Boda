@@ -16,6 +16,7 @@ window.I18N = (function () {
   'use strict';
 
   const ES = {
+    'story.stageHint': 'Toca la foto para girarla, o fuera para cerrar',
     // --- script.js ---
     'rsvp.alertName': 'Por favor indica tu nombre y apellidos antes de guardar.',
     'rsvp.sending': 'Enviando tu respuesta… puede tardar unos segundos.',
@@ -35,7 +36,8 @@ window.I18N = (function () {
     'lang.switchTo': 'Cambiar a inglés',
     // --- mapa.js ---
     'map.hint': 'Toca una parada para ver los detalles',
-    'map.open': 'Abrir en Google Maps',
+    'map.route': 'Cómo llegar',
+    'map.twoFingers': 'Usa dos dedos para mover el mapa',
     'map.expand': 'Ampliar',
     'map.close': 'Cerrar',
     'map.iglesia.short': 'Iglesia',
@@ -95,10 +97,23 @@ window.I18N = (function () {
     'hero.scroll': 'Scroll',
     'hero.scrollAria': 'Scroll to keep reading',
     // --- intro ---
-    'intro.text': '&laquo;There is no fear in love, but perfect love casts out fear.&raquo;',
-    'intro.ref': '1 John 4:18',
+    'story.title': 'Our story',
+    'story.hint': 'Tap a photo to turn it over',
+    'story.stageHint': 'Tap the photo to turn it, or outside to close',
+    'story.0.cap': 'The postcard',
+    'story.0.aria': 'The postcard: turn the photo over',
+    'story.0.text': 'On this postcard Pablo wrote the words he would use to ask me to marry him, on the first day we moved in together.<br>We met in Madrid 8-9 years ago, thanks to an international science outreach association with a keen interest in travelling, having good friends and experiencing the effects of alcohol on young people\'s bodies, among other serious matters. We had good taste in common... all that was left was to find each other.<br>At every event, like magnets, we always ended up side by side.<br>Pablo went on Erasmus, and life went on for both of us until...',
+    'story.1.cap': 'Madrid',
+    'story.1.aria': 'Madrid: turn the photo over',
+    'story.1.text': 'Our story also began with a message. After we met through friends at university, our paths went separate ways, until I wrote to her again and she gave me a chance.',
+    'story.2.cap': 'Copenhagen',
+    'story.2.aria': 'Copenhagen: turn the photo over',
+    'story.2.text': '[Copenhagen: your time there. Two or three sentences of your own.]',
+    'story.3.cap': 'Valencia',
+    'story.3.aria': 'Valencia: turn the photo over',
+    'story.3.text': '[Valencia: where you are now. Two or three sentences of your own.]',
     // --- countdown ---
-    'countdown.title': 'Only a few days to go',
+    'countdown.title': 'A few days to go',
     'countdown.days': 'days',
     'countdown.hours': 'hours',
     'countdown.min': 'min',
@@ -106,8 +121,8 @@ window.I18N = (function () {
     'countdown.calendar': 'Add to calendar',
     // --- where & when ---
     'loc.title': 'Where and when',
-    'loc.ceremony': 'Ceremony · 12:30',
-    'loc.reception': 'Reception · 14:30',
+    'loc.ceremony': 'Ceremony',
+    'loc.reception': 'Reception',
     'loc.map': 'See it on the map',
     // --- timeline ---
     'tl.title': 'The day',
@@ -121,7 +136,7 @@ window.I18N = (function () {
     'tl.4.desc': "Don't let the party stop!",
     // --- rsvp ---
     'rsvp.title': 'Will you join us?',
-    'rsvp.lead': 'Please reply by 1 February 2027. One reply per person.',
+    'rsvp.lead': 'Please reply by 13 January 2027. One reply per person.',
     'rsvp.name': 'Full name',
     'rsvp.phone': 'Phone <span class="optional">(in case we need to call you)</span>',
     'rsvp.coming': 'Are you coming?',
@@ -159,11 +174,18 @@ window.I18N = (function () {
     'rsvp.error': "We couldn't save your reply. Please try again in a moment and, if it keeps failing, message us on WhatsApp.",
     // --- gifts ---
     'gifts.title': 'Gifts',
-    'gifts.lead': "Your presence is the best gift.<br>If you'd also like to give us a little envelope or a present:",
+    'gifts.lead': "We'd love to take you all with us on the honeymoon flight, but not even an Iberia plane has room for everyone. So you can come along in spirit with a little something ;)",
     'gifts.showIban': 'Show bank account',
-    'gifts.copy': 'Copy',
+    'gifts.hint': 'Tap the plane to take off',
+    'gifts.planeAria': 'Take off to Thailand to see the bank account',
+    'gifts.from': 'Madrid',
+    'gifts.to': 'Thailand',
+    'gifts.trip': 'Honeymoon',
+    'gifts.pass': 'Boarding pass',
+    'gifts.passengers': 'Passengers',
+    'gifts.account': 'Bank account',
+    'gifts.copy': 'Tap the number to copy it',
     'gifts.copyAria': 'Copy the IBAN',
-    'gifts.meta': 'Pablo Atienza &amp; María de los Ángeles Quijano<br>Reference: Boda Mª Ángeles y Pablo + your name',
     'copy.done': 'Copied!',
     // --- playlist (static) ---
     'pl.title': 'The playlist',
@@ -215,7 +237,8 @@ window.I18N = (function () {
     'map.busOut': 'The bus leaves Cibeles for La Cigüeña',
     'map.busBack': 'Back to Cibeles and Avenida de América, around that time',
     'map.hint': 'Tap a stop to see the details',
-    'map.open': 'Open in Google Maps',
+    'map.route': 'Get directions',
+    'map.twoFingers': 'Use two fingers to move the map',
     'map.expand': 'Enlarge',
     'map.close': 'Close',
     'map.iglesia.short': 'Church',
@@ -249,7 +272,9 @@ window.I18N = (function () {
     'lang.switchTo': 'Cambiar a español',
     // --- calendar file ---
     'ics.summary': 'Wedding of Mª Ángeles & Pablo',
-    'ics.description': 'Ceremony at Parroquia de San José (C. Alcalá 43) at 12:30 and reception at Complejo La Cigüeña (Arganda del Rey) at 14:30.'
+    'ics.description': 'Ceremony at Parroquia de San José (C. Alcalá 43) at 12:30 and reception at Complejo La Cigüeña (Arganda del Rey) at 14:30.',
+    'extra1.title': 'Frase',
+    'extra1.text': 'Por encima de todo, vístanse de amor,<br>que es el vínculo perfecto.<br><span class="frase-cita">- Colosenses 3:14 -</span>',
   };
 
   const dict = { es: ES, en: EN };

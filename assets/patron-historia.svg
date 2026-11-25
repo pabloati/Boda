@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="200" viewBox="0 0 400 200">
+  <!-- Background of "Nuestra historia": glowing sandstone like the top-left corner of
+       hero-mobile.jpg (its sunny, palest part): fine strata flowing down from top left
+       to bottom right in marked, uneven curves, soft light patches and sand grain.
+       Seamless tile (400 x 200):
+       - every stratum drops exactly 200 px (the tile height) for every 400 px across,
+         and the line styles repeat every 100 px, so a stratum that leaves the tile
+         comes back as one with the same style;
+       - the strata are drawn three tiles wide, so the warp below always has real
+         lines to pull from;
+       - the warp (a stitched, low-frequency noise that bends the strata here and
+         there, so no two curves look alike) and the other noises are stitched to
+         the tile size, so they repeat exactly. -->
+  <defs>
+    <!-- one stratum through (0,0): a wide S-curve per tile (a rise, then a dip),
+         three tiles long. "a" swings about 28 px from the slope, "b" about 24 px
+         (close enough that neighbouring strata never cross) -->
+    <path id="a" d="M-400 -200 C-333.3 -204 -266.7 -170.6 -200 -100 C-133.3 -29.4 -66.7 4 0 0 C66.7 -4 133.3 29.4 200 100 C266.7 170.6 333.3 204 400 200 C466.7 196 533.3 229.4 600 300 C666.7 370.6 733.3 404 800 400"/>
+    <path id="b" d="M-400 -200 C-333.3 -198.7 -266.7 -165.3 -200 -100 C-133.3 -34.7 -66.7 -1.3 0 0 C66.7 1.3 133.3 34.7 200 100 C266.7 165.3 333.3 198.7 400 200 C466.7 201.3 533.3 234.7 600 300 C666.7 365.3 733.3 398.7 800 400"/>
+    <!-- bends the strata: swirls that differ from one place to the next -->
+    <filter id="warp" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" x="-100" y="-100" width="600" height="400">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.01" numOctaves="2" seed="11" stitchTiles="stitch" x="0" y="0" width="400" height="200" result="swirl"/>
+      <feDisplacementMap in="SourceGraphic" in2="swirl" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- softens the broad shadow bands -->
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <!-- large soft shadowed areas, like the folds of the canyon walls turning away from the light -->
+    <filter id="shade" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0025 0.005" numOctaves="2" seed="21" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 0.78  0 0 0 0 0.44  0 0 0 0 0.20  -1.4 0 0 0 0.70"/>
+    </filter>
+    <!-- sand grain -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 0.76  0 0 0 0 0.54  0 0 0 0 0.24  0.65 0 0 0 -0.25"/>
+    </filter>
+    <!-- large soft light patches, like the glow on the rock -->
+    <filter id="glow" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.01" numOctaves="2" seed="3" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 0.98  0 0 0 0 0.84  1.6 0 0 0 -0.60"/>
+    </filter>
+  </defs>
+
+  <rect width="400" height="200" fill="#fde6ab"/>
+  <rect width="400" height="200" filter="url(#shade)"/>
+  <rect width="400" height="200" filter="url(#glow)"/>
+
+  <!-- strata every 10 px, from 300 px above the tile to 290 px below its top, enough
+       to cover it with the curves and the warp -->
+  <g filter="url(#warp)">
+    <g fill="none" stroke-linecap="round" transform="translate(0 -300)">
+      <!-- broad blurred shadow bands that follow the strata, like the rounded folds
+           of the rock (one wide and one narrow every 100 px) -->
+      <g stroke="#c4743a" filter="url(#soft)">
+        <use xlink:href="#a" href="#a" y="35"  stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="85"  stroke-width="12" opacity="0.10"/>
+        <use xlink:href="#a" href="#a" y="135" stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="185" stroke-width="12" opacity="0.10"/>
+        <use xlink:href="#a" href="#a" y="235" stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="285" stroke-width="12" opacity="0.10"/>
+        <use xlink:href="#a" href="#a" y="335" stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="385" stroke-width="12" opacity="0.10"/>
+        <use xlink:href="#a" href="#a" y="435" stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="485" stroke-width="12" opacity="0.10"/>
+        <use xlink:href="#a" href="#a" y="535" stroke-width="26" opacity="0.16"/>
+        <use xlink:href="#b" href="#b" y="585" stroke-width="12" opacity="0.10"/>
+      </g>
+      <g stroke="#d8944e" opacity="0.8">
+        <use xlink:href="#a" href="#a" y="0"   stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="10"  stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="20"  stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="40"  stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="50"  stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="70"  stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="80"  stroke-width="0.5" opacity="0.18"/>
+
+        <use xlink:href="#a" href="#a" y="100" stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="110" stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="120" stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="140" stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="150" stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="170" stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="180" stroke-width="0.5" opacity="0.18"/>
+
+        <use xlink:href="#a" href="#a" y="200" stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="210" stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="220" stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="240" stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="250" stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="270" stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="280" stroke-width="0.5" opacity="0.18"/>
+
+        <use xlink:href="#a" href="#a" y="300" stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="310" stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="320" stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="340" stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="350" stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="370" stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="380" stroke-width="0.5" opacity="0.18"/>
+
+        <use xlink:href="#a" href="#a" y="400" stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="410" stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="420" stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="440" stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="450" stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="470" stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="480" stroke-width="0.5" opacity="0.18"/>
+
+        <use xlink:href="#a" href="#a" y="500" stroke-width="0.8" opacity="0.36"/>
+        <use xlink:href="#b" href="#b" y="510" stroke-width="0.5" opacity="0.22"/>
+        <use xlink:href="#a" href="#a" y="520" stroke-width="1.0" opacity="0.32"/>
+        <use xlink:href="#b" href="#b" y="540" stroke-width="0.6" opacity="0.26"/>
+        <use xlink:href="#a" href="#a" y="550" stroke-width="0.5" opacity="0.20"/>
+        <use xlink:href="#b" href="#b" y="570" stroke-width="0.9" opacity="0.34"/>
+        <use xlink:href="#a" href="#a" y="580" stroke-width="0.5" opacity="0.18"/>
+      </g>
+      <!-- the light strata in between, where the rock catches the sun -->
+      <g stroke="#fffbf0">
+        <use xlink:href="#b" href="#b" y="30"  stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="60"  stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="90"  stroke-width="1.2" opacity="0.45"/>
+        <use xlink:href="#b" href="#b" y="130" stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="160" stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="190" stroke-width="1.2" opacity="0.45"/>
+        <use xlink:href="#b" href="#b" y="230" stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="260" stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="290" stroke-width="1.2" opacity="0.45"/>
+        <use xlink:href="#b" href="#b" y="330" stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="360" stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="390" stroke-width="1.2" opacity="0.45"/>
+        <use xlink:href="#b" href="#b" y="430" stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="460" stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="490" stroke-width="1.2" opacity="0.45"/>
+        <use xlink:href="#b" href="#b" y="530" stroke-width="1.6" opacity="0.50"/>
+        <use xlink:href="#a" href="#a" y="560" stroke-width="0.9" opacity="0.40"/>
+        <use xlink:href="#b" href="#b" y="590" stroke-width="1.2" opacity="0.45"/>
+      </g>
+    </g>
+  </g>
+
+  <rect width="400" height="200" filter="url(#grain)"/>
+</svg>
