@@ -183,8 +183,6 @@ window.I18N = (function () {
     'gifts.trip': 'Honeymoon',
     'gifts.pass': 'Boarding pass',
     'gifts.passengers': 'Passengers',
-    'gifts.ref': 'Reference',
-    'gifts.refValue': 'Boda Mª Ángeles y Pablo + your name',
     'gifts.account': 'Bank account',
     'gifts.copy': 'Tap the number to copy it',
     'gifts.copyAria': 'Copy the IBAN',
